@@ -1,0 +1,32 @@
+{
+  "name": "create-contract-cli",
+  "version": "1.0.0",
+  "description": "creates a cli tool based on a NEAR smart contract",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "test": ". tests/test.sh",
+    "lint": "eslint . --ext .ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luciotato/create-contract-cli.git"
+  },
+  "keywords": [
+    "near",
+    "contract",
+    "cli",
+    "tool"
+  ],
+  "author": "luciotato@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luciotato/create-contract-cli/issues"
+  },
+  "homepage": "https://github.com/luciotato/create-contract-cli#readme",
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
+}
