@@ -1,0 +1,26 @@
+{
+  "name": "hand-coded-tom",
+  "version": "1.0.0",
+  "description": "model for create-command-cli",
+  "main": "tom.js",
+  "scripts": {
+    "test": "tom --help"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luciotato/tom.git"
+  },
+  "keywords": [
+    "create-command-cli"
+  ],
+  "author": "Lucio Tato",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luciotato/tom/issues"
+  },
+  "homepage": "https://github.com/luciotato/tom/#readme",
+  "devDependencies": {
+    "@types/node": "^14.11.2",
+    "typescript": "^4.0.3"
+  }
+}

@@ -1,0 +1,308 @@
+//utils.ts
+//## utility methods 
+
+interface String {
+  replaceAll: (searched: string, newStr: string) => string;
+  quoted(quoteChar: string): string;
+  countSpaces(): number;
+}
+
+String.prototype.replaceAll = function (searched: string, newStr: string) {
+    return searched.replace(new RegExp(searched, 'g'), newStr)
+}
+String.prototype.quoted = function (quoteChar: string) {
+    return `${quoteChar}${this}${quoteChar}`
+}
+String.prototype.countSpaces = function () {
+    //var inx=0
+    let inx = 0
+    //while inx<this.length
+    while (inx < this.length) {
+    //if this.charAt(inx) isnt ' ', break
+        if (this.charAt(inx) !== ' ') { break }
+        //inx++
+        inx++
+    }// end loop
+
+    //return inx
+    return inx
+}
+
+
+
+
+/*
+//Helper methods to class String.
+//Also add 'remove' & 'clear' to class Array
+
+    //    append to class String
+
+
+        //shim method startsWith(text:string)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'startsWith'))
+        startsWith = function(text){
+            //return this.slice(0, text.length) is text
+            return this.slice(0, text.length) === text;
+        };
+
+        //shim method endsWith(text:string)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'endsWith'))
+        endsWith = function(text){
+            //return this.slice(-text.length) is text
+            return this.slice(-text.length) === text;
+        };
+
+        //shim method trimRight()
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'trimRight'))
+        trimRight = function(){
+            //if no this.length into var inx, return this //empty str
+            var inx:=undefined
+            if (!((inx=this.length))) {return this};
+            //do
+            do{
+
+                //inx--
+                inx--;
+            } while (inx >= 0 && this.charAt(inx) === ' ');// end loop
+            //return this.slice(0,inx+1)
+            return this.slice(0, inx + 1);
+        };
+
+        //shim method trimLeft()
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'trimLeft'))
+        trimLeft = function(){
+            //if no this.length into var len, return this
+            var len:=undefined
+            if (!((len=this.length))) {return this};
+            //var inx=0
+            var inx = 0;
+            //while inx<len and this.charAt(inx) is ' '
+            while(inx < len && this.charAt(inx) === ' '){
+                //inx++
+                inx++;
+            };// end loop
+            //return this.slice(inx)
+            return this.slice(inx);
+        };
+
+//.capitalized
+
+        //method capitalized returns string
+        // ---------------------------
+        capitalized = function(){
+           //if this, return "#{this.charAt(0).toUpperCase()}#{this.slice(1)}"
+           if (this) {return `${this.charAt(0).toUpperCase()}#{this.slice(1)}`};
+        };
+
+//.replaceAll, equiv. to .replace(/./g, newStr)
+
+        //shim method replaceAll(searched,newStr)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'replaceAll'))
+        replaceAll = function(searched, newStr){
+           //return this.replace(new RegExp(searched,"g"), newStr)
+           return this.replace(new RegExp(searched, 'g'), newStr);
+        };
+
+//.countSpaces()
+
+        //shim method countSpaces()
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'countSpaces'))
+        countSpaces = function(){
+            //var inx=0
+            var inx = 0;
+            //while inx<this.length
+            while(inx < this.length){
+                //if this.charAt(inx) isnt ' ', break
+                if (this.charAt(inx) !== ' ') {break};
+                //inx++
+                inx++;
+            };// end loop
+
+            //return inx
+            return inx;
+        };
+
+//.quoted(quotechar)
+
+        //method quoted(quoteChar)
+        // ---------------------------
+        quoted = function(quoteChar){
+            //return '#{quoteChar}#{this}#{quoteChar}'
+            return `${quoteChar}#{this}#{quoteChar}`;
+        };
+
+        //shim method rpad(howMany)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'rpad'))
+        rpad = function(howMany){
+            //return .concat(String.spaces(howMany-.length))
+            return this.concat(String.spaces(howMany - this.length));
+        };
+
+//repeat(howMany)
+
+        //shim method repeat(howMany)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'repeat'))
+        repeat = function(howMany){
+            //if howMany<=0, return ''
+            if (howMany <= 0) {return ''};
+
+            //var a=''
+            var a = '';
+            //while howMany--
+            while(howMany--){
+                //a &= this
+                a += this;
+            };// end loop
+
+            //return a
+            return a;
+        };
+
+    //    append to namespace String
+
+
+
+//Checks if a name is Capitalized, unicode aware.
+//capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
+
+        //method isCapitalized(text:string) returns boolean
+        // ---------------------------
+        isCapitalized = function(text){
+            //if text and text.charAt(0) is text.charAt(0).toUpperCase()
+            if (text && text.charAt(0) === text.charAt(0).toUpperCase()) {
+
+                //if text.length is 1, return true;
+                if (text.length === 1) {return true};
+
+                //for n=1 while n<text.length
+                for( var n=1; n < text.length; n++) {
+                    //if text.charAt(n) is text.charAt(n).toLowerCase(), return true
+                    if (text.charAt(n) === text.charAt(n).toLowerCase()) {return true};
+                };// end for n
+
+            };
+
+            //return false
+            return false;
+        };
+
+//String.findMatchingPair(text,start,closer).
+//Note: text[start] MUST be the opener char
+
+        //method findMatchingPair(text:string, start, closer)
+        // ---------------------------
+        findMatchingPair = function(text, start, closer){
+            //var opener=text.charAt(start);
+            var opener = text.charAt(start);
+            //var opencount=1;
+            var opencount = 1;
+            //for n=start+1 while n<text.length
+            for( var n=start + 1; n < text.length; n++) {
+                //if text.charAt(n) is closer and --opencount is 0
+                if (text.charAt(n) === closer && --opencount === 0) {
+
+                    //return n
+                    return n;
+                }
+                //if text.charAt(n) is closer and --opencount is 0
+
+                else if (text.charAt(n) === opener) {
+
+                    //opencount++
+                    opencount++;
+                };
+            };// end for n
+
+            //return -1
+            return -1;
+        };
+
+
+
+    //    append to class Array
+
+
+//method .remove(element)
+
+        //shim method remove(element)  [not enumerable]
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'remove'))
+        Object.defineProperty(
+        ,'remove',{value:function(element){
+
+            //if this.indexOf(element) into var inx >= 0
+            var inx:=undefined
+            if ((inx=this.indexOf(element)) >= 0) {
+
+                 //return this.splice(inx,1)
+                 return this.splice(inx, 1);
+            };
+        }
+        ,enumerable:false
+        });
+
+
+        //shim method clear       [not enumerable]
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'clear'))
+        Object.defineProperty(
+        ,'clear',{value:function(){
+            //empty the array
+            //for n=1 to .length
+            var _end7=this.length;
+            for( var n=1; n<=_end7; n++) {
+                //.pop
+                this.pop();
+            };// end for n
+
+        }
+        ,enumerable:false
+        });
+
+
+//##Console group
+
+    //    append to namespace console
+
+
+//Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
+//neither do older browsers
+
+        //properties indentLevel
+
+        //properties indentLevel
+
+        //shim method group()
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'group'))
+        group = function(){
+            //console.log.apply undefined,arguments
+            console.log.apply(undefined, Array.prototype.slice.call(arguments));
+            //console.indentLevel = console.indentLevel or 0 + 1
+            console.indentLevel = console.indentLevel || 0 + 1;
+        };
+
+        //shim method groupEnd()
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(,'groupEnd'))
+        groupEnd = function(){
+            //if console.indentLevel
+            if (console.indentLevel) {
+
+                //console.indentLevel--
+                console.indentLevel--;
+            };
+        };
+// -----------
+// Module code
+// -----------
+// end of module
+*/

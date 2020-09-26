@@ -4,10 +4,15 @@
 		{
 			"type": "npm",
 			"script": "build",
-			"group": "build",
-			"problemMatcher": [],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"label": "npm: build",
-			"detail": "tsc"
+			"detail": "npm build",
 		}
 	]
 }
