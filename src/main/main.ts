@@ -9,6 +9,7 @@ import { ContractAPIProducer as Producer } from "./ContractAPI-producer"
 import { ASTModule, PropertyAccess } from "../lib/Parser/Grammar"
 import { CommandLineArgs,ShowHelpOptions  } from "../lib/util/CommandLineArgs"
 import { options } from "./CLIOptions"
+import { URL } from "url";
 
 type dataInfo = {
     nickname: string;
@@ -139,8 +140,9 @@ function main() {
     //add auxiliary files
     //console.log("Current dir: " +process.cwd())
     //console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
-    let basedir = path.join(process.argv[1],"..","..")
-    process.stdout.write(`Completing ${projectDir}/...`)
+    //@ts-ignore -- import.meta.url
+    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname),"..","..");
+    process.stdout.write(`Completing ${projectDir}/ from ${basedir}/...`)
     try {
         mkPath.create(path.join(projectDir, "util"))
 

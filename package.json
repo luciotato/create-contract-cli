@@ -4,7 +4,7 @@
   "description": "creates a cli tool based on a NEAR smart contract",
   "main": "dist/main/main",
   "type": "module",
-  "bin": "bin/cli",
+  "bin": "bin/cli.js",
   "directories": {
     "test": "dist/test"
   },
