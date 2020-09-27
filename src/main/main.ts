@@ -142,6 +142,7 @@ function main() {
     //console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
     //@ts-ignore -- import.meta.url
     let basedir = path.join(path.dirname(new URL(import.meta.url).pathname),"..","..");
+    if (basedir.startsWith("\\")) basedir = basedir.slice(1) //windows compat remove extra "\"
     process.stdout.write(`Completing ${projectDir}/ from ${basedir}/...`)
     try {
         mkPath.create(path.join(projectDir, "util"))
