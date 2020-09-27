@@ -115,7 +115,7 @@ const OPERATORS_PRECEDENCE = ['&', '&mut', '*',
 export class Identifier extends ASTBase {
     // ---------------------------
     parse() {
-
+        this.optMut()
         this.name = this.reqToken(TokenCode.WORD)
         while (this.opt('::')) {
             this.name += '::'
@@ -389,6 +389,12 @@ export class Operand extends ASTBase {
             return //**** early exit
         }
 
+        if (t.value == "[") { // array expression
+            this.name = 'array expression'
+            this.children.push(this.reqClass(ArrayLiteral))
+            return //**** early exit
+        }
+
         if (t.value == "(") { // parent expression
             this.name = 'parentized'
             this.children.push(this.reqClass(ParenExpression))
@@ -448,7 +454,7 @@ export class FunctionArgument extends ASTBase {
             this.owner.lexer.advance()
             return //early exit
         }
-        this.optAddrOf()
+        this.optRef()
         this.optMut()
         this.expression = this.reqClass(Expression) as Expression
     }
@@ -697,7 +703,7 @@ export class ObjectLiteral extends ASTBase {
     // ---------------------------
     produce() {
         this.owner.codeWriter.write("{")
-        this.produceChildren(","+EOL)
+        this.produceChildren("," + EOL)
         this.owner.codeWriter.write("}")
     }
 
@@ -768,7 +774,17 @@ export class ParenExpression extends ASTBase {
     parse() {
         this.req('(')
         this.lock()
-        this.reqChild(Expression)
+        while (true) {
+            this.reqChild(Expression)
+            if (this.opt(",")) {
+                //tuple paren expression
+                this.keyword="tuple"
+                continue
+            }
+            else {
+                break
+            }
+        }
         this.req(')')
 
         Expression.checkNativeRustConversionMapCollect(this) //veo si tiene una llamada a .to_vec() u otra conversi�n
@@ -784,12 +800,19 @@ export class ParenExpression extends ASTBase {
  * */
 export class TypeAnnotation extends ASTBase {
     parse() {
-        this.optAddrOf()
+        this.optRef()
         this.optMut()
-        const ident = this.reqClass(Identifier)
-        this.name = ident.name //composed::namespace::name
-        if (this.opt('<')) {
-            this.children = this.reqSeparatedList(Identifier, ',', '>')
+        if (this.opt("(")) { //tuple type annotation
+            this.keyword = "tuple type"
+            this.name = "(tuple)"
+            this.children = this.reqSeparatedList(TypeAnnotation, ',', ')')
+        }
+        else {
+            const ident = this.reqClass(Identifier)
+            this.name = ident.name //composed::namespace::name
+            if (this.opt('<') || this.opt("<'")) {
+                this.children = this.reqSeparatedList(Identifier, ',', '>')
+            }
         }
     }
 }
@@ -878,7 +901,7 @@ export class MacroInvocation extends ASTBase {
             this.reqChild(Expression)
             this.req(",")
             this.reqChild(Expression)
-            if (this.opt(",")){ //third parameter, message if asssert failed
+            if (this.opt(",")) { //third parameter, message if asssert failed
                 this.reqChild(Expression)
             }
             this.req(")")
@@ -926,7 +949,8 @@ export class ImplDeclaration extends ASTBase {
     parse() {
         this.req('impl')
         this.lock()
-        this.name = this.reqToken(TokenCode.WORD)
+        const ident = this.reqClass(Identifier)
+        this.name = ident.name
         if (this.opt('for')) {
             this.for = this.reqClass(Identifier)
         }
@@ -1086,7 +1110,7 @@ export class VariableDecl extends ASTBase {
 
         //manage special keywords like 'pub' & mut
         this.optPub()
-        this.optAddrOf()
+        this.optRef()
         this.optMut()
 
         this.name = this.reqToken(TokenCode.WORD)
@@ -1134,7 +1158,17 @@ export class LetStatement extends ASTBase {
         this.req('let')
         this.optMut()
         this.lock()
-        this.children = this.reqSeparatedList(VariableDecl, ',', ';')
+        if (this.opt("(")) { //tuple assignment
+            this.keyword = "tuple"
+            this.children = this.reqSeparatedList(Identifier, ',', ')')
+            //optional assigned value
+            if (this.opt('=')) {
+                this.children.push(this.reqClass(Expression) as Expression)
+            }
+        }
+        else {
+            this.children = this.reqSeparatedList(VariableDecl, ',', ';')
+        }
     }
 }
 
@@ -1743,9 +1777,14 @@ export class Accessor extends ASTBase {
 
     static parseAccessors(node: VarRef) {
 
-        let accessorFound=true
+        let accessorFound = true
         //Loop parsing accessors
         while (accessorFound) {
+
+            if (node.owner.lexer.token.tokenCode == TokenCode.COMMENT) { //skip comments
+                node.owner.lexer.advance()
+                continue
+            }
 
             switch (node.owner.lexer.token.value) {
 
@@ -1766,7 +1805,7 @@ export class Accessor extends ASTBase {
                     break
 
                 default:
-                    accessorFound=false
+                    accessorFound = false
             }
         }
     }
@@ -1801,7 +1840,7 @@ export class PropertyAccess extends Accessor {
         this.lock()
         //check for NumberLiteral  x.0 rust tuple dot-index access. https://stackoverflow.com/questions/32030756/reasons-for-dot-notation-for-tuple
         if (this.owner.lexer.token.tokenCode == TokenCode.NUMBER) {
-            this.keyword="tuple-index"
+            this.keyword = "tuple-index"
             this.extraInfo = this.owner.lexer.token.value
             this.owner.lexer.advance()
         }
@@ -1876,6 +1915,8 @@ export class VarRef extends ASTBase {
         this.preIncDec = this.optList(['--', '++'])
         this.isFunctionCall = false
 
+        this.optMut
+        this.optRef()
         this.name = this.reqClass(Identifier).name
         this.lock()
 
@@ -2797,7 +2838,7 @@ export class Statement {
             const objectLiteral = node.reqClass(ObjectLiteral)
             objectLiteral.name = vr.name
             objectLiteral.keyword = "struct-instantiation"
-            return objectLiteral 
+            return objectLiteral
         }
 
         //it wasn't a function call,
@@ -2864,6 +2905,8 @@ export class Body extends ASTBase {
 
             if (node.owner.lexer.token.tokenCode == TokenCode.EOF) break //break on EOF
             if (closer && node.opt(closer)) break //on closer:'}', break - end of body, (a single extra separator before closer is allowed)
+
+            if (logger.debugFrom && node.owner.lexer.token.line > logger.debugFrom) logger.debugLevel = 1;
 
             //-----------------------
             //here we assume it's a Statement

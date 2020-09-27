@@ -1,4 +1,4 @@
-import { color } from './color.js'
+import * as color from './color.js'
 import { ControlledError } from './ControlledError.js'
 
 //Main namespace
@@ -29,15 +29,22 @@ export namespace logger {
     export var warningLevel= 0
     export var warningCount = 0
     export var messages = []
-    export var debugEnabled = false
     export var verboseLevel = 1
+
+    export var debugLevel = 0
+    export var debugFrom = 0
+    export function setDebugLevel(level:number, fromLine?:number){
+        debugLevel = level
+        debugFrom = fromLine||0
+    }
+
     //     method debug
     // ---------------------------
     // eslint-disable-next-line no-shadow-restricted-names
     export function debug(...vargs: any[]) {
 
         //if options.debugEnabled
-        if (debugEnabled) {
+        if (debugLevel) {
 
             //var args = arguments.toArray()
             var args = Array.prototype.slice.call(vargs)
@@ -51,7 +58,7 @@ export namespace logger {
     export function debugGroup() {
 
         //if options.debugEnabled
-        if (debugEnabled) {
+        if (debugLevel) {
 
             //console.error.apply undefined,arguments
             console.error.apply(undefined, Array.prototype.slice.call(arguments))
@@ -65,7 +72,7 @@ export namespace logger {
     export function debugGroupEnd() {
 
         //if options.debugEnabled
-        if (debugEnabled) {
+        if (debugLevel) {
 
             //console.groupEnd
             console.groupEnd()

@@ -8,9 +8,7 @@ export function setDebug(value: 0 | 1 | 2) { debug = value }
 export function spawnNearCli(args: string[]) {
     
     //-----------------------------
-    //as of today 2020/09/19 near-cli seems to be ignoring --networkId 
-    // and won't work unless you set NODE_ENV
-    // this is a workround for that problem
+    // near-cli uses NODE_ENV to define --networkId 
     //-----------------------------
     // get process.env, clone the actual env vars 
     var env = Object.create( process.env );
@@ -21,7 +19,15 @@ export function spawnNearCli(args: string[]) {
         console.log(`NODE_ENV=${network}`);
     }
     //-----------------------------
-    
+
+    for(var i=0;i<args.length;i++){
+        //(windows-compat)
+        if (typeof args[i]!="string") { //JSON
+            args[i]=JSON.stringify(args[i])
+            args[i]=args[i].replace(/"/g,'\\"') //add escape before each quote (windows-compat)
+        }
+    }
+
     console.log(`near ${args.join(" ")}`);
     var execResult = child_process.spawnSync("near", args, {shell:true, env:env}); // shell:true => to be able to invoke near-cli on windows
     
@@ -47,6 +53,7 @@ export function spawnNearCli(args: string[]) {
             //deduplicate
             let numbers=[...new Set(largeNumbers)]
             //show conversion to NEARs
+            console.log("numbers reference:")
             for (let num of numbers) {
                 if (num.length >= 20) {
                     let near = num;

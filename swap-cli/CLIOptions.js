@@ -1,43 +1,36 @@
-export const commonCliOptions = {
-
+export const options = {
     help: {
-        name: "help",
         shortName: "h",
+        value: false,
     },
-
     verbose: {
-        name: "verbose",
         shortName: "v",
         helpText: 'Prints out verbose output',
+        name: "verbose",
     },
-
     amount: {
-        name: "amount",
         shortName: "am",
         valueType: "NEAR",
+        value: 0,
         helpText: `attach NEAR tokens to this call. Example: --amount 100N`
     },
-
-    networkId:{
-        name: "networkId",
+    networkId: {
         shortName: "net",
         valueType: "string",
-        helpText: 'NEAR network ID, allows using different keys based on network',
+        value: "",
+        helpText: 'NEAR network ID (default is NODE_ENV)',
     },
-
-    accountId:{
-        name: "accountId",
+    accountId: {
         shortName: "acc",
         valueType: "string",
+        value: "",
         helpText: `user accountId, sets signer`
     },
-
-    contractName:{
-        name: "contractName",
+    contractName: {
         shortName: "c",
         valueType: "string",
+        value: "",
         helpText: `sets the contract account ID`
     },
-
-}
-
+};
+//# sourceMappingURL=CLIOptions.js.map

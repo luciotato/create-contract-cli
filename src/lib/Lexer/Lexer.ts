@@ -139,6 +139,10 @@ export class Lexer {
             case '::': {
                 return [TokenCode.PUNCTUATION, 2]
             }
+            //rust lifetime open
+            case "<'": {
+                return [TokenCode.PUNCTUATION, 2]
+            }
             //rust match pair: X => Y
             case '=>': {
                 return [TokenCode.PUNCTUATION, 2]
@@ -188,12 +192,20 @@ export class Lexer {
             return [TokenCode.WHITESPACE, endPos]
         }
 
+        const threeChars: string = this.readString.slice(0, 3)
+
+        if (threeChars=='r#"') { //raw literal string
+            const endQuotePos = this.untilUnescaped('"#', 3)
+            //return new Token 'LITERAL_STRING' 
+            return [TokenCode.LITERAL_STRING, endQuotePos + 2] //includes opening (r#") and closing quotes ("#)
+        }
+
         //rust 3-char assignment operators
-        if (['<<=', '>>='].includes(this.readString.slice(0, 3))) {
+        if (['<<=', '>>='].includes(threeChars)) {
             return [TokenCode.ASSIGNMENT, 3]
         }
         //rust 3-char operators
-        if (['...', '..='].includes(this.readString.slice(0, 3))) {
+        if (['...', '..='].includes(threeChars)) {
             return [TokenCode.OPERATOR, 3]
         }
 
@@ -499,7 +511,7 @@ export class Lexer {
         }
 
         //#debug
-        if (logger.debugEnabled) logger.debug('>>>READ', `${result.line}:${result.col}`, result.toString())
+        if (logger.debugLevel) logger.debug('>>>READ', `${result.line}:${result.col}`, result.toString())
 
         return result
     }
@@ -523,7 +535,7 @@ export class Lexer {
         }
         catch (ex) {
             //add current position to error message
-            throw new Error(ex.message + `@${this.filename}:${this.curReadLine}:${(this.curReadCol)}`)
+            throw new Error(ex.message + ` ${this.filename}:${this.curReadLine}:${(this.curReadCol)}`)
         }
 
     }

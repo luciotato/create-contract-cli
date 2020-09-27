@@ -3,25 +3,29 @@ import * as mkPath from "../lib/util/mkPath.js"
 import { copyFileSync, readFileSync } from "fs"
 import { logger } from "../lib/util/logger.js"
 import { Parser } from "../lib/Parser/Parser.js"
-import { ContractAPIProducer as Producer} from "../ContractAPI-producer"
-import { color } from "../lib/util/color.js"
+import { ContractAPIProducer as Producer} from "../main/ContractAPI-producer"
+import * as color from '../lib/util/color.js'
 
 const TESTNAME = "ContractAPI Producer"
 
-export function testContractAPIProducer() {
+type dataInfo = {
+    nickname: string;
+    defaultContractName: string;
+}
+
+export function testFor(rustFile: string, expectedFile:string, data: dataInfo) {
 
     console.log("Testing "+TESTNAME)
-
-    logger.debugEnabled = false
 
     //parse
     let parsedModule 
     try {
         const parser = new Parser()
         //parse rust lib file
-        parsedModule = parser.parseFile('./res/test/staking-pool/src/lib.rs')
+        parsedModule = parser.parseFile(rustFile)
     }
     catch (ex) {
+        console.log(color.red+ex.message+color.normal)
         console.log(ex)
         console.log(process.cwd())
         console.log("Error parsing " + parsedModule?.name)
@@ -35,12 +39,7 @@ export function testContractAPIProducer() {
 
     console.log("writing temp files in " +path.join(process.cwd(), outPath))
 
-    const data = {
-        nickName: "tom",
-        defaultContractName: "tomstaker.stakehouse.betanet"
-    }
-
-    const generatedFile= path.join(outPath, data.nickName+"-contract-API.js")
+    const generatedFile= path.join(outPath, data.nickname+"-contract-API.js")
 
     //produce
     try {
@@ -54,7 +53,6 @@ export function testContractAPIProducer() {
 
     const generated = readFileSync(generatedFile)
 
-    const expectedFile = "./res/test/expected/staking-pool-API.js"
     const expected = readFileSync(expectedFile)
 
     if (generated.toString()!==expected.toString()){
@@ -68,3 +66,20 @@ export function testContractAPIProducer() {
     }
 }
 
+export function testContractAPIProducer() {
+
+    logger.setDebugLevel(0)
+    //logger.setDebugLevel(1,500)
+
+    testFor('./res/test/rust/NEARSwap/src/lib.rs', "./res/test/expected/swap-API.js",
+        {nickname: "swap", defaultContractName: "near-clp.betanet" }
+    )
+
+    logger.setDebugLevel(0)
+    //logger.setDebugLevel(1,500)
+
+    testFor('./res/test/rust/staking-pool/src/lib.rs', "./res/test/expected/staking-pool-API.js",
+        {nickname: "tom", defaultContractName: "tomstaker.stakehouse.betanet" }
+    )
+
+}

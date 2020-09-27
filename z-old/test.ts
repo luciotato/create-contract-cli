@@ -1,8 +1,6 @@
 //test/index.ts
 import { logger } from "../util/logger"
 import { Parser } from "../Parser/Parser"
-//import { D3Visualization } from "./src/Producer/D3Visualization"
-//import { AssemblyScriptProducer as Producer} from "../Producer/AssemblyScriptProducer"
 import { ContractCliProducer as Producer } from "../Producer/create-contract-cli-producer"
 import * as mkPath from "../util/mkPath"
 import * as path from "path"
@@ -15,10 +13,10 @@ function main() {
     let parsedModule 
 
     const data = {
-        nickName: "tom",
+        nickname: "tom",
         defaultContractName: "tomstaker.stakehouse.betanet"
     }
-    const projectName = `${data.nickName}-cli`
+    const projectName = `${data.nickname}-cli`
 
     const projectPath = path.join("out", projectName)
     mkPath.create(projectPath)
@@ -55,7 +53,7 @@ function main() {
     try {
         mkPath.create(path.join(projectPath, "util"))
         const modelPath = path.join("dist", "src", "tests", "model", "hand-coded-tom")
-        copyFileSync(path.join(modelPath, "tom.js"), path.join(projectPath, data.nickName+".js"))
+        copyFileSync(path.join(modelPath, "tom.js"), path.join(projectPath, data.nickname+".js"))
         for (const file of ["CommandLineArgs", "CommonCLIOptions", "ShowHelpPage", "SpawnNearCli"]) {
             copyFileSync(path.join(modelPath, "util", file + ".js"), path.join(projectPath, "util", file + ".js"))
         }

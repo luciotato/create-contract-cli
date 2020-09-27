@@ -1,7 +1,7 @@
-import { ASTBase } from "./lib/Parser/ASTBase";
-import * as Grammar from "./lib/Parser/Grammar";
-import { Parser } from "./lib/Parser/Parser";
-import { CodeWriter } from "./lib/Parser/CodeWriter";
+import { ASTBase } from "../lib/Parser/ASTBase";
+import * as Grammar from "../lib/Parser/Grammar";
+import { Parser } from "../lib/Parser/Parser";
+import { CodeWriter } from "../lib/Parser/CodeWriter";
 
 import * as Path from 'path'
 
@@ -19,12 +19,10 @@ class ASTModuleWriter extends Grammar.ASTModule {
             
 import { spawnNearCli } from "./util/SpawnNearCli"
 import { CommandLineArgs } from "./util/CommandLineArgs"
-import { commonCliOptions } from "./util/CommonCLIOptions"
+import { options } from "./CLIOptions.js"
 
 //name of this script
-export const NickName = '${o.data.nickName}'
-//account id where this contrat is deployed
-export const defaultContractName = '${o.data.defaultContractName}'
+export const nickname = '${o.data.nickname}'
 
 //one function for each pub fn in the contract
 //get parameters by consuming from CommandLineParser
@@ -96,7 +94,11 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         const selfParam: Grammar.VariableDecl = this.paramsDeclarations.children[0] as Grammar.VariableDecl
         //pub fn(&mut self) are "calls" -- alter state
         //pub fn(&self) are views -- do not alter state
-        const isView = !(selfParam.isMut)
+        let isView = !(selfParam.isMut)
+        if (isView && this.commentsAndAttr.includes("#[init]")){
+            //it's the init/new pub fn
+            isView=false
+        }
 
         //output pub fn comments
         //this.writeComments() -- no, they're include in the help string
@@ -105,7 +107,8 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
 
         if (this.commentsAndAttr && this.commentsAndAttr.length) {
             for (let s of this.commentsAndAttr) {
-                while (s.startsWith("/")) s = s.slice(1);
+                while (s.startsWith("/")) s = s.slice(1); //remove starting //
+                if (s.endsWith("/")) s= s.slice(0,s.length-1) //remove ending /
                 o.writeLine(s.replace(/`/g, "'"))
             }
         }
@@ -134,7 +137,7 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         }
 
         o.writeLine("usage:")
-        o.write("> " + o.data.nickName + " " + this.name + " " + argsDecl)
+        o.write("> " + o.data.nickname + " " + this.name + " " + argsDecl)
 
         //Type Annotation -- remove
         /*let hasReturnValue = false;
@@ -164,47 +167,41 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         o.indent += 2 //start body
         o.blankLine()
 
-        //standard contractName option
-        o.writeLine("//consume contract name from options if present")
-        o.writeLine("const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName")
-        o.blankLine()
-
         if (isPayable) {
             o.writeLine("//function is #payable, --amount option is required")
-            o.writeLine("//IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'")
-            o.writeLine("a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears")
+            o.writeLine("a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required")
         }
 
         //commented options for the user to expand
         o.writeLine('//--these are some examples on how to consume arguments')
-        o.writeLine('//const argument = a.consumeString("api argument")')
-        o.writeLine('//const argumentJson = a.consumeJSON("JSON argument")')
+        o.writeLine('//const toAccount = a.consumeString("to Account")')
+        o.writeLine('//const argumentJson = a.consumeJSON("JSON params")')
         o.blankLine()
 
         //get JSON args for the fn
         if (hasArguments) {
             o.writeLine('//get fn arguments as JSON')
-            o.writeLine(`const params = a.consumeJSON("${argsDecl}")`)
+            o.writeLine(`const fnJSONparams = a.consumeJSON("${argsDecl}")`)
         }
         else {
             o.writeLine(`//--${this.name} has no arguments, if you add some, uncomment the following line`)
-            o.writeLine('//const params = a.consumeJSON("{ x:0, y:1, z:3 }")')
+            o.writeLine('//const fnJSONparams = a.consumeJSON("{ x:0, y:1, z:3 }")')
         }
         o.blankLine()
 
 
         //standard end of args mark
-        o.writeLine("a.noMoreArgs() //end of arguments")
+        o.writeLine("a.noMoreArgs() // no more positional args should remain")
         o.blankLine()
 
         //composing const nearCliArgs = [
         o.writeLine("const nearCliArgs = [")
         o.indent += 2
         o.writeLine(isView ? `"view",` : `"call",`)
-        o.writeLine(`contract,`)
+        o.writeLine(`options.contractName.value,`)
         o.writeLine(`"${this.name}",`)
         if (hasArguments) {
-            o.writeLine('JSON.stringify(params)')
+            o.writeLine('fnJSONparams,')
         }
         o.indent -= 2
         o.writeLine("]")

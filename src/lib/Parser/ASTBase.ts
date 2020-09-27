@@ -31,7 +31,7 @@ export class ASTBase {
     extraInfo
     isPublic: boolean = false
     isMut: boolean = false
-    isAddressOf: boolean
+    isRef: boolean
     nativeSuffixes: ASTBase // to_vec, as_u128, .map, .collect etc.
 
     constructor(parent, name) {
@@ -245,7 +245,7 @@ export class ASTBase {
             if (typeof searched === 'string') {
                 const searchedString: string = searched
                 found = (t.value == searchedString)
-                if (found && logger.debugEnabled) {
+                if (found && logger.debugLevel) {
                     logger.debug(this.constructor.name, 'matched OK:', searched, t.value)
                 }
             }
@@ -254,7 +254,7 @@ export class ASTBase {
             else if (typeof searched === 'number') { //it's a TokenCode
                 const searchedToken: TokenCode = searched as TokenCode
                 found = (t.tokenCode == searchedToken)
-                if (found && logger.debugEnabled) {
+                if (found && logger.debugLevel) {
                     logger.debug(this.constructor.name, 'matched OK:', TokenCode[searchedToken], t.value)
                 }
             }
@@ -322,7 +322,7 @@ export class ASTBase {
                         logger.debug(searchedClass.name, 'parse failed.', err.message)
                         //rewind the token stream, to try other AST nodes
                         this.owner.lexer.restoreSavedPosition()
-                        logger.debug('<<REW to', this.owner.lexer.token.toStringDebug())
+                        logger.debug('<<REW to', this.owner.lexer.token?.toStringDebug())
                     }
                     else {
                         //else: it's a hard-error. The AST node were locked-on-target.
@@ -497,10 +497,10 @@ export class ASTBase {
             this.owner.lexer.advance()
         }
     }
-    optAddrOf() {
+    optRef() {
         //manage special prefixes like '&'
         if (this.owner.lexer.token.value == '&') {
-            this.isAddressOf = true
+            this.isRef = true
             this.owner.lexer.advance()
         }
     }

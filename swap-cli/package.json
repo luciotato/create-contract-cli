@@ -1,11 +1,9 @@
 {
-  "name": "nickname",
+  "name": "cli-nickname",
   "version": "1.0.0",
-  "description": "command cli for ${contract} smart contract at ${contractAddress}}",
-  "main": "nickname",
-  "type": "module",
+  "description": "command cli for tom ${contract} smart contract at ${contractAddress}}",
   "bin": {
-    "nickname": "cli.js"
+    "${nickname}": "./bin/cli"
   },
   "scripts": {
   },
