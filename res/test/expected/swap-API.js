@@ -5,12 +5,10 @@
             
 import { spawnNearCli } from "./util/SpawnNearCli.js"
 import { CommandLineArgs } from "./util/CommandLineArgs.js"
-import { commonCliOptions } from "./util/CommonCLIOptions.js"
+import { options } from "./CLIOptions.js"
 
 //name of this script
 export const nickname = 'swap'
-//account id where this contrat is deployed
-export const defaultContractName = 'near-clp.betanet'
 
 //one function for each pub fn in the contract
 //get parameters by consuming from CommandLineParser
@@ -20,25 +18,23 @@ export class ContractAPI {
   #[init]
   
   usage:
-  > swap new `;
+  > swap new 
+  `;
   
   new(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //--new has no arguments, if you add some, uncomment the following line
-    //const params = a.consumeJSON("{ x:0, y:1, z:3 }")
+    //const fnJSONparams = a.consumeJSON("{ x:0, y:1, z:3 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
-      "view",
-      contract,
+      "call",
+      options.contractName.value,
       "new",
     ]
     
@@ -51,27 +47,25 @@ export class ContractAPI {
   set_fee_dst_help =`
   
   usage:
-  > swap set_fee_dst { fee_dst: AccountId }`;
+  > swap set_fee_dst { fee_dst: AccountId }
+  `;
   
   set_fee_dst(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ fee_dst: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ fee_dst: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "set_fee_dst",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -85,27 +79,25 @@ export class ContractAPI {
    fee size.
   
   usage:
-  > swap change_owner { new_owner: AccountId }`;
+  > swap change_owner { new_owner: AccountId }
+  `;
   
   change_owner(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ new_owner: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ new_owner: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "change_owner",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -117,34 +109,31 @@ export class ContractAPI {
   check_number_help =`
   **********************
        POOL MANAGEMENT
-    **********************/
+    **********************
   #[payable]
   
   usage:
-  > swap check_number { a: u128, aj: U128, b: Balance }`;
+  > swap check_number { a: u128, aj: U128, b: Balance }
+  `;
   
   check_number(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ a: u128, aj: U128, b: Balance }")
+    const fnJSONparams = a.consumeJSON("{ a: u128, aj: U128, b: Balance }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "check_number",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -161,30 +150,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap create_pool { token: AccountId }`;
+  > swap create_pool { token: AccountId }
+  `;
   
   create_pool(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "create_pool",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -197,27 +183,25 @@ export class ContractAPI {
    Extracts public information of the 'token' pool.
   
   usage:
-  > swap pool_info { token: AccountId }`;
+  > swap pool_info { token: AccountId }
+  `;
   
   pool_info(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "pool_info",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -230,25 +214,23 @@ export class ContractAPI {
    Returns list of pools identified as their reserve token AccountId.
   
   usage:
-  > swap list_pools `;
+  > swap list_pools 
+  `;
   
   list_pools(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //--list_pools has no arguments, if you add some, uncomment the following line
-    //const params = a.consumeJSON("{ x:0, y:1, z:3 }")
+    //const fnJSONparams = a.consumeJSON("{ x:0, y:1, z:3 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "list_pools",
     ]
     
@@ -264,30 +246,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap add_liquidity { token: AccountId, max_tokens: U128, min_shares: U128 }`;
+  > swap add_liquidity { token: AccountId, max_tokens: U128, min_shares: U128 }
+  `;
   
   add_liquidity(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, max_tokens: U128, min_shares: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, max_tokens: U128, min_shares: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "add_liquidity",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -302,27 +281,25 @@ export class ContractAPI {
    exchengable between different pools.
   
   usage:
-  > swap withdraw_liquidity { token: AccountId, shares: U128, min_ynear: U128, min_tokens: U128 }`;
+  > swap withdraw_liquidity { token: AccountId, shares: U128, min_ynear: U128, min_tokens: U128 }
+  `;
   
   withdraw_liquidity(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, shares: U128, min_ynear: U128, min_tokens: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, shares: U128, min_ynear: U128, min_tokens: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "withdraw_liquidity",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -335,27 +312,25 @@ export class ContractAPI {
    Returns the owner balance of shares of a pool identified by token.
   
   usage:
-  > swap shares_balance_of { token: AccountId, owner: AccountId }`;
+  > swap shares_balance_of { token: AccountId, owner: AccountId }
+  `;
   
   shares_balance_of(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, owner: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, owner: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "shares_balance_of",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -367,37 +342,34 @@ export class ContractAPI {
   swap_near_to_token_exact_in_help =`
   **********************
     CLP market functions
-    **********************/
+    **********************
    Swaps NEAR to 'token' and transfers the reserve tokens to the caller.
    Caller attaches near tokens he wants to swap to the transacion under a condition of
    receving at least 'min_tokens' of 'token'.
   #[payable]
   
   usage:
-  > swap swap_near_to_token_exact_in { token: AccountId, min_tokens: U128 }`;
+  > swap swap_near_to_token_exact_in { token: AccountId, min_tokens: U128 }
+  `;
   
   swap_near_to_token_exact_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, min_tokens: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, min_tokens: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_near_to_token_exact_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -412,30 +384,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap swap_near_to_token_exact_in_xfr { token: AccountId, min_tokens: U128, recipient: AccountId }`;
+  > swap swap_near_to_token_exact_in_xfr { token: AccountId, min_tokens: U128, recipient: AccountId }
+  `;
   
   swap_near_to_token_exact_in_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, min_tokens: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, min_tokens: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_near_to_token_exact_in_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -452,30 +421,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap swap_near_to_token_exact_out { token: AccountId, tokens_out: U128 }`;
+  > swap swap_near_to_token_exact_out { token: AccountId, tokens_out: U128 }
+  `;
   
   swap_near_to_token_exact_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_out: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_out: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_near_to_token_exact_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -490,30 +456,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap swap_near_to_token_exact_out_xfr { token: AccountId, tokens_out: U128, recipient: AccountId }`;
+  > swap swap_near_to_token_exact_out_xfr { token: AccountId, tokens_out: U128, recipient: AccountId }
+  `;
   
   swap_near_to_token_exact_out_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_out: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_out: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_near_to_token_exact_out_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -531,30 +494,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap swap_token_to_near_exact_in { token: AccountId, tokens_paid: U128, min_ynear: U128 }`;
+  > swap swap_token_to_near_exact_in { token: AccountId, tokens_paid: U128, min_ynear: U128 }
+  `;
   
   swap_token_to_near_exact_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_paid: U128, min_ynear: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_paid: U128, min_ynear: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_token_to_near_exact_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -569,30 +529,27 @@ export class ContractAPI {
   #[payable]
   
   usage:
-  > swap swap_token_to_near_exact_in_xfr { token: AccountId, tokens_paid: U128, min_ynear: U128, recipient: AccountId }`;
+  > swap swap_token_to_near_exact_in_xfr { token: AccountId, tokens_paid: U128, min_ynear: U128, recipient: AccountId }
+  `;
   
   swap_token_to_near_exact_in_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //function is #payable, --amount option is required
-    //IMPORTANT! manually check if the function requires YOCTONEAR and change the 2nd param to 'Y'
-    a.requireOptionWithAmount(commonCliOptions.amount,'N'); //contract require an amount in expressed in N=NEARS, Y=YoctoNears
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_paid: U128, min_ynear: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_paid: U128, min_ynear: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_token_to_near_exact_in_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -610,27 +567,25 @@ export class ContractAPI {
    TODO: Transaction will panic if a caller doesn't provide enough allowance.
   
   usage:
-  > swap swap_token_to_near_exact_out { token: AccountId, ynear_out: U128, max_tokens: U128 }`;
+  > swap swap_token_to_near_exact_out { token: AccountId, ynear_out: U128, max_tokens: U128 }
+  `;
   
   swap_token_to_near_exact_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, ynear_out: U128, max_tokens: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, ynear_out: U128, max_tokens: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_token_to_near_exact_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -644,27 +599,25 @@ export class ContractAPI {
    who will receive the tokens after the swap.
   
   usage:
-  > swap swap_token_to_near_exact_out_xfr { token: AccountId, ynear_out: U128, max_tokens: U128, recipient: AccountId }`;
+  > swap swap_token_to_near_exact_out_xfr { token: AccountId, ynear_out: U128, max_tokens: U128, recipient: AccountId }
+  `;
   
   swap_token_to_near_exact_out_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, ynear_out: U128, max_tokens: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, ynear_out: U128, max_tokens: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_token_to_near_exact_out_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -682,27 +635,25 @@ export class ContractAPI {
    TODO: Transaction will panic if a caller doesn't provide enough allowance.
   
   usage:
-  > swap swap_tokens_exact_in { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128 }`;
+  > swap swap_tokens_exact_in { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128 }
+  `;
   
   swap_tokens_exact_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128 }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_tokens_exact_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -716,27 +667,25 @@ export class ContractAPI {
    who will receive the tokens after the swap.
   
   usage:
-  > swap swap_tokens_exact_in_xfr { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128, recipient: AccountId }`;
+  > swap swap_tokens_exact_in_xfr { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128, recipient: AccountId }
+  `;
   
   swap_tokens_exact_in_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_tokens_exact_in_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -754,27 +703,25 @@ export class ContractAPI {
    TODO: Transaction will panic if a caller doesn't provide enough allowance.
   
   usage:
-  > swap swap_tokens_exact_out { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128 }`;
+  > swap swap_tokens_exact_out { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128 }
+  `;
   
   swap_tokens_exact_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128 }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_tokens_exact_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -788,27 +735,25 @@ export class ContractAPI {
    who will receive the tokens after the swap.
   
   usage:
-  > swap swap_tokens_exact_out_xfr { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128, recipient: AccountId }`;
+  > swap swap_tokens_exact_out_xfr { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128, recipient: AccountId }
+  `;
   
   swap_tokens_exact_out_xfr(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128, recipient: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128, recipient: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "swap_tokens_exact_out_xfr",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -822,27 +767,25 @@ export class ContractAPI {
    assets
   
   usage:
-  > swap price_near_to_token_in { token: AccountId, ynear_in: U128 }`;
+  > swap price_near_to_token_in { token: AccountId, ynear_in: U128 }
+  `;
   
   price_near_to_token_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, ynear_in: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, ynear_in: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_near_to_token_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -856,27 +799,25 @@ export class ContractAPI {
    'tokens_out' of 'token'
   
   usage:
-  > swap price_near_to_token_out { token: AccountId, tokens_out: U128 }`;
+  > swap price_near_to_token_out { token: AccountId, tokens_out: U128 }
+  `;
   
   price_near_to_token_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_out: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_out: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_near_to_token_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -889,27 +830,25 @@ export class ContractAPI {
    Calculates amount of NEAR user will recieve when swapping 'tokens_in' for NEAR.
   
   usage:
-  > swap price_token_to_near_in { token: AccountId, tokens_in: U128 }`;
+  > swap price_token_to_near_in { token: AccountId, tokens_in: U128 }
+  `;
   
   price_token_to_near_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, tokens_in: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, tokens_in: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_token_to_near_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -923,27 +862,25 @@ export class ContractAPI {
    'tokens_out' of 'tokens'
   
   usage:
-  > swap price_token_to_near_out { token: AccountId, ynear_out: U128 }`;
+  > swap price_token_to_near_out { token: AccountId, ynear_out: U128 }
+  `;
   
   price_token_to_near_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId, ynear_out: U128 }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, ynear_out: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_token_to_near_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -956,27 +893,25 @@ export class ContractAPI {
    Calculates amount of tokens 'to' user will receive when swapping 'tokens_in' of 'from'
   
   usage:
-  > swap price_token_to_token_in { from: AccountId, to: AccountId, tokens_in: U128 }`;
+  > swap price_token_to_token_in { from: AccountId, to: AccountId, tokens_in: U128 }
+  `;
   
   price_token_to_token_in(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, tokens_in: U128 }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, tokens_in: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_token_to_token_in",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -990,27 +925,25 @@ export class ContractAPI {
    'tokens_out' of tokens 'to'
   
   usage:
-  > swap price_token_to_token_out { from: AccountId, to: AccountId, tokens_out: U128 }`;
+  > swap price_token_to_token_out { from: AccountId, to: AccountId, tokens_out: U128 }
+  `;
   
   price_token_to_token_out(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ from: AccountId, to: AccountId, tokens_out: U128 }")
+    const fnJSONparams = a.consumeJSON("{ from: AccountId, to: AccountId, tokens_out: U128 }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "view",
-      contract,
+      options.contractName.value,
       "price_token_to_token_out",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line
@@ -1022,27 +955,25 @@ export class ContractAPI {
   add_liquidity_transfer_callback_help =`
   
   usage:
-  > swap add_liquidity_transfer_callback { token: AccountId }`;
+  > swap add_liquidity_transfer_callback { token: AccountId }
+  `;
   
   add_liquidity_transfer_callback(a /*:CommandLineArgs*/) {
     
-    //consume contract name from options if present
-    const contract = a.consumeOption(commonCliOptions.contractName) || defaultContractName
-    
     //--these are some examples on how to consume arguments
-    //const argument = a.consumeString("api argument")
-    //const argumentJson = a.consumeJSON("JSON argument")
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
     
     //get fn arguments as JSON
-    const params = a.consumeJSON("{ token: AccountId }")
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
     
-    a.noMoreArgs() //end of arguments
+    a.noMoreArgs() // no more positional args should remain
     
     const nearCliArgs = [
       "call",
-      contract,
+      options.contractName.value,
       "add_liquidity_transfer_callback",
-      JSON.stringify(params)
+      fnJSONparams,
     ]
     
     a.addOptionsTo(nearCliArgs); //add any other --options found the command line

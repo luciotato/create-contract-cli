@@ -137,7 +137,7 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         }
 
         o.writeLine("usage:")
-        o.write("> " + o.data.nickname + " " + this.name + " " + argsDecl)
+        o.writeLine("> " + o.data.nickname + " " + this.name + " " + argsDecl)
 
         //Type Annotation -- remove
         /*let hasReturnValue = false;
