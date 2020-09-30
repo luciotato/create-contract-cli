@@ -1,4 +1,10 @@
+#IDES
+.vs
+
+#products
 dist
 out
+
+#packages
 node_modules
 
