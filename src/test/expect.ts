@@ -32,19 +32,20 @@ function isObject(object) {
     return object != null && typeof object === 'object';
 }
 
+let savedTitle: string;
 let saveReceived: any = undefined;
 const red = '\x1b[91m'
 const yellow = '\x1b[93m'
 const green = '\x1b[32m'
 const normal = '\x1b[39;49m'
 
-function expect(received:any) {
+function expect(title:string, received:any) {
+    savedTitle = title || ""
     saveReceived = received
     return expect.prototype
 }
-expect.prototype.toBe = function (expected, message) {
+expect.prototype.toBe = function (expected:any) {
     let eq = false;
-    message = message? message : ""
     if (isObject(expected) && isObject(saveReceived)) {
         eq = deepEqual(expected, saveReceived)
     }
@@ -52,12 +53,12 @@ expect.prototype.toBe = function (expected, message) {
         eq = (expected == saveReceived)
     }
     if (!eq) {
-        console.log(red+"expect failed: " + message +normal);
-        console.log("      received: " + inspect(saveReceived, { depth: 10 }));
-        console.log("      expected: " + inspect(expected, { depth: 10 }));
+        console.log(red+"ERR: expect failed: " + savedTitle +normal);
+        console.log("      received: " + yellow+inspect(saveReceived, { depth: 10 })+normal);
+        console.log("      expected: " + green+inspect(expected, { depth: 10 })+normal);
     }
     else {
-        console.log(green+"OK. " + message + normal);
+        console.log(green+"OK: "+normal+savedTitle);
     }
     return expect.prototype
 }

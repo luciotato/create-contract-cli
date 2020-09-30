@@ -43,11 +43,15 @@ export function spawnNearCli(args: string[]) {
     if (execResult.stdout) {
         //console.log("stdout:")
         //console.log("-*-")
-        process.stdout.write(execResult.stdout)
+        //fixes for  near-cli output
+        let stdo=execResult.stdout.toString()
+        stdo = stdo.replace(/&#x2F;/g,"/")
+        stdo = stdo.replace(/&#39;/g,"'")
+        process.stdout.write(stdo);
         //console.log("-*-")
         //show large numbers converted to near
         //get all numbers where number.lenght>=20
-        let numbersFound = execResult.stdout.toString().match(/\d+/g)
+        let numbersFound = stdo.match(/\d+/g);
         if (numbersFound) {
             let largeNumbers = numbersFound.filter((value) => value.length >= 20)
             if (largeNumbers.length) {

@@ -17,7 +17,7 @@ function testThis(rustCode:string, expected:string[]) {
         lexer.advance()
     }
 
-    expect(tokens).toBe(expected)
+    expect("tokenizer",tokens).toBe(expected)
 
 }
 

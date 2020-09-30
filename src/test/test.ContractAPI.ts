@@ -57,8 +57,9 @@ export function testFor(rustFile: string, expectedFile:string, data: dataInfo) {
 
     if (generated.toString()!==expected.toString()){
         console.log(color.red+"FAILED "+color.normal)
-        console.log("expected: "+expectedFile)
         console.log("generated: "+generatedFile)
+        console.log("expected: "+expectedFile)
+        console.log(" > meld "+generatedFile+" "+expectedFile)
     }
     else {
         console.log(TESTNAME+" Test "+color.green+"OK"+color.normal)

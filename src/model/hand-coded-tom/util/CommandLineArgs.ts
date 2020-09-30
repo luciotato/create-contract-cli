@@ -368,52 +368,45 @@ export class CommandLineArgs {
      * @param requiredUnits N|Y unit in which the amount is required
      */
     convertAmount(value: string, requiredUnits: "N" | "Y", name:string) {
-
-        let result: string
-        name=color.yellow+name+color.normal
-
-        if (value.length > 1 && value.endsWith("N")) { //NEARS
-            result = value.slice(0, -1) //remove N
-            result = result.replace("_", "") //allow 100_000_000, ignore _
-            if (requiredUnits == "N") return result; //already in Nears
-
-            //Yoctos required -- convert to yoctos
-            let parts = result.split(".")
-            if (parts.length > 2) {
-                color.logErr(name+": invalid amount format, too many decimal points: " + value)
-                process.exit(1)
+        let result = value;
+        name = color.yellow + name + color.normal;
+        result = result.replace("_", ""); //allow 100_000_000, ignore _
+        
+        if (result.endsWith("Y")) { //value ends in "Y"OCTOS
+        
+            if (result.includes(".")) {
+                color.logErr(name + ": invalid amount format, YOCTOS can't have decimals: " + value);
+                process.exit(1);
             }
-            if (parts.length == 1) parts.push("") //.0
-            let decimalString = parts[1].padEnd(24, '0')
-            result = parts[0] + "" + decimalString // +""+ is for making sure + means concat here
-            return result
-
-        }
-        else if (value.length > 1 && value.endsWith("Y")) { //YOCTOS
-
-            if (value.includes(".")) {
-                color.logErr(name+": invalid amount format, YOCTOS can't have decimals: " + value)
-                process.exit(1)
-            }
-
-            result = value.slice(0, -1) // remove Y
-            result = result.replace("_", "") //allow 100_000_000, ignore _
-            if (requiredUnits == "Y") return result; //already in Yoctos
-
+            result = result.slice(0, -1); // remove Y
+            if (requiredUnits == "Y")
+                return result; //already in Yoctos
             //NEARS required -- convert to NEARS
             if (result.length <= 24) {
-                result = "0." + result.padStart(24, '0').slice(-24)
+                result = "0." + result.padStart(24, '0').slice(-24);
             }
             else {
                 //insert decimal point at 1e24
-                result = result.slice(0, result.length - 24) + "." + result.slice(-24)
+                result = result.slice(0, result.length - 24) + "." + result.slice(-24);
             }
-            return result
+            return result;
         }
-        else {
-            color.logErr(name+": invalid amount format, expecting [0-9.](Y|N). Received: " + value)
-            console.log("valid examples are: 0.5N | 100N | 100_000_000Y")
-            process.exit(1)
+        else { //other, assume amount in NEARS (default)
+ 
+            if (result.endsWith("N")) result = result.slice(0, -1); //remove N
+            if (requiredUnits == "N")
+                return result; //already in Nears
+            //Yoctos required -- convert to yoctos
+            let parts = result.split(".");
+            if (parts.length > 2) {
+                color.logErr(name + ": invalid amount format, too many decimal points: " + value);
+                process.exit(1);
+            }
+            if (parts.length == 1)
+                parts.push(""); //.0
+            let decimalString = parts[1].padEnd(24, '0');
+            result = parts[0] + "" + decimalString; // +""+ is for making sure + means concat here
+            return result;
         }
     }
 
@@ -495,12 +488,11 @@ export class CommandLineArgs {
             if (propValue.endsWith(",")) propValue = propValue.slice(0, propValue.length - 1)
             //check if it's a number
             if (propValue.slice(0,1).match(/[0-9]/)) { //starts with a digit
-                if (propValue.endsWith("N")) { //amount in nears
-                    propValue= this.convertAmount(propValue,"Y",propName) //convert to yocto
+                if (propValue.endsWith("Y")) { //amount in yoctos
+                    propValue = this.convertAmount(propValue, "Y", propName); //process 
                 }
-                else if (propValue.endsWith("Y")) { //amount in yocto
-                    propValue= propValue.slice(0,-1)
-                    propValue= propValue.replace("_", "") // just remove _'s 
+                else { //default: amount expressed in nears
+                    propValue = this.convertAmount(propValue, "Y", propName); //convert to Yoctos
                 }
             }
             //store 
