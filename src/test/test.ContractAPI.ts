@@ -39,7 +39,7 @@ export function testFor(rustFile: string, expectedFile:string, data: dataInfo) {
 
     console.log("writing temp files in " +path.join(process.cwd(), outPath))
 
-    const generatedFile= path.join(outPath, data.nickname+"-contract-API.js")
+    const generatedFile= path.join(outPath, data.nickname+"-API.js")
 
     //produce
     try {
@@ -83,4 +83,26 @@ export function testContractAPIProducer() {
         {nickname: "tom", defaultContractName: "tomstaker.stakehouse.betanet" }
     )
 
+    logger.setDebugLevel(0)
+    //logger.setDebugLevel(1,500)
+
+    testFor('./res/test/rust/lockup/src/lib.rs', "./res/test/expected/lockup-API.js",
+        {nickname: "lockup", defaultContractName: "testcontract.testnet" }
+    )
+
+    testFor('./res/test/rust/multisig/src/lib.rs', "./res/test/expected/multisig-API.js",
+        {nickname: "multisig", defaultContractName: "testcontract.testnet" }
+    )
+
+    testFor('./res/test/rust/staking-pool-factory/src/lib.rs', "./res/test/expected/factory-API.js",
+        {nickname: "factory", defaultContractName: "testcontract.testnet" }
+    )
+
+    testFor('./res/test/rust/voting/src/lib.rs', "./res/test/expected/vote-API.js",
+        {nickname: "vote", defaultContractName: "testcontract.testnet" }
+    )
+
+    testFor('./res/test/rust/whitelist/src/lib.rs', "./res/test/expected/whitelist-API.js",
+        {nickname: "whitelist", defaultContractName: "testcontract.testnet" }
+    )
 }

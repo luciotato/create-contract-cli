@@ -1,2 +1,0 @@
-node dist/main/main res/test/rust/NEARSwap swap -c nearswap.testnet -o out
-

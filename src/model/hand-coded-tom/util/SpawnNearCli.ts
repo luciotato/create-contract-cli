@@ -38,22 +38,21 @@ export function spawnNearCli(args: string[]) {
         console.log(execResult.error)
         process.exit(1)
     }
-
-
+    let stdo = "";
     if (execResult.stdout) {
         //console.log("stdout:")
         //console.log("-*-")
         //fixes for  near-cli output
-        let stdo=execResult.stdout.toString()
-        stdo = stdo.replace(/&#x2F;/g,"/")
-        stdo = stdo.replace(/&#39;/g,"'")
+        stdo = execResult.stdout.toString()
+        stdo = stdo.replace(/&#x2F;/g, "/")
+        stdo = stdo.replace(/&#39;/g, "'")
         process.stdout.write(stdo);
         //console.log("-*-")
         //show large numbers converted to near
         //get all numbers where number.lenght>=20
         let numbersFound = stdo.match(/\d+/g);
         if (numbersFound) {
-            let largeNumbers = numbersFound.filter((value) => value.length >= 20)
+            let largeNumbers = numbersFound.filter((value) => value.length >= 12);
             if (largeNumbers.length) {
                 //deduplicate
                 let numbers = [...new Set(largeNumbers)]
@@ -63,7 +62,7 @@ export function spawnNearCli(args: string[]) {
                     if (num.length >= 20) {
                         let near = num;
                         if (near.length < 25) near = near.padStart(25, '0');
-                        near = near.slice(0, near.length - 24) + "." + near.slice(near.length - 24) + " NEAR"
+                        near = near.slice(0, -24) + "." + near.slice(-24) + " NEAR"
                         //show reference line
                         console.log(num.padStart(36, ' ') + " => " + near.padStart(38, ' '))
                     }
@@ -82,6 +81,21 @@ export function spawnNearCli(args: string[]) {
     if (execResult.status != 0) {
         process.exit(execResult.status as number);
     }
+    return stdo;
+}
+//# sourceMappingURL=SpawnNearCli.js.map
 
-    return execResult.stdout;
+export function lastNumber(stdo) {
+    let items = stdo.split("\n")
+    if (items.length < 2) return "";
+    return items[items.length - 2].replace(/'/g, "")
+}
+
+export function thsep(stdonum) {
+    if (stdonum && stdonum.length > 3) {
+        for (let n = stdonum.length - 3; n >= 1; n -= 3) {
+            stdonum = stdonum.slice(0, n) + "_" + stdonum.slice(n )
+        }
+    }
+    return stdonum;
 }

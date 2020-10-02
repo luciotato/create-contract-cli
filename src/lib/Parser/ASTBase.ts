@@ -9,8 +9,9 @@ import { ControlledError } from '../util/ControlledError'
 
 import { logger } from '../util/logger'
 import { Parser } from './Parser'
-import { TypeAnnotation} from './Grammar'
+import { ArrayLiteral, TypeAnnotation} from './Grammar'
 import { EOL } from 'os'
+import { options } from '../../main/CLIOptions'
 
 export class ASTBase {
 
@@ -32,6 +33,7 @@ export class ASTBase {
     isPublic: boolean = false
     isMut: boolean = false
     isRef: boolean
+    decorators: string[]
     nativeSuffixes: ASTBase // to_vec, as_u128, .map, .collect etc.
 
     constructor(parent, name) {
@@ -511,7 +513,22 @@ export class ASTBase {
             this.owner.lexer.advance()
         }
     }
+    optDecorators() {
+        //manage decorators like #[callback]
+        if (this.owner.lexer.filename.includes("lockup") && this.owner.lexer.token.line>50){
+            console.log("DEBUG")
+            logger.setDebugLevel(1)
+        }
 
+        if (this.owner.lexer.token.value == '#' && this.owner.lexer.nextToken().value=="[" ) {
+            this.owner.lexer.advance()
+            this.owner.lexer.advance()
+            if (!this.decorators) this.decorators=[]
+            this.decorators.push(this.owner.lexer.token.value)
+            this.req("]")
+        }
+    }
+    
 
     // ---------------------------
     /**

@@ -1,1 +1,4 @@
-node dist\model\hand-coded-tom\tom stake { amount: 100N }
+
+node dist/main/main res/test/rust/NEARSwap swap -c nearswap.testnet -o out
+
+node dist/model/hand-coded-tom/tom stake { amount: 100N }

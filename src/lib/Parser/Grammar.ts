@@ -1112,7 +1112,8 @@ export class VariableDecl extends ASTBase {
         this.optPub()
         this.optRef()
         this.optMut()
-
+        this.optDecorators()
+        
         this.name = this.reqToken(TokenCode.WORD)
         this.lock()
 
