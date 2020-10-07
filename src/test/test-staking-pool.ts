@@ -90,20 +90,6 @@ try {
 color.greenOK()
 
 const contractAccountFile = path.join(basedir, "neardev", "dev-account");
-let contractAccount: string;
-//get test account where `near dev-deploy` deployed the contract (if already run)
-try {
-    contractAccount = fs.readFileSync(contractAccountFile).toString();
-}
-catch {
-    contractAccount = undefined;
-}
-
-if (contractAccount) {
-    // delete account
-    const result = near("delete", [contractAccount, "lucio.testnet"], { ignoreExitStatus: true })
-    if (result == 0) fs.unlinkSync(contractAccountFile) //rm file
-}
 
 const rustDir = path.join(basedir, "res", "test", "rust")
 const wasmFile = path.join(rustDir, "staking-pool", "staking_pool.wasm")
@@ -111,7 +97,7 @@ const wasmFile = path.join(rustDir, "staking-pool", "staking_pool.wasm")
 near("dev-deploy", [wasmFile])
 
 //get contract account
-contractAccount = fs.readFileSync(contractAccountFile).toString();
+const contractAccount = fs.readFileSync(contractAccountFile).toString();
 near("state", [contractAccount])
 
 //create a user account different from the contract account
@@ -133,27 +119,16 @@ cli("get_owner_id")
 
 cli("get_reward_fee_fraction")
 
-cli("deposit -am 1")
+//cli("deposit -am 1")
 
-cli("deposit -am 0.5")
+cli("deposit_and_stake -am 0.1")
+cli("deposit_and_stake -am 0.2")
+cli("deposit_and_stake -am 0.3")
+cli("deposit_and_stake -am 0.5")
 
-cli("withdraw_all")
 
-//-------------
-// cleanup
-//-------------
-{
-    // delete user account
-    near("delete", [userAccount, contractAccount], { ignoreExitStatus: true })
-    // delete contract account
-    const result = near("delete", [contractAccount, "lucio.testnet"], { ignoreExitStatus: true })
-    if (result == 0) fs.unlinkSync(contractAccountFile) //rm file
-}
 
-//test configure contractName & accountId
-cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount.near")
-cli("--info")
-cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`)
-cli("--info")
+//cli("withdraw_all")
+cli("ping")
 
 console.log("---------- END TESTNET DEPLOY TESTS ---------")

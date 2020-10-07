@@ -90,15 +90,14 @@ export function spawnNearCli(args:(string|any)[], options:any):string {
 
     // show numbers in yoctos converted to more readable units
     // get all numbers where number.lenght>=20
-    const numbersFound = stdo.match(/.*? \d{14,50}/g)
+    const numbersFound = stdo.replace(/'/g," ").replace(/"/g," ").match(/.*?['" ]\d{14,50}/g)
     if (numbersFound) {
         // deduplicate
         const numbers = [...new Set(numbersFound)]
         // show conversion to NEARs
         console.log("amounts denomination:")
         for (const text of numbers) {
-
-            const parts=text.replace("'"," ").replace('"'," ").split(" ")
+            const parts=text.split(" ")
             const num=parts.pop()||""
             if (num.length >= 20) {
                 // show reference line

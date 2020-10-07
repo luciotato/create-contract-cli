@@ -47,7 +47,7 @@ export class ExtensionAPI extends ContractAPI {
     `
     state(a: CommandLineArgs): void {
         a.noMoreArgs()
-        nearCli.spawnNearCli(["state"], options)
+        nearCli.spawnNearCli(["state", cliConfig.contractAccount], options)
     }
 
     // deploy extension example

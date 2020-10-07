@@ -4,10 +4,10 @@ export const red = '\x1b[91m'
 export const yellow = '\x1b[93m'
 export const green = '\x1b[32m'
 
-export function logErr(text: string) {
+export function logErr(text: string): void {
     console.error(red + "ERR: " + normal + text)
 }
 
-export function greenOK() {
+export function greenOK(): void {
     console.log(green + "OK" + normal)
 }

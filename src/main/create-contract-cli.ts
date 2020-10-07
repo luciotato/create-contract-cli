@@ -31,8 +31,8 @@ export function parseAndProduceAPIfor(rustFile: string, data: dataInfo, outFile:
         console.log(ex.message + color.normal)
         color.logErr("parsing " + rustFile)
         console.log(color.green + "Workarounds:" + color.normal)
-        console.log("* Simplify yout lib.rs (move to util.rs or internal.rs) [fast]")
-        console.log("* You can report an issue on github.com/luciotato/create-contract-cli/issues [slow]" + color.normal)
+        console.log("* [fast] Simplify yout lib.rs (move non pub fns to internal.rs or util.rs)")
+        console.log("* [slow] Report this issue at github.com/luciotato/create-contract-cli/issues - include your lib.rs" + color.normal)
         if (logger.debugLevel) {
             console.log(ex)
             throw (ex)
@@ -186,7 +186,7 @@ function main() {
     }
     color.greenOK()
 
-    if (options.nolink) {
+    if (options.nolink.value) {
         color.action(`${path.join(projectDir,nickname)} created`)
         color.greenOK()
     }
@@ -205,8 +205,10 @@ function main() {
         }
 
         console.log()
-        console.log(color.yellow + "WARN: nmp link may report ERR:code EEXISTS. You can ignore that." + color.normal)
-        console.log()
+        if (execResult.stderr?.toString().includes("EEXISTS")){
+            console.log(color.yellow + "WARN: nmp link may report ERR:code EEXISTS. You can ignore that." + color.normal)
+            console.log()
+        }
         console.log("now type:")
         console.log(` > ${nickname} --help`)
     }

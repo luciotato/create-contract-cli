@@ -5,11 +5,11 @@ export const yellow = '\x1b[93m'
 export const green = '\x1b[32m'
 
 export function action(msg:string) :void {
-    process.stdout.write(msg.padEnd(70,"."))
+    process.stdout.write(msg.padEnd(60,"."))
 }
 export function logErr(text: string) :void {
     console.error(red + "ERR: " + text + normal)
 }
 export function greenOK() :void {
-    console.log(green + " :OK" + normal)
+    console.log(green + ": OK" + normal)
 }
