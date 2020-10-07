@@ -1,6 +1,8 @@
-import * as fs from "fs"
-import * as path from "path"
-import { execSync } from "child_process"
+const fs = require("fs")
+const path= require("path")
+const child_process= require("child_process")
+
+const execSync=child_process.execSync
 
 function fromDir (startPath, filter, callback) {
     // console.log('Starting from dir '+startPath+'/');

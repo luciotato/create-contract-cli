@@ -11,7 +11,6 @@ const Parser_1 = require("../lib/Parser/Parser");
 const ContractAPI_producer_1 = require("./ContractAPI-producer");
 const CommandLineArgs_1 = require("../lib/util/CommandLineArgs");
 const CLIOptions_1 = require("./CLIOptions");
-const url_1 = require("url");
 // produce ContractAPI by parsing cotract/src/lib.rs
 function parseAndProduceAPIfor(rustFile, data, outFile) {
     logger.setDebugLevel(0);
@@ -126,10 +125,13 @@ function main() {
     };
     parseAndProduceAPIfor(rustSourceFile, data, generatedContractAPI);
     // add auxiliary files
-    // console.log("Current dir: " +process.cwd())
-    // console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
-    // @ts-ignore -- import.meta.url
-    let basedir = path.join(path.dirname(new url_1.URL(import.meta.url).pathname), "..", "..");
+    //console.log("Current dir: " +process.cwd())
+    //console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
+    let basedir = path.join(__dirname, "..", "..");
+    //console.log(__dirname);
+    // Prints: /Users/mjr
+    //console.log(path.dirname(__filename));
+    // Prints: /Users/mjr    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
     if (basedir.startsWith("\\"))
         basedir = basedir.slice(1); // windows compat remove extra "\"
     basedir = path.relative(process.cwd(), basedir);
@@ -152,11 +154,10 @@ function main() {
         //create CLIConfig.js
         const cliConfigPath = path.join(projectDir, "CLIConfig.js");
         const text = `
-        export const cliConfig =
-            {
+        module.exports = {
                 userAccount: "${CLIOptions_1.options.accountId.value}",
                 contractAccount: "${CLIOptions_1.options.contractName.value}"
-            }
+        }
         `;
         fs.writeFileSync(cliConfigPath, text);
         //copy common files - main dir

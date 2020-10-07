@@ -133,10 +133,13 @@ function main() {
     parseAndProduceAPIfor(rustSourceFile, data, generatedContractAPI)
 
     // add auxiliary files
-    // console.log("Current dir: " +process.cwd())
-    // console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
-    // @ts-ignore -- import.meta.url
-    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
+    //console.log("Current dir: " +process.cwd())
+    //console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
+    let basedir = path.join(__dirname,"..","..")
+    //console.log(__dirname);
+    // Prints: /Users/mjr
+    //console.log(path.dirname(__filename));
+    // Prints: /Users/mjr    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
     if (basedir.startsWith("\\")) basedir = basedir.slice(1) // windows compat remove extra "\"
     basedir=path.relative(process.cwd(),basedir)
     
@@ -163,11 +166,10 @@ function main() {
         //create CLIConfig.js
         const cliConfigPath = path.join(projectDir, "CLIConfig.js")
         const text = `
-        export const cliConfig =
-            {
+        module.exports = {
                 userAccount: "${options.accountId.value}",
                 contractAccount: "${options.contractName.value}"
-            }
+        }
         `;
         fs.writeFileSync(cliConfigPath, text)
 
