@@ -2,7 +2,6 @@
 .vs
 
 #products
-dist
 out
 #created by near dev-deploy
 neardev
@@ -10,3 +9,4 @@ neardev
 #packages
 node_modules
 
+#note: /dist is included so the user don't has to npm instal/build to use it
