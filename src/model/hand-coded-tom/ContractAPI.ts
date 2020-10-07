@@ -1,7 +1,7 @@
 import * as nearCli from "./util/SpawnNearCli.js"
 import { CommandLineArgs } from "./util/CommandLineArgs.js"
 import { options } from "./CLIOptions.js"
-import { config } from "./config.js"
+import { cliConfig } from "./CLIConfig.js"
 
 // name of this script
 export const nickname = "tom"
@@ -10,27 +10,29 @@ export const nickname = "tom"
 // get parameters by consuming from CommandLineParser
 export class ContractAPI {
     // this.view helper function
-    view(command:string, fnJSONparams?:any) {
-        return nearCli.view(config.contractAccount, command, fnJSONparams, options)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    view(command:string, fnJSONparams?:any): string {
+        return nearCli.view(cliConfig.contractAccount, command, fnJSONparams, options)
     }
-
     // this.call helper function
-    call(command:string, fnJSONparams?:any) {
-        return nearCli.call(config.contractAccount, command, fnJSONparams, options)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    call(command:string, fnJSONparams?:any): string {
+        return nearCli.call(cliConfig.contractAccount, command, fnJSONparams, options)
     }
 
     deploy_help = `
-    deploy a WASM file into the account ${config.contractAccount} and call init function
+    deploy a WASM file into the account ${cliConfig.contractAccount} and call init function
     
     usage:
     > ${nickname} deploy [--account xx] code.WASM new { owner_id:string, stake_public_key:string, reward_fee_fraction: { numerator:x, denominator:y } }
     
     example:
     > ${nickname} deploy code.WASM new { owner_id:lucio.near, stake_public_key:"7fa387483934", reward_fee_fraction: { numerator:8, denominator:100 } }
-    willl deploy code.WASM at ${config.contractAccount} and then initialize it
+    willl deploy code.WASM at ${cliConfig.contractAccount} and then initialize it
     `;
 
-    deploy(a: CommandLineArgs) {
+    deploy(a: CommandLineArgs): void {
+
         const wasmFile = a.consumeString("wasmFile")
 
         a.optionalString("new") // can be omitted
@@ -39,14 +41,10 @@ export class ContractAPI {
 
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'deploy',
-            config.contractAccount,
-            wasmFile,
-            "new", JSON.stringify(initArgs)
-        ]
-
-        nearCli.spawnNearCli(nearCliArgs, options)
+        nearCli.spawnNearCli( [
+            'deploy',cliConfig.contractAccount, wasmFile,
+            "new", initArgs
+        ], options)
     }
 
     ping_help = `
@@ -55,7 +53,7 @@ export class ContractAPI {
     usage:
     > ${nickname} ping `;
 
-    ping(a: CommandLineArgs) {
+    ping(a: CommandLineArgs) :void{
         a.noMoreArgs() // end of arguments
 
         this.call("ping")
@@ -72,7 +70,7 @@ export class ContractAPI {
     will get 10 accounts starting from 0
     `;
 
-    get_accounts(a: CommandLineArgs) {
+    get_accounts(a: CommandLineArgs) :string{
         const params = a.consumeJSON("{ from_index:number, limit:number }")
 
         a.noMoreArgs()
@@ -92,7 +90,7 @@ export class ContractAPI {
     
     `;
 
-    deposit(a: CommandLineArgs) {
+    deposit(a: CommandLineArgs) :void{
         a.requireOptionWithAmount(options.amount, "N") // require --amount, in Nears
 
         a.noMoreArgs()
@@ -112,7 +110,7 @@ will stake 10N from the unstaked balance of myaccount.betanet
 
 `;
 
-    stake(a: CommandLineArgs) {
+    stake(a: CommandLineArgs) :void{
         const stakeJSONargs = a.consumeJSON("{ amount: x }")
 
         a.noMoreArgs()
@@ -120,19 +118,19 @@ will stake 10N from the unstaked balance of myaccount.betanet
         this.call("stake", stakeJSONargs)
     }
 
-    get_total_staked_balance(a: CommandLineArgs) {
+    get_total_staked_balance(a: CommandLineArgs) :string{
         a.noMoreArgs()
 
         return this.view("get_total_staked_balance")
     }
 
-    get_owner_id(a: CommandLineArgs) {
+    get_owner_id(a: CommandLineArgs) : string{
         a.noMoreArgs()
 
         return this.view("get_owner_id")
     }
 
-    get_staking_key(a: CommandLineArgs) {
+    get_staking_key(a: CommandLineArgs) :string{
         a.noMoreArgs()
 
         return this.view("get_staking_key")

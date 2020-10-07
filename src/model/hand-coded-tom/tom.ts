@@ -1,26 +1,31 @@
 #!/bin/node
-import { config } from "./config.js"
+import { cliConfig } from "./CLIConfig.js"
 import { nickname } from "./ContractAPI.js"
 import { options } from "./CLIOptions.js"
-import { CommandLineArgs, ShowHelpPage } from "./util/CommandLineArgs.js"
+import { CommandLineArgs, OptionDeclaration, ShowHelpPage } from "./util/CommandLineArgs.js"
 import * as color from "./util/color.js"
-import * as nearCli from "./util/SpawnNearCli.js"
 import { ExtensionAPI } from "./ExtensionAPI.js"
+import { saveConfig } from "./util/saveConfig.js"
 
 // default accountId
-options.accountId.value = config.userAccount
+options.accountId.value = cliConfig.userAccount
 
 // process command line args
-const args = new CommandLineArgs(options)
+const args = new CommandLineArgs(options as unknown as Record<string,OptionDeclaration>)
 
 // command is the 1st positional argument
 const command = args.getCommand()
 
-// Show info if requested
+// Show config info if requested
+// Set config if requested
+if (options.cliConfig.value) {
+    saveConfig(options.accountId.value, options.contractName.value)
+    process.exit(0)
+}
 if (options.info.value) {
     console.log(`config.js:`)
-    console.log(`  Your account    : ${color.yellow}${config.userAccount}${color.normal}`)
-    console.log(`  Contract account: ${color.yellow}${config.contractAccount}${color.normal}`)
+    console.log(`  Your account    : ${color.yellow}${cliConfig.userAccount}${color.normal}`)
+    console.log(`  Contract account: ${color.yellow}${cliConfig.contractAccount}${color.normal}`)
     process.exit(0)
 }
 
@@ -38,6 +43,7 @@ if (options.info.value) {
 const API = new ExtensionAPI()
 
 // check the command is in the API
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (command && typeof (API as any)[command] !== "function") {
     color.logErr("unknown command " + color.yellow + command + color.normal)
     console.log(`${nickname} --help to see a list of commands`)
@@ -46,9 +52,10 @@ if (command && typeof (API as any)[command] !== "function") {
 
 // Show help if requested or if no command
 if (options.help.value || !command) {
-    ShowHelpPage(command, API, options)
+    ShowHelpPage(command, API as unknown as Record<string,unknown>, options as unknown as Record<string,OptionDeclaration>)
     process.exit(0)
 }
 
 // call the contract API function
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (API as any)[command](args)

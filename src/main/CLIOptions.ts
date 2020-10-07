@@ -1,6 +1,6 @@
 export const options = {
 
-    contractAccount: {
+    contractName: {
         shortName: "c",
         helpText: `AccountId where the contract is deployed`,
         valueType: "string",
@@ -37,6 +37,11 @@ export const options = {
         valueType: "string",
         helpText: `output path (Default .)`,
         value: "."
-    }
+    },
 
+    nolink: {
+        shortName: "nl",
+        helpText: `do not run npm link after creation`,
+        value: false
+    }
 }

@@ -1,4 +1,6 @@
 
+//create a cli
 node dist/main/main res/test/rust/NEARSwap swap -c nearswap.testnet -o out
 
+//run cli
 node dist/model/hand-coded-tom/tom stake { amount: 100N }

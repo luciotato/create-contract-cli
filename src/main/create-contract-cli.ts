@@ -16,14 +16,14 @@ type dataInfo = {
 }
 
 // produce ContractAPI by parsing cotract/src/lib.rs
-export function produceFor(rustFile: string, data: dataInfo, outFile: string): void {
+export function parseAndProduceAPIfor(rustFile: string, data: dataInfo, outFile: string): void {
     logger.setDebugLevel(0)
 
     // parse
-    process.stdout.write(`Parsing ${rustFile}:...`)
+    color.action(`Parsing ${rustFile}`)
     let parsedModule: ASTModule
     try {
-        const parser = new Parser({skipFunctionBody:true})
+        const parser = new Parser({ skipFunctionBody: true })
         // parse rust lib file
         parsedModule = parser.parseFile(rustFile)
     } catch (ex) {
@@ -43,14 +43,14 @@ export function produceFor(rustFile: string, data: dataInfo, outFile: string): v
 
     // make output path
     try {
-        mkPath.create(path.basename(outFile))
+        mkPath.create(path.dirname(outFile))
     } catch (ex) {
-        color.logErr("creating dir " + path.basename(outFile))
+        color.logErr("creating dir " + path.dirname(outFile))
         throw (ex)
     }
 
     // produce
-    process.stdout.write(`Producing ${outFile}:...`)
+    color.action(`Producing ${outFile}`)
     try {
         Producer.produce(parsedModule, data, outFile)
     } catch (ex) {
@@ -81,12 +81,13 @@ function main() {
         console.log("Parses your rust NEAR contract code interface from src/lib.rs and generates a cli-tool tailored to that contract")
         console.log()
         console.log("usage:")
-        console.log(" > create-contact-cli nickname path/to/rust-project -c contract_account_id --accountId user_acc_id ")
-        console.log("where -nickname- is the name of your new cli-tool")
+        console.log(" > create-contact-cli [nickname] path/to/rust-project -c contract_account_id --accountId user_account_id ")
+        console.log("where [nickname] is the name of your new cli-tool")
         console.log()
         console.log("Example:")
         console.log(" > create-contact-cli staky core-contracts/staker-pool -c mystaker.stakehouse.betanet --accountId lucio.testnet")
-        console.log("This wil create a new cli tool named 'staky'. Type 'staky --help' after creation")
+        console.log("This wil create a new cli tool named 'staky', to control the contract at mystaker.stakehouse.betanet")
+        console.log("Type 'staky --help' after creation")
         ShowHelpOptions(options)
         process.exit(0)
     }
@@ -106,13 +107,13 @@ function main() {
     }
 
     // both -c -acc are required
-    args.requireOptionString(options.contractAccount)
+    args.requireOptionString(options.contractName)
     args.requireOptionString(options.accountId)
 
     // create project dir
     let projectDir = `${nickname}-cli`
     if (options.output.value) projectDir = path.join(options.output.value, projectDir)
-    process.stdout.write(`Creating dir ${projectDir}/...`)
+    color.action(`Creating dir ${projectDir}`)
     try {
         mkPath.create(projectDir)
     } catch (ex) {
@@ -123,12 +124,13 @@ function main() {
 
     // create ContractAPI
     const generatedContractAPI = path.join(projectDir, "ContractAPI.js")
+    // by parsing cotract/src/lib.rs
     const data = {
         nickname: nickname,
-        defaultContractName: options.contractAccount.value,
+        defaultContractName: options.contractName.value,
         defaultUserAccountId: options.accountId.value
     }
-    produceFor(rustSourceFile, data, generatedContractAPI)
+    parseAndProduceAPIfor(rustSourceFile, data, generatedContractAPI)
 
     // add auxiliary files
     // console.log("Current dir: " +process.cwd())
@@ -136,55 +138,79 @@ function main() {
     // @ts-ignore -- import.meta.url
     let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
     if (basedir.startsWith("\\")) basedir = basedir.slice(1) // windows compat remove extra "\"
-    process.stdout.write(`Completing ${projectDir}/ from ${basedir}/...`)
+    basedir=path.relative(process.cwd(),basedir)
+    
+    color.action(`Completing from ${basedir}/model`)
     try {
         mkPath.create(path.join(projectDir, "util"))
 
+        //create package.json
         let pkg = fs.readFileSync(path.join(basedir, "res", "package.json")).toString()
         pkg = pkg.replace(/nickname/g, nickname)
         pkg = pkg.replace("${contract}", pathToRustProject.replace(/\\/g, "/")) // windows compat: c.\./
-        pkg = pkg.replace("${contractAddress}", options.contractAccount.value)
+        pkg = pkg.replace("${contractAddress}", options.contractName.value)
         fs.writeFileSync(path.join(projectDir, "package.json"), pkg)
 
+        //create cli.js
         let cli = fs.readFileSync(path.join(basedir, "res", "cli.js")).toString()
         cli = cli.replace(/nickname/g, nickname)
         fs.writeFileSync(path.join(projectDir, "cli.js"), cli)
 
+        //create ${nickname}.js
         const modelPath = path.join(basedir, "dist", "model", "hand-coded-tom")
         fs.copyFileSync(path.join(modelPath, "tom.js"), path.join(projectDir, nickname + ".js"))
 
-        let cliOptions = fs.readFileSync(path.join(modelPath, "CLIOptions.js")).toString()
-        cliOptions = cliOptions.replace("${default-contract-name}", options.contractAccount.value)
-        cliOptions = cliOptions.replace("${default-user-accountId}", options.accountId.value)
-        fs.writeFileSync(path.join(projectDir, "CLIOptions.js"), cliOptions)
+        //create CLIConfig.js
+        const cliConfigPath = path.join(projectDir, "CLIConfig.js")
+        const text = `
+        export const cliConfig =
+            {
+                userAccount: "${options.accountId.value}",
+                contractAccount: "${options.contractName.value}"
+            }
+        `;
+        fs.writeFileSync(cliConfigPath, text)
 
-        for (const file of ["SpawnNearCli", "CommandLineArgs", "color"]) {
+        //copy common files - main dir
+        for (const file of ["CLIOptions", "ExtensionAPI"]) {
+            fs.copyFileSync(path.join(modelPath, file + ".js"), path.join(projectDir, file + ".js"))
+        }
+        //copy common files - util dir
+        for (const file of ["SpawnNearCli", "CommandLineArgs", "saveConfig", "color"]) {
             fs.copyFileSync(path.join(modelPath, "util", file + ".js"), path.join(projectDir, "util", file + ".js"))
         }
+
     } catch (ex) {
         color.logErr("copying auxiliary files")
         throw (ex)
     }
     color.greenOK()
 
-    console.log(`cd ${projectDir}/...`)
-    console.log(`Executing npm link...`)
-    const spawnOptions: child_process.CommonSpawnOptions = {
-        shell: true, // shell:true => to be able to invoke on windows
-        cwd: path.join(process.cwd(), projectDir),
-        stdio: "inherit"
+    if (options.nolink) {
+        color.action(`${path.join(projectDir,nickname)} created`)
+        color.greenOK()
     }
-    const execResult = child_process.spawnSync("npm", ["link"], spawnOptions)
-    if (execResult.error) {
-        color.logErr(execResult.error.message)
-        process.exit(5)
+    else {
+        console.log(`cd ${projectDir}`)
+        console.log(`Executing npm link`)
+        const spawnOptions: child_process.CommonSpawnOptions = {
+            shell: true, // shell:true => to be able to invoke on windows
+            cwd: projectDir,
+            stdio: "inherit"
+        }
+        const execResult = child_process.spawnSync("npm", ["link"], spawnOptions)
+        if (execResult.error) {
+            color.logErr(execResult.error.message)
+            process.exit(5)
+        }
+
+        console.log()
+        console.log(color.yellow + "WARN: nmp link may report ERR:code EEXISTS. You can ignore that." + color.normal)
+        console.log()
+        console.log("now type:")
+        console.log(` > ${nickname} --help`)
     }
 
-    console.log()
-    console.log(color.yellow + "WARN: nmp link may report ERR:code EEXISTS. You can ignore that." + color.normal)
-    console.log()
-    console.log("now type:")
-    console.log(` > ${nickname} --help`)
 }
 
 main()

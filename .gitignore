@@ -4,6 +4,8 @@
 #products
 dist
 out
+#created by near dev-deploy
+neardev
 
 #packages
 node_modules

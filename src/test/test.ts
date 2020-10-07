@@ -18,7 +18,7 @@ function testCLIparser() {
     expect("options.amount", options.amount.value).toBe(10)
 }
 
-console.log("---------- START TESTS ---------")
+console.log("---------- START PARSE TESTS ---------")
 
 testCLIparser()
 
@@ -26,4 +26,8 @@ testTokenizer()
 
 testContractAPIProducer()
 
-console.log("---------- END TESTS ---------")
+console.log("---------- END PARSE TESTS ---------")
+
+console.log("---------- START TESTNET DEPLOY TESTS ---------")
+
+console.log("---------- END TESTNET DEPLOY TESTS ---------")

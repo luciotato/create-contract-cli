@@ -40,13 +40,13 @@ export type OptionDeclaration =
         shortName: string
         valueType?: string
         helpText?: string
-        value?: any
+        value?: string|number|boolean
     }
 
 // ----------------------------------------------------
 // construct and show help page based on valid options
 // ----------------------------------------------------
-export function ShowHelpOptions(optionsDeclaration: any) {
+export function ShowHelpOptions(optionsDeclaration: Record<string,OptionDeclaration>) :void {
     // show help about declared options
     console.log()
     console.log("-".repeat(60))
@@ -69,8 +69,8 @@ export function ShowHelpOptions(optionsDeclaration: any) {
 // ----------------------------------------------------
 // construct and show a help page based on the API for the commands
 // ----------------------------------------------------
-export function ShowHelpPage(command: string, contractAPI: any, optionsDeclaration: any) {
-    const commandsHelp: any = {}
+export function ShowHelpPage(command: string, contractAPI: Record<string,unknown>, optionsDeclaration: Record<string,OptionDeclaration>): void {
+    const commandsHelp: Record<string,string> = {}
 
     // check all functions in the ContractAPI class, except the class constructor
     const methodNames =
@@ -107,11 +107,11 @@ export function ShowHelpPage(command: string, contractAPI: any, optionsDeclarati
 export class CommandLineArgs {
     clArgs: string[] // initial list process.argv
 
-    positional: (string | {})[] // string or JSON objects -- positional arguments
+    positional: (string | Record<string,unknown>)[] // string or JSON objects -- positional arguments
 
-    optDeclarations: any; // pointer to passed option declarations
+    optDeclarations: Record<string,OptionDeclaration>; // pointer to passed option declarations
 
-    constructor(options: any) {
+    constructor(options: Record<string,OptionDeclaration>) {
         this.clArgs = process.argv
         this.optDeclarations = options
         this.positional = []
@@ -183,7 +183,7 @@ export class CommandLineArgs {
      * When the first argument is the command to execute
      * returns "" if there's no arguments
      */
-    getCommand() {
+    getCommand():string {
         if (this.positional.length > 0 && typeof this.positional[0] !== "string") {
             color.logErr("expected a command as first argument'")
             process.exit(1)
@@ -200,7 +200,7 @@ export class CommandLineArgs {
      * returns false if the next arg doesn't match
      * @param which which string is expected
      */
-    optionalString(which:string) {
+    optionalString(which:string):boolean {
         if (this.positional.length == 0) return false
 
         if (typeof this.positional[0] !== "string") {
@@ -218,7 +218,7 @@ export class CommandLineArgs {
      * requires a string as the next positional argument
      * @param name
      */
-    consumeString(name: string) {
+    consumeString(name: string):string {
         if (this.positional.length == 0) {
             color.logErr(`expected '${name}' argument`)
             process.exit(1)
@@ -234,7 +234,7 @@ export class CommandLineArgs {
      * requires an amount in NEAR or YOCTO as the next positional argument
      * @param name
      */
-    consumeAmount(name: string, units: "N" | "Y"): string {
+    consumeAmount(name: string, units: "N"|"Y"|"I"|"F"): string|number {
         const value = this.consumeString(name)
         return this.convertAmount(value, units, name)
     }
@@ -243,7 +243,8 @@ export class CommandLineArgs {
      * requires a JSON as the next positional arg
      * @param name
      */
-    consumeJSON(name: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    consumeJSON(name: string):any {
         if (this.positional.length == 0) {
             color.logErr(`expected ${name} as { }`)
             process.exit(1)
@@ -252,14 +253,14 @@ export class CommandLineArgs {
             color.logErr(`expected ${name} as {... } got a string: '${this.positional[0]}'`)
             process.exit(1)
         }
-        return this.positional.shift() as any
+        return this.positional.shift() as Record<string,unknown>
     }
 
     /**
      * marks the end of the required arguments
      * if there are more arguments => error
      */
-    noMoreArgs() {
+    noMoreArgs():void {
         if (this.positional.length) {
             color.logErr(`unrecognized extra arguments`)
             console.log(inspect(this.positional))
@@ -280,7 +281,7 @@ export class CommandLineArgs {
      * @param optionName option name
      */
     requireOptionString(opt: OptionDeclaration): void {
-        if (opt.value == undefined || opt.value == "" || opt.value == {}) {
+        if (opt.value == undefined || opt.value == "" ) {
             const key = this.findDeclarationKey(opt)
             color.logErr(`required --${key}`)
             process.exit(1)
@@ -292,7 +293,7 @@ export class CommandLineArgs {
  * @param optionName option name
  */
     requireOptionWithAmount(opt: OptionDeclaration, units: "N" | "Y"): void {
-        const value: string = opt.value.toString().trim()
+        const value: string = opt.value?.toString().trim()||""
 
         const key = this.findDeclarationKey(opt)
         if (!value) {
@@ -310,7 +311,7 @@ export class CommandLineArgs {
      *
      * @param optionName option name
      */
-    consumeOption(opt: OptionDeclaration, defaultValue?: string): string {
+    consumeOption(opt: OptionDeclaration): string {
         const value: string = opt.value as string
 
         if (value) { // found
@@ -331,8 +332,8 @@ export class CommandLineArgs {
      * @param value string as read from the command line
      * @param requiredUnits N|Y unit in which the amount is required
      */
-    convertAmount(value: string, requiredUnits: "N" | "Y", name:string) {
-        let result = value
+    convertAmount(value: string, requiredUnits: "N"|"Y"|"I"|"F", name:string): string|number {
+        let result = value.toUpperCase()
         name = color.yellow + name + color.normal
         result = result.replace("_", "") // allow 100_000_000, ignore _
 
@@ -343,6 +344,7 @@ export class CommandLineArgs {
             }
             result = result.slice(0, -1) // remove Y
             if (requiredUnits == "Y") { return result } // already in Yoctos
+            if (requiredUnits == "I"||requiredUnits == "F") { return Number(result) } // a js Number
             // NEARS required -- convert to NEARS
             if (result.length <= 24) {
                 result = "0." + result.padStart(24, '0').slice(-24)
@@ -352,6 +354,14 @@ export class CommandLineArgs {
             }
             return result
         } else { // other, assume amount in NEARS (default)
+            if (!result.slice(-1).match(/\d|N|I|F/)) { //should end with N|I|F or a digit
+                color.logErr(name + ": invalid denominator, expected Y|N|I|F => yoctos|near|int|float. Received:"  + result)
+                process.exit(1)
+            }
+            if (result.endsWith("I")||result.endsWith("F")) {
+                result = result.slice(0, -1) // remove denom, store as number
+                return Number(result)
+            }
             if (result.endsWith("N")) result = result.slice(0, -1) // remove N
             if (requiredUnits == "N") { return result } // already in Nears
             // Yoctos required -- convert to yoctos
@@ -396,7 +406,7 @@ export class CommandLineArgs {
         }
 
         // Here we have start & end for matching { }
-        const resultObj:any = {}
+        const resultObj:Record<string,unknown> = {}
         for (let index = start + 1; index < end; index++) {
             let propName = this.clArgs[index]
             let propValue
@@ -442,12 +452,8 @@ export class CommandLineArgs {
             // remove ending "," if it's there
             if (propValue.endsWith(",")) propValue = propValue.slice(0, propValue.length - 1)
             // check if it's a number
-            if (propValue.slice(0, 1).match(/[0-9]/)) { // starts with a digit
-                if (propValue.endsWith("Y")) { // amount in yoctos
-                    propValue = this.convertAmount(propValue, "Y", propName) // process
-                } else { // default: amount expressed in nears
-                    propValue = this.convertAmount(propValue, "Y", propName) // convert to Yoctos
-                }
+            if (propValue.toUpperCase().match(/^[0-9.]+[Y|N|I|F]{0,1}$/)) { // amount (optionally [Y|N|I|F] expressed in nears. yoctos, integer or float
+                propValue = this.convertAmount(propValue, "Y", propName) // process and convert to Yoctos if expressed in nears
             }
             // store
             resultObj[propName] = propValue

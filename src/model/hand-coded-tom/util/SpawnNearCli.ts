@@ -1,28 +1,34 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as child_process from "child_process"
-import * as util from "util"
-import * as fs from "fs"
 
 let debug = 0
-export function setDebug(value: 0 | 1 | 2) { debug = value }
+export function setDebug(value: 0 | 1 | 2):void { debug = value }
 
-export function decodeHTMLEntities(str:string) {
-    str = str.replace(/\&\#(\d+);/g, function(match, dec) {
+export function decodeHTMLEntities(str:string):string {
+    str = str.replace(/&#(\d+);/g, function(match, dec) {
         return String.fromCharCode(dec)
     })
-    str = str.replace(/\&\#(x[A-F0-9]+);/g, function(match, dec) {
+    str = str.replace(/&#(x[A-F0-9]+);/g, function(match, dec) {
         return String.fromCharCode(parseInt("0" + dec))
     })
-    return str.replace(/\&quot;/g, "'")
+    return str.replace(/&quot;/g, "'")
 }
 
-export function yton(yoctos:string) {
+export function yton(yoctos:string):string {
     let units = yoctos
     if (units.length < 25) units = units.padStart(25, '0')
     units = units.slice(0, -24) + "." + units.slice(-24)
     return units
 }
 
-export function spawnNearCli(args:(string|any)[], options:any) {
+export function spawnNearCli(args:(string|any)[], options:any):string {
+    
+    //remove empty args
+    let inx=0
+    while(inx<args.length) if (args[inx]==undefined) args.splice(inx,1); else inx++;
+    
     // add options to args for near-cli
     // for each option
     for (const key in options) {
@@ -84,19 +90,19 @@ export function spawnNearCli(args:(string|any)[], options:any) {
 
     // show numbers in yoctos converted to more readable units
     // get all numbers where number.lenght>=20
-    const numbersFound = stdo.match(/\d+/g)
+    const numbersFound = stdo.match(/.*? \d{14,50}/g)
     if (numbersFound) {
-        const largeNumbers = numbersFound.filter((value) => value.length >= 12)
-        if (largeNumbers.length) {
-            // deduplicate
-            const numbers = [...new Set(largeNumbers)]
-            // show conversion to NEARs
-            console.log("amounts denomination:")
-            for (const num of numbers) {
-                if (num.length >= 20) {
-                    // show reference line
-                    console.log(num.padStart(36, ' ') + " Yoctos => " + yton(num).padStart(38, ' '))
-                }
+        // deduplicate
+        const numbers = [...new Set(numbersFound)]
+        // show conversion to NEARs
+        console.log("amounts denomination:")
+        for (const text of numbers) {
+
+            const parts=text.replace("'"," ").replace('"'," ").split(" ")
+            const num=parts.pop()||""
+            if (num.length >= 20) {
+                // show reference line
+                console.log(text.padStart(60, ' ').slice(-60) + " Yoctos => " + yton(num).padStart(38, ' '))
             }
         }
     }

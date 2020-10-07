@@ -1,8 +1,8 @@
 #!/bin/node
-import { config } from "./config.js"
-import { ContractAPI, nickname } from "./ContractAPI.js"
+import { cliConfig } from "./CLIConfig.js"
+import { nickname, ContractAPI } from "./ContractAPI.js"
 import { options } from "./CLIOptions.js"
-import { CommandLineArgs, ShowHelpPage } from "./util/CommandLineArgs.js"
+import { CommandLineArgs } from "./util/CommandLineArgs.js"
 import * as color from "./util/color.js"
 import * as nearCli from "./util/SpawnNearCli.js"
 
@@ -10,32 +10,74 @@ import * as nearCli from "./util/SpawnNearCli.js"
 // Contract API extensions
 // -------------------------
 export class ExtensionAPI extends ContractAPI {
-    // hm handy extension
+
+    // hm handy extension example
     hm_help = `How much? 
 	converts an amount in Yoctos into a more readable format. 
     Example: 
-    >nearswap hm 30037100000000000000000000
+    >${nickname} hm 30037100000000000000000000
     `
-    hm(a: CommandLineArgs) {
+    hm(a: CommandLineArgs): void {
         const str = a.consumeString("amount")
-        console.log(a.convertAmount(str + "Y", "N", "amount"))
-        process.exit(0)
+        console.log(color.green,a.convertAmount(str + "Y", "N", "amount"),color.normal)
     }
+
+    // where extension example
+    where_help = `Where is the contract? 
+    show contract accountId
+    Example extension, gives the same information as: ${nickname} --info
+    
+    Usage:
+    >${nickname} where [are] [you]
+    `
+    where(a: CommandLineArgs): void {
+        a.optionalString("are")
+        a.optionalString("you")
+        a.noMoreArgs()
+        console.log("Contract is at ",color.green,cliConfig.contractAccount,color.normal)
+        console.log("Default user is ",color.green,cliConfig.userAccount,color.normal)
+    }
+
+    // balance extension example
+    state_help = `
+    Get contract's account state, with more readable numbers
+    
+    Usage:
+    >${nickname} state
+    `
+    state(a: CommandLineArgs): void {
+        a.noMoreArgs()
+        nearCli.spawnNearCli(["state"], options)
+    }
+
+    // deploy extension example
+    deploy_help = `call near deploy on ${cliConfig.contractAccount} 
+    Example: 
+    >${nickname} deploy path/to/wasm
+    `
+    deploy(a: CommandLineArgs): void {
+        //get path from command line
+        const wasmFile = a.consumeString("path/to/contract.wasm")
+        //spawn near-cli, command=deploy
+        nearCli.spawnNearCli(["deploy",wasmFile], options)
+    }
+
 
     // -----------------------------------------------
     // -----------------------------------------------
-    // You can add more commands to this cli here
+    // You can add more extension commands here
     // -----------------------------------------------
     // -----------------------------------------------
 
     // -----------------------------------------------
     // info Example extension
     // -----------------------------------------------
+    /*
     myfn_help = `This is a command extension example wiht variable args. 
 	Handy commands you can create composing fn calls to this contract or others
 
 	Usage:
-	>tom myfn [account]+
+	>${nickname} myfn [account]+
     `
     myfn(a: CommandLineArgs) {
         if (a.positional.length == 0) {
@@ -48,25 +90,27 @@ export class ExtensionAPI extends ContractAPI {
         }
         process.exit(0)
     }
+    */
 
     // -----------------------------------------------
     // NEP21 Example extension
     // -----------------------------------------------
+    /*
     nep21_help = `Call functions on NEP21 contracts.
     Examples:
-    >tom nep21 balance gold.nep21.near         -> get how much gold this contract has
-    >tom nep21 balance my gold.nep21.near      -> get how much gold you have
-    >tom nep21 mint mytoken.near               -> (dev) calls mytoken.near.mint(), minting tokens for you
+    >>${nickname} nep21 balance gold.nep21.near         -> get how much gold this contract has
+    >>${nickname} nep21 balance my gold.nep21.near      -> get how much gold you have
+    >>${nickname} nep21 mint mytoken.near               -> (dev) calls mytoken.near.mint(), minting tokens for you
 
-    >nearswap nep21 transfer 50 gold.near to lucio.testnet  -> transfer 50e24 gold.near tokens to account lucio.testnet
+    >${nickname} nep21 transfer 50 gold.near to lucio.testnet  -> transfer 50e24 gold.near tokens to account lucio.testnet
 
 `
     nep21(a: CommandLineArgs) {
         const subcommand = a.consumeString("sub-command")
 
         if (subcommand == "balance") {
-            let tokenOwner = config.contractAccount
-            if (a.optionalString("my")) tokenOwner = config.userAccount
+            let tokenOwner = cliConfig.contractAccount
+            if (a.optionalString("my")) tokenOwner = cliConfig.userAccount
 
             while (a.positional.length) {
                 const token = a.consumeString("nep21-contract")
@@ -86,7 +130,7 @@ export class ExtensionAPI extends ContractAPI {
             a.optionalString("to")
 
             let toAcc = a.consumeString("to account")
-            if (toAcc == "contract") toAcc = config.contractAccount // this contract
+            if (toAcc == "contract") toAcc = cliConfig.contractAccount // this contract
 
             nearCli.call(token, "transfer", { new_owner_id: toAcc, amount: tokAmount }, options)
         } else {
@@ -96,7 +140,9 @@ export class ExtensionAPI extends ContractAPI {
 
         process.exit(0)
     }
+    */
 
+    /*
     // function depo: example manually coded composed/aternative command
     depo_help: string = `
     shotcut for deposit
@@ -125,9 +171,10 @@ export class ExtensionAPI extends ContractAPI {
 
         return this.call(fnToCall)
     }
+    */
 
     // function info: example manually coded composed command
-
+    /*
     info_help = "get_owner_id, get_staking_key & get_total_staked_balance"
 
     info(a: CommandLineArgs) {
@@ -135,4 +182,6 @@ export class ExtensionAPI extends ContractAPI {
         this.get_staking_key(a)
         this.get_total_staked_balance(a)
     }
+    */
+
 }

@@ -8,16 +8,18 @@
 import * as fs from 'fs'
 import * as path from 'path'
 
-//    export function toFile(filename, mode)
 // ---------------------------
-export function toFile(filename: string) {
+// mkPath.toFile
+// ---------------------------
+export function toFile(filename: string) :void{
     // Create a path to a file
     create(path.dirname(filename))
 }
 
-//    export function create (dirPath, mode)
 // ---------------------------
-export function create(dirPath) {
+// mkPath.create(dirPath)
+// ---------------------------
+export function create(dirPath:string) :void {
     // Make sure a path exists - Recursive
 
     if (dirExists(dirPath)) { return } // ok! dir exists
@@ -34,7 +36,7 @@ export function create(dirPath) {
 
 //    helper function dirExists(dirPath)
 // ---------------------------
-export function dirExists(dirPath) {
+export function dirExists(dirPath:string): boolean {
     try {
         if (fs.statSync(dirPath).isDirectory()) {
             return true // ok! exists and is a directory

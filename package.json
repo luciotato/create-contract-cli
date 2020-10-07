@@ -2,7 +2,7 @@
   "name": "create-contract-cli",
   "version": "1.0.0",
   "description": "creates a cli tool based on a NEAR smart contract",
-  "main": "dist/main/main",
+  "main": "dist/main/create-contract-cli",
   "type": "module",
   "bin": "bin/cli.js",
   "directories": {
@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "node ./build.js",
-    "test": "npm run-script build && node dist/test/test.js",
+    "test:deploy": "npm run build && node dist/test/test-deploy.js",
+    "test": "npm run build && node dist/test/test.js",
     "lint": "eslint . --ext .ts --fix"
   },
   "repository": {

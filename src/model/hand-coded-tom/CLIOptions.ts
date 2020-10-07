@@ -43,14 +43,19 @@ export const options = {
         valueType: "string",
         value: "",
         helpText: 'NEAR network ID (default is NODE_ENV)'
-    }
+    },
 
-/*    contractName: {
-        shortName: "contract",
+    contractName: {
+        shortName: "c",
         valueType: "string",
         value: "",
-        helpText: `sets the contract account ID for deployment`
+        helpText: `sets the contract accountId for near deploy and --cliConfig`
     },
-*/
+
+    cliConfig: {
+        shortName: "cliconf",
+        value: false,
+        helpText: `config this cli, you must include --contractName xx and --accountId yy to set default contract accountId and user`
+    },
 }
 // # sourceMappingURL=CLIOptions.js.map

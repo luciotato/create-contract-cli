@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import "../dist/main/main.js"
+import "../dist/main/create-contract-cli.js"
