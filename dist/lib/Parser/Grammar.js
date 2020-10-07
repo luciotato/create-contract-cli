@@ -1,8 +1,11 @@
+"use strict";
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /*
  * This Grammar is based on [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
  * *with extensions*.
 */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ASTModule = exports.Body = exports.Statement = exports.VarRef = exports.IndexAccess = exports.PropertyAccess = exports.FunctionAccess = exports.Accessor = exports.ForStatement = exports.RangeExpression = exports.WhileStatement = exports.IfStatement = exports.ReturnStatement = exports.TraitDeclaration = exports.FunctionParameters = exports.LetStatement = exports.VariableDecl = exports.FunctionDeclaration = exports.MatchExpression = exports.MatchPair = exports.RustClosure = exports.IdentifierMaybeTuple = exports.LineAttribute = exports.ImplDeclaration = exports.EnumDeclaration = exports.EnumItem = exports.StructDeclaration = exports.MacroInvocation = exports.DelimitedWordList = exports.TypeDeclaration = exports.ModDeclaration = exports.UseDeclaration = exports.TypeAnnotation = exports.ParenExpression = exports.ConstDeclaration = exports.ArrayLiteral = exports.StaticDeclaration = exports.ObjectLiteral = exports.NameValuePair = exports.RustNativeSuffixes = exports.Expression = exports.FunctionArgument = exports.Operand = exports.RegExpLiteral = exports.StringLiteral = exports.NumberLiteral = exports.UnaryOper = exports.Oper = exports.Identifier = void 0;
 // Grammar Meta-Syntax
 // -------------------
 // Each Grammar class, contains a 'grammar definition' as reference.
@@ -41,10 +44,10 @@
 // a comma-separated list of `VariableDecl` (at least one)
 // The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl`
 // Since the comma is inside a **( )** group, it means _at least one VariableDecl_ is required.
-import { ASTBase } from './ASTBase.js';
-import * as logger from '../util/logger.js';
-import { TokenCode } from '../Lexer/Lexer.js';
-import { EOL } from 'os';
+const ASTBase_1 = require("./ASTBase");
+const logger = require("../util/logger.js");
+const Lexer_1 = require("../Lexer/Lexer");
+const os_1 = require("os");
 // Reserved Words
 // ---------------
 // Words that are reserved and cannot be used as variable or function names
@@ -86,23 +89,24 @@ const OPERATORS_PRECEDENCE = ['&', '&mut', '*',
 /**
  * can include namespace::namespace::name
  * */
-export class Identifier extends ASTBase {
+class Identifier extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.optMut();
         this.optRef();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         while (this.opt('::')) {
             this.name += '::';
             if (this.opt("<")) {
                 this.typeParams = DelimitedWordList.parseOpened(this, '<', '>');
             }
             else {
-                this.name += this.reqToken(TokenCode.WORD);
+                this.name += this.reqToken(Lexer_1.TokenCode.WORD);
             }
         }
     }
 }
+exports.Identifier = Identifier;
 // ## Oper
 // ```
 // Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
@@ -113,7 +117,7 @@ export class Identifier extends ASTBase {
 // An Oper sits between two Operands ("Oper" is a "Binary Operator",
 // different from *UnaryOperators* which optionally precede a Operand)
 // If an Oper is found after an Operand, a second Operand is expected.
-export class Oper extends ASTBase {
+class Oper extends ASTBase_1.ASTBase {
     constructor() {
         super(...arguments);
         // ---------------------------
@@ -131,7 +135,7 @@ export class Oper extends ASTBase {
             this.name = this.req("as");
         }
         else {
-            this.name = this.reqToken(TokenCode.OPERATOR);
+            this.name = this.reqToken(Lexer_1.TokenCode.OPERATOR);
             this.lock();
             // check range operator
             if (this.name == ".." && this.opt("=")) {
@@ -149,8 +153,9 @@ export class Oper extends ASTBase {
         (_b = this.right) === null || _b === void 0 ? void 0 : _b.produce();
     }
 }
+exports.Oper = Oper;
 // end class Oper
-export class UnaryOper extends Oper {
+class UnaryOper extends Oper {
     // ---------------------------
     parse() {
         this.name = this.reqOneOf(['+', '-', '!']);
@@ -167,26 +172,28 @@ export class UnaryOper extends Oper {
         }
     }
 }
+exports.UnaryOper = UnaryOper;
 // end class UnaryOper
 // ## NumberLiteral
 // `NumberLiteral: [0-9_.u] | '0x[0-9a-fA-F] | 0b[0-1][u0-9] `
-export class NumberLiteral extends ASTBase {
+class NumberLiteral extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.tokenCode = this.owner.lexer.token.tokenCode;
-        this.name = this.reqList([TokenCode.NUMBER, TokenCode.HEXANUMBER, TokenCode.BINARYNUMBER]);
+        this.name = this.reqList([Lexer_1.TokenCode.NUMBER, Lexer_1.TokenCode.HEXANUMBER, Lexer_1.TokenCode.BINARYNUMBER]);
         Expression.checkNativeRustConversionMapCollect(this); // veo si tiene una llamada a .to_vec() u otra conversi�n
     }
 }
+exports.NumberLiteral = NumberLiteral;
 // end class NumberLiteral
 // ## StringLiteral
 // `StringLiteral: '"' [ any* | '\"' ] '"' | ''' [ any* | '\'' ] '''
 // A string constant token. Can be anything the lexer supports, including single or double-quoted strings.
 // The token includes the enclosing quotes
-export class StringLiteral extends ASTBase {
+class StringLiteral extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
-        this.name = this.reqToken(TokenCode.LITERAL_STRING);
+        this.name = this.reqToken(Lexer_1.TokenCode.LITERAL_STRING);
         Expression.checkNativeRustConversionMapCollect(this); // veo si tiene una llamada a .to_vec() u otra conversi�n
     }
     // ---------------------------
@@ -194,17 +201,19 @@ export class StringLiteral extends ASTBase {
         return this.name.slice(1, -1);
     }
 }
+exports.StringLiteral = StringLiteral;
 // end class StringLiteral
 // ## RegExpLiteral
 // `RegExpLiteral: REGEX`
 // A regular expression token constant. Can be anything the lexer supports.
-export class RegExpLiteral extends ASTBase {
+class RegExpLiteral extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
-        this.name = this.reqToken(TokenCode.LITERAL_STRING);
+        this.name = this.reqToken(Lexer_1.TokenCode.LITERAL_STRING);
         Expression.checkNativeRustConversionMapCollect(this); // veo si tiene una llamada a .to_vec() u otra conversi�n
     }
 }
+exports.RegExpLiteral = RegExpLiteral;
 // end class RegExpLiteral
 // ## Operand
 // ```
@@ -219,18 +228,18 @@ export class RegExpLiteral extends ASTBase {
 // A `Operand` is the data on which the operator operates.
 // It's the left and right part of a binary operator.
 // It's the data affected (righ) by a UnaryOper.
-export class Operand extends ASTBase {
+class Operand extends ASTBase_1.ASTBase {
     // -------------------------
     // value is at children[0]
     // -------------------------
     parse() {
         // Let's look for operands in a expression, i.e: "a" and "b" in  "a+b*5"
         const t = this.owner.lexer.token;
-        if ([TokenCode.NUMBER, TokenCode.HEXANUMBER, TokenCode.BINARYNUMBER].includes(t.tokenCode)) {
+        if ([Lexer_1.TokenCode.NUMBER, Lexer_1.TokenCode.HEXANUMBER, Lexer_1.TokenCode.BINARYNUMBER].includes(t.tokenCode)) {
             this.children.push(this.reqClass(NumberLiteral));
             return; //* *** early exit
         }
-        if (t.tokenCode == TokenCode.LITERAL_STRING) {
+        if (t.tokenCode == Lexer_1.TokenCode.LITERAL_STRING) {
             this.children.push(this.reqClass(StringLiteral));
             return; //* *** early exit
         }
@@ -303,8 +312,9 @@ export class Operand extends ASTBase {
         this.produceChildren();
     }
 }
+exports.Operand = Operand;
 // end class Operand
-export class FunctionArgument extends ASTBase {
+class FunctionArgument extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.lock();
@@ -318,12 +328,13 @@ export class FunctionArgument extends ASTBase {
         this.expression = this.reqClass(Expression);
     }
 } // end class FunctionArgument
+exports.FunctionArgument = FunctionArgument;
 // -----------
 // ## Expression
 // `Expression: [UnaryOper] Operand [Oper [UnaryOper] Operand]*`
 // The expression class parses intially a *flat* array of nodes.
 // After the expression is parsed, a *Expression Tree* is created based on operator precedence.
-export class Expression extends ASTBase {
+class Expression extends ASTBase_1.ASTBase {
     constructor() {
         super(...arguments);
         // ---------------------------
@@ -425,14 +436,15 @@ export class Expression extends ASTBase {
         }
     }
 }
+exports.Expression = Expression;
 // end class Expression
-export class RustNativeSuffixes extends ASTBase {
+class RustNativeSuffixes extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         // check for .into() o .as_u128() .to_vec() .map() . collect() etc,
         while (this.owner.lexer.token.value == '.') {
             this.owner.lexer.advance();
-            if (this.owner.lexer.token.tokenCode == TokenCode.NUMBER) {
+            if (this.owner.lexer.token.tokenCode == Lexer_1.TokenCode.NUMBER) {
                 // tuple item acess
                 this.reqChild(NumberLiteral);
             }
@@ -451,15 +463,16 @@ export class RustNativeSuffixes extends ASTBase {
         }
     }
 }
+exports.RustNativeSuffixes = RustNativeSuffixes;
 // ## NameValuePair
 // `NameValuePair: (IDENTIFIER|StringLiteral|NumberLiteral) ':' Expression`
 // A single item inside a `ObjectLiteral / StructInstantiation.value`
 // a `property-name: value` pair.
-export class NameValuePair extends ASTBase {
+class NameValuePair extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.owner.lexer.savePosition();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         if (this.opt(':')) { // por alguna razon en rust decidieron q se podia instanciar un obj por posicion, los : son opcionales
             this.owner.lexer.discardSavedPosition();
             this.lock();
@@ -479,7 +492,8 @@ export class NameValuePair extends ASTBase {
         this.value.produce();
     }
 }
-export class ObjectLiteral extends ASTBase {
+exports.NameValuePair = NameValuePair;
+class ObjectLiteral extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('{');
@@ -497,11 +511,12 @@ export class ObjectLiteral extends ASTBase {
     // ---------------------------
     produce() {
         this.owner.codeWriter.write("{");
-        this.produceChildren("," + EOL);
+        this.produceChildren("," + os_1.EOL);
         this.owner.codeWriter.write("}");
     }
 }
-export class StaticDeclaration extends ASTBase {
+exports.ObjectLiteral = ObjectLiteral;
+class StaticDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('static');
@@ -509,18 +524,19 @@ export class StaticDeclaration extends ASTBase {
         // from this point is a syntax error.
         this.lock();
         // After the word 'static' we require an identifier:type=value
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.req(":");
         this.reqChild(TypeAnnotation);
         this.req("=");
         this.reqChild(Expression);
     }
 }
+exports.StaticDeclaration = StaticDeclaration;
 // end static place declaration
 // ## ArrayLiteral
 // `ArrayLiteral: '[' (Expression,)* ']'`
 // An array definition, such as `a = [1,2,3]`
-export class ArrayLiteral extends ASTBase {
+class ArrayLiteral extends ASTBase_1.ASTBase {
     constructor() {
         super(...arguments);
         this.items = [];
@@ -533,7 +549,8 @@ export class ArrayLiteral extends ASTBase {
         this.items = this.optSeparatedList(Expression, ',', ']');
     }
 } // end class ArrayLiteral
-export class ConstDeclaration extends ASTBase {
+exports.ArrayLiteral = ArrayLiteral;
+class ConstDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('const');
@@ -541,18 +558,19 @@ export class ConstDeclaration extends ASTBase {
         // from this point is a syntax error.
         this.lock();
         // After the word 'const' we require an identifier
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.req(":");
         this.reqChild(TypeAnnotation);
         this.req("=");
         this.reqChild(Expression);
     }
 }
+exports.ConstDeclaration = ConstDeclaration;
 // end ConstValueDeclaration
 // ## ParenExpression
 // `ParenExpression: '(' Expression ')'`
 // An expression enclosed by parentheses, like `(a + b)`.
-export class ParenExpression extends ASTBase {
+class ParenExpression extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('(');
@@ -572,12 +590,13 @@ export class ParenExpression extends ASTBase {
         Expression.checkNativeRustConversionMapCollect(this); // veo si tiene una llamada a .to_vec() u otra conversion
     }
 }
+exports.ParenExpression = ParenExpression;
 // end class ParenExpression
 /**
  * a type annotation with optional <type-paramenters,...>
  *      IDENT [ '<' (type-paramenter,) '>' ]
  * */
-export class TypeAnnotation extends ASTBase {
+class TypeAnnotation extends ASTBase_1.ASTBase {
     parse() {
         this.optRef();
         this.optMut();
@@ -608,16 +627,17 @@ export class TypeAnnotation extends ASTBase {
         }
     }
 }
+exports.TypeAnnotation = TypeAnnotation;
 /**
  * class UseDeclaration
  *      'use' WORD ([::WORD...]  | '{' (Identifier,) '}' | * )
  * */
-export class UseDeclaration extends ASTBase {
+class UseDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('use');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         while (this.owner.lexer.token.value == '::') {
             this.name += '::';
             const nextValue = this.owner.lexer.advance();
@@ -632,31 +652,34 @@ export class UseDeclaration extends ASTBase {
                 break; // no more ::'s possible
             }
             else { // more indentifiers
-                this.name += this.reqToken(TokenCode.WORD);
+                this.name += this.reqToken(Lexer_1.TokenCode.WORD);
             }
         }
     }
 }
-export class ModDeclaration extends ASTBase {
+exports.UseDeclaration = UseDeclaration;
+class ModDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('mod');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         Body.optIntoChildren(this);
     }
 }
-export class TypeDeclaration extends ASTBase {
+exports.ModDeclaration = ModDeclaration;
+class TypeDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('type');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.req('=');
         this.reqChild(Expression);
     }
 }
-export class DelimitedWordList {
+exports.TypeDeclaration = TypeDeclaration;
+class DelimitedWordList {
     static parse(node, opener, closer) {
         const initial = node.req(opener);
         return DelimitedWordList.parseAfter(initial, node, opener, closer);
@@ -684,14 +707,15 @@ export class DelimitedWordList {
         return macroWords;
     }
 }
-export class MacroInvocation extends ASTBase {
+exports.DelimitedWordList = DelimitedWordList;
+class MacroInvocation extends ASTBase_1.ASTBase {
     constructor() {
         super(...arguments);
         this.macroWords = [];
     }
     // ---------------------------
     parse() {
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.name += this.req('!');
         this.lock();
         // handle standard rust macro parameter delimiters
@@ -733,38 +757,42 @@ export class MacroInvocation extends ASTBase {
         this.owner.lexer.semiNotRequired = true; // no need for a semicolon after this
     }
     toString() {
-        return Function.apply(ASTBase.toString, this) + ' ' + this.macroWords.join(' ');
+        return Function.apply(ASTBase_1.ASTBase.toString, this) + ' ' + this.macroWords.join(' ');
     }
 }
-export class StructDeclaration extends ASTBase {
+exports.MacroInvocation = MacroInvocation;
+class StructDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('struct');
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.req('{');
         this.children = this.reqSeparatedList(VariableDecl, ",", "}");
     }
 }
-export class EnumItem extends ASTBase {
+exports.StructDeclaration = StructDeclaration;
+class EnumItem extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         if (this.opt('{')) {
             this.children = this.reqSeparatedList(VariableDecl, ",", "}");
         }
     }
 }
-export class EnumDeclaration extends ASTBase {
+exports.EnumItem = EnumItem;
+class EnumDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('enum');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.req('{');
         this.children = this.reqSeparatedList(EnumItem, ",", "}");
     }
 }
-export class ImplDeclaration extends ASTBase {
+exports.EnumDeclaration = EnumDeclaration;
+class ImplDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('impl');
@@ -778,16 +806,18 @@ export class ImplDeclaration extends ASTBase {
         Body.parseIntoChildren(this); // parse as a Body (no separator, several fn { } blocks) => children
     }
 }
+exports.ImplDeclaration = ImplDeclaration;
 /**
  * A single-line attribute
  * comments attached to statements are stored in Statement.comment
  * */
-export class LineAttribute extends ASTBase {
+class LineAttribute extends ASTBase_1.ASTBase {
     parse() {
-        this.name = this.reqToken(TokenCode.ATTRIBUTE);
+        this.name = this.reqToken(Lexer_1.TokenCode.ATTRIBUTE);
     }
 }
-export class IdentifierMaybeTuple extends ASTBase {
+exports.LineAttribute = LineAttribute;
+class IdentifierMaybeTuple extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         if (this.opt("(")) {
@@ -799,11 +829,12 @@ export class IdentifierMaybeTuple extends ASTBase {
         }
     }
 }
+exports.IdentifierMaybeTuple = IdentifierMaybeTuple;
 // ## RustClosure
 //
 // `RustClosure: ` '|' (WORD,...) '|' ( Body | Expression | fn-call ) `
 //
-export class RustClosure extends ASTBase {
+class RustClosure extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('|');
@@ -825,12 +856,13 @@ export class RustClosure extends ASTBase {
         }
     }
 }
+exports.RustClosure = RustClosure;
 // end class RustClosure
 // ## MatchPair
 //
 // `MatchPair: ` (Expression | '_' ) '=>' Expression
 //
-export class MatchPair extends ASTBase {
+class MatchPair extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         if (this.opt('_')) {
@@ -848,14 +880,15 @@ export class MatchPair extends ASTBase {
         }
     }
     toString() {
-        return Function.apply(ASTBase.toString, this) + (this.left ? this.left.name : '_') + " => " + this.right.name;
+        return Function.apply(ASTBase_1.ASTBase.toString, this) + (this.left ? this.left.name : '_') + " => " + this.right.name;
     }
 }
+exports.MatchPair = MatchPair;
 // ## MatchExpression
 //
 // `MatchExpression: ` match Expression '{' ( (Expression | '_' ) => Expression ,... ) '}'`
 //
-export class MatchExpression extends ASTBase {
+class MatchExpression extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('match');
@@ -866,6 +899,7 @@ export class MatchExpression extends ASTBase {
         Expression.checkNativeRustConversionMapCollect(this); // veo si tiene una llamada a .to_vec() u otra conversi�n
     }
 }
+exports.MatchExpression = MatchExpression;
 // end class MatchExpression
 // ## FunctionDeclaration
 //
@@ -873,14 +907,14 @@ export class MatchExpression extends ASTBase {
 //
 // Functions: parametrized pieces of callable code.
 //
-export class FunctionDeclaration extends ASTBase {
+class FunctionDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         // manage special keywords like 'pub'
         this.optPub();
         this.req('fn');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         // get parameters declarations
         this.paramsDeclarations = this.opt(FunctionParameters);
         // get the return-type (optional)
@@ -901,6 +935,7 @@ export class FunctionDeclaration extends ASTBase {
         }
     }
 }
+exports.FunctionDeclaration = FunctionDeclaration;
 // end class FunctionDeclaration
 /**
  * [pub mut &] Name,Type and optional assignment
@@ -908,7 +943,7 @@ export class FunctionDeclaration extends ASTBase {
  * Identifier: TypeAnnotation [ = Expression ]
  *
  * */
-export class VariableDecl extends ASTBase {
+class VariableDecl extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         // manage special keywords like 'pub' & mut
@@ -916,7 +951,7 @@ export class VariableDecl extends ASTBase {
         this.optRef();
         this.optMut();
         this.optDecorators();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         this.lock();
         // if .parent instance of VarStatement
         if (this.parent instanceof LetStatement && RESERVED_WORDS.indexOf(this.name) >= 0) {
@@ -935,8 +970,9 @@ export class VariableDecl extends ASTBase {
         return (this.isRef ? "&" : "") + (this.isMut ? "mut " : "") + this.name + (this.typeAnnotation ? this.typeAnnotation.name + ":" : "");
     }
 }
+exports.VariableDecl = VariableDecl;
 // end class VariableDecl
-export class LetStatement extends ASTBase {
+class LetStatement extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('let');
@@ -955,8 +991,9 @@ export class LetStatement extends ASTBase {
         }
     }
 }
+exports.LetStatement = LetStatement;
 // ------------------
-export class FunctionParameters extends ASTBase {
+class FunctionParameters extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         // if we define a list of specific parameters, fuction is no longer variadic
@@ -968,13 +1005,14 @@ export class FunctionParameters extends ASTBase {
         return "(" + this.children.map((c) => c.toString()).join(",") + ")";
     }
 } // end class FunctionParameters
+exports.FunctionParameters = FunctionParameters;
 // ------------------------------------------
-export class TraitDeclaration extends ASTBase {
+class TraitDeclaration extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('trait');
         this.lock();
-        this.name = this.reqToken(TokenCode.WORD);
+        this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         // See if there is an inheritance declaration
         if (this.opt(':')) {
             // now a list of references (to other traits, separated by "+", ended by the "{" )
@@ -985,11 +1023,12 @@ export class TraitDeclaration extends ASTBase {
         Body.parseIntoChildren(this);
     }
 }
+exports.TraitDeclaration = TraitDeclaration;
 // end class TraitDeclaration
 /**
  * 'return' [Expression]
  * */
-export class ReturnStatement extends ASTBase {
+class ReturnStatement extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('return');
@@ -997,9 +1036,10 @@ export class ReturnStatement extends ASTBase {
         this.optChild(Expression);
     }
 }
+exports.ReturnStatement = ReturnStatement;
 // end class ReturnStatement
 // ---------------------------
-export class IfStatement extends ASTBase {
+class IfStatement extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('if');
@@ -1011,9 +1051,10 @@ export class IfStatement extends ASTBase {
         }
     }
 }
+exports.IfStatement = IfStatement;
 // end class IfStatement
 // ---------------------------
-export class WhileStatement extends ASTBase {
+class WhileStatement extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.req('while');
@@ -1023,12 +1064,13 @@ export class WhileStatement extends ASTBase {
         Body.parseIntoChildren(this);
     }
     toString() {
-        return Function.apply(ASTBase.toString, this) + ' ' + this.conditional.name;
+        return Function.apply(ASTBase_1.ASTBase.toString, this) + ' ' + this.conditional.name;
     }
 }
+exports.WhileStatement = WhileStatement;
 // end class WhileStatement
 // ## Range Expression
-export class RangeExpression extends ASTBase {
+class RangeExpression extends ASTBase_1.ASTBase {
     constructor() {
         super(...arguments);
         this.inclusive = false;
@@ -1042,8 +1084,9 @@ export class RangeExpression extends ASTBase {
         this.reqChild(Expression);
     }
 } // end class RangeExpression
+exports.RangeExpression = RangeExpression;
 // ## For Statement
-export class ForStatement extends ASTBase {
+class ForStatement extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         // We start with commonn `for` keyword
@@ -1056,6 +1099,7 @@ export class ForStatement extends ASTBase {
         Body.parseIntoChildren(this); // first child, then block
     }
 } // end class ForStatement
+exports.ForStatement = ForStatement;
 // -----------------------
 // ## Accessors
 // `Accessors: (PropertyAccess | FunctionAccess | IndexAccess)`
@@ -1078,12 +1122,12 @@ export class ForStatement extends ASTBase {
 // It resolves to the function return value.
 // ## Implementation
 // We provide a class Accessor to be super class for the three accessors types.
-export class Accessor extends ASTBase {
+class Accessor extends ASTBase_1.ASTBase {
     static parseAccessors(node) {
         let accessorFound = true;
         // Loop parsing accessors
         while (accessorFound) {
-            if (node.owner.lexer.token.tokenCode == TokenCode.COMMENT) { // skip comments
+            if (node.owner.lexer.token.tokenCode == Lexer_1.TokenCode.COMMENT) { // skip comments
                 node.owner.lexer.advance();
                 continue;
             }
@@ -1107,8 +1151,9 @@ export class Accessor extends ASTBase {
         }
     }
 }
+exports.Accessor = Accessor;
 // end class Accessor
-export class FunctionAccess extends Accessor {
+class FunctionAccess extends Accessor {
     // ---------------------------
     parse() {
         this.req('(');
@@ -1127,21 +1172,22 @@ export class FunctionAccess extends Accessor {
         o.write(")");
     }
 }
+exports.FunctionAccess = FunctionAccess;
 // end class FunctionAccess
-export class PropertyAccess extends Accessor {
+class PropertyAccess extends Accessor {
     // ---------------------------
     parse() {
         this.req('.');
         this.lock();
         // check for NumberLiteral  x.0 rust tuple dot-index access. https://stackoverflow.com/questions/32030756/reasons-for-dot-notation-for-tuple
-        if (this.owner.lexer.token.tokenCode == TokenCode.NUMBER) {
+        if (this.owner.lexer.token.tokenCode == Lexer_1.TokenCode.NUMBER) {
             this.keyword = "tuple-index";
             this.extraInfo = this.owner.lexer.token.value;
             this.owner.lexer.advance();
         }
         else {
             // let's assume .field access
-            this.name = this.reqToken(TokenCode.WORD);
+            this.name = this.reqToken(Lexer_1.TokenCode.WORD);
         }
     }
     // ---------------------------
@@ -1155,8 +1201,9 @@ export class PropertyAccess extends Accessor {
         o.write(this.name);
     }
 }
+exports.PropertyAccess = PropertyAccess;
 // end class PropertyAccess
-export class IndexAccess extends Accessor {
+class IndexAccess extends Accessor {
     // ---------------------------
     parse() {
         this.name = this.req('[');
@@ -1175,6 +1222,7 @@ export class IndexAccess extends Accessor {
         o.write("]");
     }
 }
+exports.IndexAccess = IndexAccess;
 // end class IndexAccess
 // -----------------------
 /**
@@ -1197,7 +1245,7 @@ export class IndexAccess extends Accessor {
  *      myStruct.values[7].price
  *
  * */
-export class VarRef extends ASTBase {
+class VarRef extends ASTBase_1.ASTBase {
     // ---------------------------
     parse() {
         this.preIncDec = this.optList(['--', '++']);
@@ -1239,6 +1287,7 @@ export class VarRef extends ASTBase {
         return `${result}${this.postIncDec || ''}`;
     }
 }
+exports.VarRef = VarRef;
 // end class VariableRef
 // ##Statement
 // A `Statement` is an imperative statment (command) or a control construct.
@@ -1257,7 +1306,7 @@ export class VarRef extends ASTBase {
 // ```
 // public class Statement extends ASTBase
 // constructor
-export class Statement {
+class Statement {
     // ---------------------------
     /** static Statement.tryParse
      *  try to parse a statement and return the specific node found | throws
@@ -1266,7 +1315,7 @@ export class Statement {
     static tryParse(node) {
         node.lock(); // no other option than a statement
         // manage rust attributes (lines starting with #)
-        if (node.owner.lexer.token.tokenCode == TokenCode.ATTRIBUTE) {
+        if (node.owner.lexer.token.tokenCode == Lexer_1.TokenCode.ATTRIBUTE) {
             return node.reqClass(LineAttribute);
         }
         // manage special keywords like 'pub'
@@ -1315,7 +1364,7 @@ export class Statement {
         // it wasn't a function call,
         // if there's an assignmen token => AssignmentStatement
         // else is just an expression-maybe-return-value
-        if (node.owner.lexer.token.tokenCode == TokenCode.OPERATOR) {
+        if (node.owner.lexer.token.tokenCode == Lexer_1.TokenCode.OPERATOR) {
             // it's is an AssignmentStatement
             // const assignmentStatement = node.reqClass(AssignmentStatement) as AssignmentStatement
             // assignmentStatement.lvalue = vr //complete the AssignmentStatement L-value with the prevously parsed VarRef
@@ -1326,6 +1375,7 @@ export class Statement {
         return vr;
     }
 }
+exports.Statement = Statement;
 // ----------------------------------------
 // Table-based (fast) Statement parsing
 // ------------------------------------
@@ -1363,7 +1413,7 @@ Statement.DirectKeywordMap = {
 /**
  * '{' [Statements;] '}'
  * */
-export class Body extends ASTBase {
+class Body extends ASTBase_1.ASTBase {
     parse() {
         this.req("{");
         this.lock();
@@ -1397,7 +1447,7 @@ export class Body extends ASTBase {
             // pre comments and attrs
             const preComments = [];
             node.owner.lexer.consumeCommentsAndAttr(preComments);
-            if (node.owner.lexer.token.tokenCode == TokenCode.EOF)
+            if (node.owner.lexer.token.tokenCode == Lexer_1.TokenCode.EOF)
                 break; // break on EOF
             if (closer && node.opt(closer))
                 break; // on closer:'}', break - end of body, (a single extra separator before closer is allowed)
@@ -1439,10 +1489,11 @@ export class Body extends ASTBase {
             node.owner.lexer.semiNotRequired = true; // no need for a semicolon if closed by '}'
     }
 }
+exports.Body = Body;
 // end class Body
 // ## Module
 // The `Module` represents a complete source file.
-export class ASTModule extends ASTBase {
+class ASTModule extends ASTBase_1.ASTBase {
     // ------------
     constructor(owner, filename) {
         super(null, filename);
@@ -1456,4 +1507,5 @@ export class ASTModule extends ASTBase {
         Body.parseIntoChildren(this, closer);
     }
 }
+exports.ASTModule = ASTModule;
 //# sourceMappingURL=Grammar.js.map

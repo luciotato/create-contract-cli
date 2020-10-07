@@ -1,8 +1,10 @@
-import * as path from "path";
-import * as fs from "fs";
-import * as mkPath from "../lib/util/mkPath.js";
-import * as color from '../lib/util/color.js';
-import * as child_process from "child_process";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const path = require("path");
+const fs = require("fs");
+const mkPath = require("../lib/util/mkPath");
+const color = require("../lib/util/color.js");
+const child_process = require("child_process");
 let nickname = "";
 let contractCli = "";
 //-----------------------------------

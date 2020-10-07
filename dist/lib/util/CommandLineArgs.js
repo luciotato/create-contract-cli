@@ -1,3 +1,4 @@
+"use strict";
 /**
  #Simple and minimum command line args parser
  *
@@ -30,13 +31,15 @@ options:
 ## Planned funcionalities:
 ### parse [ ]
 */
-import { sep } from "path"; // host OS path separator
-import { inspect } from "util";
-import * as color from './color.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CommandLineArgs = exports.ShowHelpPage = exports.ShowHelpOptions = void 0;
+const path_1 = require("path"); // host OS path separator
+const util_1 = require("util");
+const color = require("./color.js");
 // ----------------------------------------------------
 // construct and show help page based on valid options
 // ----------------------------------------------------
-export function ShowHelpOptions(optionsDeclaration) {
+function ShowHelpOptions(optionsDeclaration) {
     // show help about declared options
     console.log();
     console.log("-".repeat(60));
@@ -57,10 +60,11 @@ export function ShowHelpOptions(optionsDeclaration) {
     }
     console.log("-".repeat(60));
 }
+exports.ShowHelpOptions = ShowHelpOptions;
 // ----------------------------------------------------
 // construct and show a help page based on the API for the commands
 // ----------------------------------------------------
-export function ShowHelpPage(command, contractAPI, optionsDeclaration) {
+function ShowHelpPage(command, contractAPI, optionsDeclaration) {
     const commandsHelp = {};
     // check all functions in the ContractAPI class, except the class constructor
     const methodNames = Object.getOwnPropertyNames(contractAPI.__proto__)
@@ -86,18 +90,19 @@ export function ShowHelpPage(command, contractAPI, optionsDeclaration) {
     }
     ShowHelpOptions(optionsDeclaration);
 }
+exports.ShowHelpPage = ShowHelpPage;
 // --------------------------
 // --  main exported class --
 // --------------------------
-export class CommandLineArgs {
+class CommandLineArgs {
     constructor(options) {
         this.clArgs = process.argv;
         this.optDeclarations = options;
         this.positional = [];
         // remove 'node' if called as a node script
         if (this.clArgs.length && (this.clArgs[0] === 'node' ||
-            this.clArgs[0].endsWith(sep + 'node')) ||
-            this.clArgs[0].endsWith(sep + 'node.exe')) {
+            this.clArgs[0].endsWith(path_1.sep + 'node')) ||
+            this.clArgs[0].endsWith(path_1.sep + 'node.exe')) {
             this.clArgs = this.clArgs.slice(1);
         }
         // remove this script/executable name from command line arguments
@@ -231,7 +236,7 @@ export class CommandLineArgs {
     noMoreArgs() {
         if (this.positional.length) {
             color.logErr(`unrecognized extra arguments`);
-            console.log(inspect(this.positional));
+            console.log(util_1.inspect(this.positional));
             process.exit(1);
         }
     }
@@ -242,7 +247,7 @@ export class CommandLineArgs {
             if (opt.helpText && this.optDeclarations[key].helpText == opt.helpText)
                 return key;
         }
-        throw new Error("shortName|helpText not found in declarations: " + inspect(opt));
+        throw new Error("shortName|helpText not found in declarations: " + util_1.inspect(opt));
     }
     /**
      * requires the presence of an option with a string value
@@ -503,5 +508,6 @@ export class CommandLineArgs {
         return -1; // not found
     }
 }
+exports.CommandLineArgs = CommandLineArgs;
 // end class CommandLineArgs
 //# sourceMappingURL=CommandLineArgs.js.map

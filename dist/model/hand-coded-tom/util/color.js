@@ -1,11 +1,16 @@
-export const normal = '\x1b[39;49m';
-export const red = '\x1b[91m';
-export const yellow = '\x1b[93m';
-export const green = '\x1b[32m';
-export function logErr(text) {
-    console.error(red + "ERR: " + normal + text);
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.greenOK = exports.logErr = exports.green = exports.yellow = exports.red = exports.normal = void 0;
+exports.normal = '\x1b[39;49m';
+exports.red = '\x1b[91m';
+exports.yellow = '\x1b[93m';
+exports.green = '\x1b[32m';
+function logErr(text) {
+    console.error(exports.red + "ERR: " + exports.normal + text);
 }
-export function greenOK() {
-    console.log(green + "OK" + normal);
+exports.logErr = logErr;
+function greenOK() {
+    console.log(exports.green + "OK" + exports.normal);
 }
+exports.greenOK = greenOK;
 //# sourceMappingURL=color.js.map

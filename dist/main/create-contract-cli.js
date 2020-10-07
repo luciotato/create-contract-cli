@@ -1,22 +1,25 @@
-import * as path from "path";
-import * as fs from "fs";
-import * as mkPath from "../lib/util/mkPath.js";
-import * as color from '../lib/util/color.js';
-import * as child_process from "child_process";
-import * as logger from "../lib/util/logger.js";
-import { Parser } from "../lib/Parser/Parser.js";
-import { ContractAPIProducer as Producer } from "./ContractAPI-producer.js";
-import { CommandLineArgs, ShowHelpOptions } from "../lib/util/CommandLineArgs.js";
-import { options } from "./CLIOptions.js";
-import { URL } from "url";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseAndProduceAPIfor = void 0;
+const path = require("path");
+const fs = require("fs");
+const mkPath = require("../lib/util/mkPath");
+const color = require("../lib/util/color.js");
+const child_process = require("child_process");
+const logger = require("../lib/util/logger");
+const Parser_1 = require("../lib/Parser/Parser");
+const ContractAPI_producer_1 = require("./ContractAPI-producer");
+const CommandLineArgs_1 = require("../lib/util/CommandLineArgs");
+const CLIOptions_1 = require("./CLIOptions");
+const url_1 = require("url");
 // produce ContractAPI by parsing cotract/src/lib.rs
-export function parseAndProduceAPIfor(rustFile, data, outFile) {
+function parseAndProduceAPIfor(rustFile, data, outFile) {
     logger.setDebugLevel(0);
     // parse
     color.action(`Parsing ${rustFile}`);
     let parsedModule;
     try {
-        const parser = new Parser({ skipFunctionBody: true });
+        const parser = new Parser_1.Parser({ skipFunctionBody: true });
         // parse rust lib file
         parsedModule = parser.parseFile(rustFile);
     }
@@ -45,7 +48,7 @@ export function parseAndProduceAPIfor(rustFile, data, outFile) {
     // produce
     color.action(`Producing ${outFile}`);
     try {
-        Producer.produce(parsedModule, data, outFile);
+        ContractAPI_producer_1.ContractAPIProducer.produce(parsedModule, data, outFile);
     }
     catch (ex) {
         console.log(color.red + "ERR");
@@ -62,14 +65,15 @@ export function parseAndProduceAPIfor(rustFile, data, outFile) {
     }
     color.greenOK();
 }
+exports.parseAndProduceAPIfor = parseAndProduceAPIfor;
 // ---------------------------
 // ------ MAIN ---------------
 // ---------------------------
 function main() {
     var _a;
-    const args = new CommandLineArgs(options);
+    const args = new CommandLineArgs_1.CommandLineArgs(CLIOptions_1.options);
     // Show help
-    if (options.help.value) {
+    if (CLIOptions_1.options.help.value) {
         console.log("create-command-cli");
         console.log("Parses your rust NEAR contract code interface from src/lib.rs and generates a cli-tool tailored to that contract");
         console.log();
@@ -81,7 +85,7 @@ function main() {
         console.log(" > create-contact-cli staky core-contracts/staker-pool -c mystaker.stakehouse.betanet --accountId lucio.testnet");
         console.log("This wil create a new cli tool named 'staky', to control the contract at mystaker.stakehouse.betanet");
         console.log("Type 'staky --help' after creation");
-        ShowHelpOptions(options);
+        CommandLineArgs_1.ShowHelpOptions(CLIOptions_1.options);
         process.exit(0);
     }
     const nickname = args.consumeString("nickname");
@@ -97,12 +101,12 @@ function main() {
         process.exit(1);
     }
     // both -c -acc are required
-    args.requireOptionString(options.contractName);
-    args.requireOptionString(options.accountId);
+    args.requireOptionString(CLIOptions_1.options.contractName);
+    args.requireOptionString(CLIOptions_1.options.accountId);
     // create project dir
     let projectDir = `${nickname}-cli`;
-    if (options.output.value)
-        projectDir = path.join(options.output.value, projectDir);
+    if (CLIOptions_1.options.output.value)
+        projectDir = path.join(CLIOptions_1.options.output.value, projectDir);
     color.action(`Creating dir ${projectDir}`);
     try {
         mkPath.create(projectDir);
@@ -117,15 +121,15 @@ function main() {
     // by parsing cotract/src/lib.rs
     const data = {
         nickname: nickname,
-        defaultContractName: options.contractName.value,
-        defaultUserAccountId: options.accountId.value
+        defaultContractName: CLIOptions_1.options.contractName.value,
+        defaultUserAccountId: CLIOptions_1.options.accountId.value
     };
     parseAndProduceAPIfor(rustSourceFile, data, generatedContractAPI);
     // add auxiliary files
     // console.log("Current dir: " +process.cwd())
     // console.log("this script: " +process.argv[1]) // \usr\local\bin\npm\node_modules\create-contract-cli\bin\cli
     // @ts-ignore -- import.meta.url
-    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..");
+    let basedir = path.join(path.dirname(new url_1.URL(import.meta.url).pathname), "..", "..");
     if (basedir.startsWith("\\"))
         basedir = basedir.slice(1); // windows compat remove extra "\"
     basedir = path.relative(process.cwd(), basedir);
@@ -136,7 +140,7 @@ function main() {
         let pkg = fs.readFileSync(path.join(basedir, "res", "package.json")).toString();
         pkg = pkg.replace(/nickname/g, nickname);
         pkg = pkg.replace("${contract}", pathToRustProject.replace(/\\/g, "/")); // windows compat: c.\./
-        pkg = pkg.replace("${contractAddress}", options.contractName.value);
+        pkg = pkg.replace("${contractAddress}", CLIOptions_1.options.contractName.value);
         fs.writeFileSync(path.join(projectDir, "package.json"), pkg);
         //create cli.js
         let cli = fs.readFileSync(path.join(basedir, "res", "cli.js")).toString();
@@ -150,8 +154,8 @@ function main() {
         const text = `
         export const cliConfig =
             {
-                userAccount: "${options.accountId.value}",
-                contractAccount: "${options.contractName.value}"
+                userAccount: "${CLIOptions_1.options.accountId.value}",
+                contractAccount: "${CLIOptions_1.options.contractName.value}"
             }
         `;
         fs.writeFileSync(cliConfigPath, text);
@@ -169,7 +173,7 @@ function main() {
         throw (ex);
     }
     color.greenOK();
-    if (options.nolink.value) {
+    if (CLIOptions_1.options.nolink.value) {
         color.action(`${path.join(projectDir, nickname)} created`);
         color.greenOK();
     }

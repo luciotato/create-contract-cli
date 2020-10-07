@@ -1,18 +1,21 @@
-import * as path from "path";
-import * as mkPath from "../lib/util/mkPath.js";
-import * as logger from "../lib/util/logger.js";
-import * as color from '../lib/util/color.js';
-import { readFileSync } from "fs";
-import { Parser } from "../lib/Parser/Parser.js";
-import { ContractAPIProducer as Producer } from "../main/ContractAPI-producer.js";
-import { spawn } from "child_process";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.testContractAPIProducer = exports.testFor = void 0;
+const path = require("path");
+const mkPath = require("../lib/util/mkPath.js");
+const logger = require("../lib/util/logger.js");
+const color = require("../lib/util/color.js");
+const fs_1 = require("fs");
+const Parser_js_1 = require("../lib/Parser/Parser.js");
+const ContractAPI_producer_1 = require("../main/ContractAPI-producer");
+const child_process_1 = require("child_process");
 const TESTNAME = "ContractAPI Producer";
-export function testFor(rustFile, expectedFile, data) {
+function testFor(rustFile, expectedFile, data) {
     console.log("Testing " + TESTNAME);
     // parse
     let parsedModule;
     try {
-        const parser = new Parser({ skipFunctionBody: true });
+        const parser = new Parser_js_1.Parser({ skipFunctionBody: true });
         // parse rust lib file
         parsedModule = parser.parseFile(rustFile);
     }
@@ -30,28 +33,29 @@ export function testFor(rustFile, expectedFile, data) {
     const generatedFile = path.join(outPath, data.nickname + "-API.js");
     // produce
     try {
-        Producer.produce(parsedModule, data, generatedFile);
+        ContractAPI_producer_1.ContractAPIProducer.produce(parsedModule, data, generatedFile);
     }
     catch (ex) {
         console.log(ex);
         console.log("Error producing " + (parsedModule === null || parsedModule === void 0 ? void 0 : parsedModule.name));
         throw (ex);
     }
-    const generated = readFileSync(generatedFile);
-    const expected = readFileSync(expectedFile);
+    const generated = fs_1.readFileSync(generatedFile);
+    const expected = fs_1.readFileSync(expectedFile);
     if (generated.toString() !== expected.toString()) {
         console.log(color.red + "FAILED " + color.normal);
         console.log("generated: " + generatedFile);
         console.log("expected: " + expectedFile);
         const compareCommand = "meld " + generatedFile + " " + expectedFile;
         console.log(" > " + compareCommand);
-        spawn("meld", [generatedFile, expectedFile]);
+        child_process_1.spawn("meld", [generatedFile, expectedFile]);
     }
     else {
         console.log(TESTNAME + " Test " + color.green + "OK" + color.normal);
     }
 }
-export function testContractAPIProducer() {
+exports.testFor = testFor;
+function testContractAPIProducer() {
     logger.setDebugLevel(0);
     // logger.setDebugLevel(1,1)
     testFor('./res/test/rust/NEARSwap/src/lib.rs', "./res/test/expected/swap-API.js", { nickname: "swap", defaultContractName: "near-clp.betanet" });
@@ -65,4 +69,5 @@ export function testContractAPIProducer() {
     testFor('./res/test/rust/staking-pool-factory/src/lib.rs', "./res/test/expected/factory-API.js", { nickname: "factory", defaultContractName: "testcontract.testnet" });
     testFor('./res/test/rust/voting/src/lib.rs', "./res/test/expected/vote-API.js", { nickname: "vote", defaultContractName: "testcontract.testnet" });
 }
+exports.testContractAPIProducer = testContractAPIProducer;
 //# sourceMappingURL=test.ContractAPI.js.map

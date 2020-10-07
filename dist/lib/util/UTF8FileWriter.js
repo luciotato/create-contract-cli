@@ -1,8 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UTF8FileWriter = void 0;
 // --------------------
 // UTF8FileReader
 // --------------------
-import * as fs from 'fs';
-export class UTF8FileWriter {
+const fs = require("fs");
+class UTF8FileWriter {
     constructor() {
         this.isOpen = false;
         this.indent = 0;
@@ -47,4 +50,5 @@ export class UTF8FileWriter {
         this.isOpen = false;
     }
 }
+exports.UTF8FileWriter = UTF8FileWriter;
 //# sourceMappingURL=UTF8FileWriter.js.map

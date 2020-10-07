@@ -1,12 +1,15 @@
+"use strict";
 // This module defines the base abstract syntax tree node used by the grammar.
 // It's main purpose is to provide utility methods used in the grammar
 // for **req**uired tokens, **opt**ional tokens
 // and comma or semicolon **Separated Lists** of symbols.
-import { TokenCode } from '../Lexer/Lexer.js';
-import { ControlledError } from '../util/ControlledError.js';
-import * as logger from '../util/logger.js';
-import { EOL } from 'os';
-export class ASTBase {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ASTBase = void 0;
+const Lexer_1 = require("../Lexer/Lexer");
+const ControlledError_1 = require("../util/ControlledError");
+const logger = require("../util/logger.js");
+const os_1 = require("os");
+class ASTBase {
     constructor(parent, name) {
         this.children = [];
         this.isPublic = false;
@@ -86,7 +89,7 @@ export class ASTBase {
         // If the AST node was NOT locked, it's a soft-error, and will not abort compilation
         // as the parent node will try other AST classes against the token stream before failing.
         // var cErr = new ControlledError("#{.lexer.posToString()}. #{msg}")
-        const cErr = new ControlledError(`${this.owner.lexer.token.posToString()}. ${msg}`);
+        const cErr = new ControlledError_1.ControlledError(`${this.owner.lexer.token.posToString()}. ${msg}`);
         cErr.soft = !(this.locked);
         throw cErr;
     }
@@ -113,7 +116,7 @@ export class ASTBase {
         for (const child of this.children) {
             if (inx > 0 && separator)
                 o.write(separator);
-            if (separator && separator.includes(EOL))
+            if (separator && separator.includes(os_1.EOL))
                 o.write(' '.repeat(o.indent));
             child.writeComments();
             child.produce();
@@ -213,7 +216,7 @@ export class ASTBase {
                 const searchedToken = searched;
                 found = (t.tokenCode == searchedToken);
                 if (found && logger.debugLevel) {
-                    logger.debug(this.constructor.name, 'matched OK:', TokenCode[searchedToken], t.value);
+                    logger.debug(this.constructor.name, 'matched OK:', Lexer_1.TokenCode[searchedToken], t.value);
                 }
             }
             if (found) { // simple string/Token match
@@ -249,7 +252,7 @@ export class ASTBase {
                     return astNode;
                 }
                 catch (err) {
-                    if (!(err instanceof ControlledError)) { // non-controlled error
+                    if (!(err instanceof ControlledError_1.ControlledError)) { // non-controlled error
                         // discard saved position
                         this.owner.lexer.discardSavedPosition();
                         throw err;
@@ -361,7 +364,7 @@ export class ASTBase {
         logger.debug(`optSeparatedList [${this.constructor.name}] get SeparatedList of [${astClass.name}] by '${separator}' closer:`, closer || '-no closer-');
         const startLine = this.owner.lexer.token.line;
         while (true) {
-            if (this.owner.lexer.token.tokenCode == TokenCode.EOF)
+            if (this.owner.lexer.token.tokenCode == Lexer_1.TokenCode.EOF)
                 break; // break on EOF
             if (closer && this.opt(closer))
                 break; // if closer set, and closer found, break
@@ -474,7 +477,7 @@ export class ASTBase {
                     msg.push(`[${i.name}]`);
                 }
                 else if (typeof i === 'number') {
-                    msg.push(`[${TokenCode[i]}]`);
+                    msg.push(`[${Lexer_1.TokenCode[i]}]`);
                 }
                 else {
                     msg.push(`<${i}>`);
@@ -487,4 +490,5 @@ export class ASTBase {
         return msg.join('|');
     }
 }
+exports.ASTBase = ASTBase;
 //# sourceMappingURL=ASTBase.js.map

@@ -1,40 +1,43 @@
 #!/bin/node
-import { cliConfig } from "./CLIConfig.js";
-import { nickname, ContractAPI } from "./ContractAPI.js";
-import { options } from "./CLIOptions.js";
-import * as color from "./util/color.js";
-import * as nearCli from "./util/SpawnNearCli.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ExtensionAPI = void 0;
+const CLIConfig_js_1 = require("./CLIConfig.js");
+const ContractAPI_js_1 = require("./ContractAPI.js");
+const CLIOptions_js_1 = require("./CLIOptions.js");
+const color = require("./util/color.js");
+const nearCli = require("./util/SpawnNearCli.js");
 // -------------------------
 // Contract API extensions
 // -------------------------
-export class ExtensionAPI extends ContractAPI {
+class ExtensionAPI extends ContractAPI_js_1.ContractAPI {
     constructor() {
         super(...arguments);
         // hm handy extension example
         this.hm_help = `How much? 
 	converts an amount in Yoctos into a more readable format. 
     Example: 
-    >${nickname} hm 30037100000000000000000000
+    >${ContractAPI_js_1.nickname} hm 30037100000000000000000000
     `;
         // where extension example
         this.where_help = `Where is the contract? 
     show contract accountId
-    Example extension, gives the same information as: ${nickname} --info
+    Example extension, gives the same information as: ${ContractAPI_js_1.nickname} --info
     
     Usage:
-    >${nickname} where [are] [you]
+    >${ContractAPI_js_1.nickname} where [are] [you]
     `;
         // balance extension example
         this.state_help = `
     Get contract's account state, with more readable numbers
     
     Usage:
-    >${nickname} state
+    >${ContractAPI_js_1.nickname} state
     `;
         // deploy extension example
-        this.deploy_help = `call near deploy on ${cliConfig.contractAccount} 
+        this.deploy_help = `call near deploy on ${CLIConfig_js_1.cliConfig.contractAccount} 
     Example: 
-    >${nickname} deploy path/to/wasm
+    >${ContractAPI_js_1.nickname} deploy path/to/wasm
     `;
         // -----------------------------------------------
         // -----------------------------------------------
@@ -161,18 +164,19 @@ export class ExtensionAPI extends ContractAPI {
         a.optionalString("are");
         a.optionalString("you");
         a.noMoreArgs();
-        console.log("Contract is at ", color.green, cliConfig.contractAccount, color.normal);
-        console.log("Default user is ", color.green, cliConfig.userAccount, color.normal);
+        console.log("Contract is at ", color.green, CLIConfig_js_1.cliConfig.contractAccount, color.normal);
+        console.log("Default user is ", color.green, CLIConfig_js_1.cliConfig.userAccount, color.normal);
     }
     state(a) {
         a.noMoreArgs();
-        nearCli.spawnNearCli(["state", cliConfig.contractAccount], options);
+        nearCli.spawnNearCli(["state", CLIConfig_js_1.cliConfig.contractAccount], CLIOptions_js_1.options);
     }
     deploy(a) {
         //get path from command line
         const wasmFile = a.consumeString("path/to/contract.wasm");
         //spawn near-cli, command=deploy
-        nearCli.spawnNearCli(["deploy", wasmFile], options);
+        nearCli.spawnNearCli(["deploy", wasmFile], CLIOptions_js_1.options);
     }
 }
+exports.ExtensionAPI = ExtensionAPI;
 //# sourceMappingURL=ExtensionAPI.js.map

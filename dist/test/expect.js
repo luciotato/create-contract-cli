@@ -1,4 +1,6 @@
-import { inspect } from "util";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("util");
 // ------------------------------
 // -- function expect().toBe() --
 // ------------------------------
@@ -45,13 +47,13 @@ expect.prototype.toBe = function (expected) {
     }
     if (!eq) {
         console.log(red + "ERR: expect failed: " + savedTitle + normal);
-        console.log("      received: " + yellow + inspect(saveReceived, { depth: 10 }) + normal);
-        console.log("      expected: " + green + inspect(expected, { depth: 10 }) + normal);
+        console.log("      received: " + yellow + util_1.inspect(saveReceived, { depth: 10 }) + normal);
+        console.log("      expected: " + green + util_1.inspect(expected, { depth: 10 }) + normal);
     }
     else {
         console.log(green + "OK: " + normal + savedTitle);
     }
     return expect.prototype;
 };
-export default expect;
+exports.default = expect;
 //# sourceMappingURL=expect.js.map

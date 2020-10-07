@@ -1,8 +1,11 @@
-import { writeFileSync } from "fs";
-import * as path from "path";
-import { cliConfig } from "../CLIConfig.js";
-import { red, green, normal } from "./color.js";
-export function saveConfig(userAccount, contractAccount) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.saveConfig = void 0;
+const fs_1 = require("fs");
+const path = require("path");
+const CLIConfig_1 = require("../CLIConfig");
+const color_1 = require("./color");
+function saveConfig(userAccount, contractAccount) {
     // @ts-ignore -- import.meta.url
     let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
     if (basedir.startsWith("\\"))
@@ -11,9 +14,9 @@ export function saveConfig(userAccount, contractAccount) {
     process.stdout.write(`saving cli-config to ${cliConfigPath}...`);
     try {
         if (!userAccount)
-            userAccount = cliConfig.userAccount;
+            userAccount = CLIConfig_1.cliConfig.userAccount;
         if (!contractAccount)
-            contractAccount = cliConfig.contractAccount;
+            contractAccount = CLIConfig_1.cliConfig.contractAccount;
         const text = `
         export const cliConfig =
             {
@@ -21,12 +24,13 @@ export function saveConfig(userAccount, contractAccount) {
                 contractAccount: "${contractAccount}"
             }
         `;
-        writeFileSync(cliConfigPath, text);
-        console.log(`${green}OK${normal}`);
+        fs_1.writeFileSync(cliConfigPath, text);
+        console.log(`${color_1.green}OK${color_1.normal}`);
     }
     catch (err) {
-        console.log(`${red}ERR:${err.message}${normal}`);
+        console.log(`${color_1.red}ERR:${err.message}${color_1.normal}`);
         throw (err);
     }
 }
+exports.saveConfig = saveConfig;
 //# sourceMappingURL=saveConfig.js.map

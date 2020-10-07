@@ -1,9 +1,12 @@
+"use strict";
 // public helper class CodeWriter
-import * as fs from 'fs';
-import * as mkPath from '../util/mkPath.js';
-import { assert } from 'console';
-import { EOL } from 'os';
-export class CodeWriter {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CodeWriter = void 0;
+const fs = require("fs");
+const mkPath = require("../util/mkPath");
+const console_1 = require("console");
+const os_1 = require("os");
+class CodeWriter {
     // ---------------------------
     constructor(fn1, data, fn2 = '', fn3 = '') {
         this.fileMode = true;
@@ -55,7 +58,7 @@ export class CodeWriter {
                 if (!this.fileIsOpen[this.selectedStream]) {
                     // make sure output dir exists
                     const filename = this.filenames[this.selectedStream];
-                    assert(filename);
+                    console_1.assert(filename);
                     mkPath.toFile(filename);
                     // open output file
                     this.fHandles[this.selectedStream] = fs.openSync(filename, 'w');
@@ -70,7 +73,7 @@ export class CodeWriter {
                     fs.writeSync(fd, part);
                 }
                 // close the line: "\n"
-                fs.writeSync(fd, EOL);
+                fs.writeSync(fd, os_1.EOL);
             }
             else {
                 // not fileMode
@@ -132,4 +135,5 @@ export class CodeWriter {
         }
     }
 }
+exports.CodeWriter = CodeWriter;
 //# sourceMappingURL=CodeWriter.js.map

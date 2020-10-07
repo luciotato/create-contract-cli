@@ -1,6 +1,9 @@
-import * as Grammar from "../lib/Parser/Grammar.js";
-import { CodeWriter } from "../lib/Parser/CodeWriter.js";
-import * as logger from "../lib/util/logger.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContractAPIProducer = exports.IfStatementWriter = exports.RustClosureWriter = exports.FunctionArgumentWriter = exports.ObjectLiteralWriter = exports.VarRefWriter = exports.LetStatementWriter = exports.ParenExpressionWriter = exports.ExpressionWriter = exports.VarDeclWriter = exports.TypeAnnotationWriter = void 0;
+const Grammar = require("../lib/Parser/Grammar");
+const CodeWriter_1 = require("../lib/Parser/CodeWriter");
+const logger = require("../lib/util/logger");
 // let globalTestFlag = false; //if the rust fn is decorated with "#[test]
 // let debugProduceLineNumbers = false
 class ASTModuleWriter extends Grammar.ASTModule {
@@ -213,7 +216,7 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
     }
 }
 Grammar.FunctionDeclaration.prototype.produce = FunctionDeclarationWriter.prototype.produceContractAPI;
-export class TypeAnnotationWriter extends Grammar.TypeAnnotation {
+class TypeAnnotationWriter extends Grammar.TypeAnnotation {
     produceTS() {
         const o = this.owner.codeWriter;
         o.write(": ");
@@ -232,8 +235,9 @@ export class TypeAnnotationWriter extends Grammar.TypeAnnotation {
         // }
     }
 }
+exports.TypeAnnotationWriter = TypeAnnotationWriter;
 Grammar.TypeAnnotation.prototype.produce = TypeAnnotationWriter.prototype.produceTS;
-export class VarDeclWriter extends Grammar.VariableDecl {
+class VarDeclWriter extends Grammar.VariableDecl {
     produceTS() {
         var _a;
         const o = this.owner.codeWriter;
@@ -257,16 +261,18 @@ export class VarDeclWriter extends Grammar.VariableDecl {
         }
     }
 }
+exports.VarDeclWriter = VarDeclWriter;
 Grammar.VariableDecl.prototype.produce = VarDeclWriter.prototype.produceTS;
-export class ExpressionWriter extends Grammar.Expression {
+class ExpressionWriter extends Grammar.Expression {
     produceTS() {
         var _a;
         // const o = this.owner.codeWriter
         (_a = this.root) === null || _a === void 0 ? void 0 : _a.produce();
     }
 }
+exports.ExpressionWriter = ExpressionWriter;
 Grammar.Expression.prototype.produce = ExpressionWriter.prototype.produceTS;
-export class ParenExpressionWriter extends Grammar.ParenExpression {
+class ParenExpressionWriter extends Grammar.ParenExpression {
     produceTS() {
         const o = this.owner.codeWriter;
         o.write("(");
@@ -274,16 +280,18 @@ export class ParenExpressionWriter extends Grammar.ParenExpression {
         o.write(")");
     }
 }
+exports.ParenExpressionWriter = ParenExpressionWriter;
 Grammar.ParenExpression.prototype.produce = ParenExpressionWriter.prototype.produceTS;
-export class LetStatementWriter extends Grammar.LetStatement {
+class LetStatementWriter extends Grammar.LetStatement {
     produceTS() {
         const o = this.owner.codeWriter;
         o.write("let ");
         this.produceChildren(", ");
     }
 }
+exports.LetStatementWriter = LetStatementWriter;
 Grammar.LetStatement.prototype.produce = LetStatementWriter.prototype.produceTS;
-export class VarRefWriter extends Grammar.VarRef {
+class VarRefWriter extends Grammar.VarRef {
     produceTS() {
         const o = this.owner.codeWriter;
         if (this.name == 'self') {
@@ -299,9 +307,10 @@ export class VarRefWriter extends Grammar.VarRef {
         this.produceChildren();
     }
 }
+exports.VarRefWriter = VarRefWriter;
 Grammar.VarRef.prototype.produce = VarRefWriter.prototype.produceTS;
 const superObjectLiteralProduce = Grammar.ObjectLiteral.prototype.produce;
-export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
+class ObjectLiteralWriter extends Grammar.ObjectLiteral {
     produceTS() {
         const o = this.owner.codeWriter;
         o.indent += 4;
@@ -312,8 +321,9 @@ export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
         o.indent -= 4;
     }
 }
+exports.ObjectLiteralWriter = ObjectLiteralWriter;
 Grammar.ObjectLiteral.prototype.produce = ObjectLiteralWriter.prototype.produceTS;
-export class FunctionArgumentWriter extends Grammar.FunctionArgument {
+class FunctionArgumentWriter extends Grammar.FunctionArgument {
     produceTS() {
         const o = this.owner.codeWriter;
         if (this.expression) {
@@ -324,6 +334,7 @@ export class FunctionArgumentWriter extends Grammar.FunctionArgument {
         }
     }
 }
+exports.FunctionArgumentWriter = FunctionArgumentWriter;
 Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.produceTS;
 // ---------------------------
 // function outNativeRustConversionMapCollect(item: ASTBase) {
@@ -340,7 +351,7 @@ Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.pr
 //        }
 //    }
 // }
-export class RustClosureWriter extends Grammar.RustClosure {
+class RustClosureWriter extends Grammar.RustClosure {
     produceTS() {
         const o = this.owner.codeWriter;
         o.write("function(");
@@ -355,9 +366,10 @@ export class RustClosureWriter extends Grammar.RustClosure {
         o.writeLine("}");
     }
 }
+exports.RustClosureWriter = RustClosureWriter;
 Grammar.RustClosure.prototype.produce = RustClosureWriter.prototype.produceTS;
 // ---------------------------
-export class IfStatementWriter extends Grammar.IfStatement {
+class IfStatementWriter extends Grammar.IfStatement {
     // conditional: Expression
     // ---------------------------
     produceTS() {
@@ -374,14 +386,16 @@ export class IfStatementWriter extends Grammar.IfStatement {
         }
     }
 }
+exports.IfStatementWriter = IfStatementWriter;
 Grammar.IfStatement.prototype.produce = IfStatementWriter.prototype.produceTS;
 // end class IfStatement
-export class ContractAPIProducer {
+class ContractAPIProducer {
     static produce(root, data, outFilename) {
         const parser = root.owner;
-        parser.codeWriter = new CodeWriter(outFilename, data);
+        parser.codeWriter = new CodeWriter_1.CodeWriter(outFilename, data);
         root.produce();
         parser.codeWriter.close();
     }
 }
+exports.ContractAPIProducer = ContractAPIProducer;
 //# sourceMappingURL=ContractAPI-producer.js.map

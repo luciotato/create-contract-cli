@@ -1,9 +1,13 @@
+"use strict";
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as child_process from "child_process";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.thsep = exports.lastNumber = exports.view = exports.call = exports.spawnNearCli = exports.yton = exports.decodeHTMLEntities = exports.setDebug = void 0;
+const child_process = require("child_process");
 let debug = 0;
-export function setDebug(value) { debug = value; }
-export function decodeHTMLEntities(str) {
+function setDebug(value) { debug = value; }
+exports.setDebug = setDebug;
+function decodeHTMLEntities(str) {
     str = str.replace(/&#(\d+);/g, function (match, dec) {
         return String.fromCharCode(dec);
     });
@@ -12,14 +16,16 @@ export function decodeHTMLEntities(str) {
     });
     return str.replace(/&quot;/g, "'");
 }
-export function yton(yoctos) {
+exports.decodeHTMLEntities = decodeHTMLEntities;
+function yton(yoctos) {
     let units = yoctos;
     if (units.length < 25)
         units = units.padStart(25, '0');
     units = units.slice(0, -24) + "." + units.slice(-24);
     return units;
 }
-export function spawnNearCli(args, options) {
+exports.yton = yton;
+function spawnNearCli(args, options) {
     var _a;
     //remove empty args
     let inx = 0;
@@ -104,6 +110,7 @@ export function spawnNearCli(args, options) {
     }
     return stdo;
 }
+exports.spawnNearCli = spawnNearCli;
 // -------------------------------------
 // extension helper fns at ContractAPI
 // -------------------------------------
@@ -117,16 +124,18 @@ function nearCli(cv, contract, command, fnJSONparams, options) {
     return spawnNearCli(nearCliArgs, options);
 }
 // --------------------- call  contract
-export function call(contract, command, fnJSONparams, options) {
+function call(contract, command, fnJSONparams, options) {
     return nearCli("call", contract, command, fnJSONparams, options);
 }
+exports.call = call;
 // --------------------- view on contract
-export function view(contract, command, fnJSONparams, options) {
+function view(contract, command, fnJSONparams, options) {
     return nearCli("view", contract, command, fnJSONparams, options);
 }
+exports.view = view;
 // format output helper functions
 // get single number output on a near view call
-export function lastNumber(stdo) {
+function lastNumber(stdo) {
     if (!stdo)
         return "";
     const items = stdo.split("\n");
@@ -134,8 +143,9 @@ export function lastNumber(stdo) {
         return "";
     return items[items.length - 2].replace(/'/g, "");
 }
+exports.lastNumber = lastNumber;
 // formats a large amount adding _ as thousands separator
-export function thsep(stdonum) {
+function thsep(stdonum) {
     if (stdonum && stdonum.length > 3) {
         for (let n = stdonum.length - 3; n >= 1; n -= 3) {
             stdonum = stdonum.slice(0, n) + "_" + stdonum.slice(n);
@@ -143,4 +153,5 @@ export function thsep(stdonum) {
     }
     return stdonum;
 }
+exports.thsep = thsep;
 //# sourceMappingURL=SpawnNearCli.js.map

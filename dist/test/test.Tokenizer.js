@@ -1,21 +1,24 @@
-import { TokenCode, Lexer } from "../lib/Lexer/Lexer.js";
-import expect from "./expect.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.testTokenizer = void 0;
+const Lexer_js_1 = require("../lib/Lexer/Lexer.js");
+const expect_js_1 = require("./expect.js");
 function testThis(rustCode, expected) {
     process.stdout.write("Testing tokenizer ");
-    const lexer = new Lexer();
+    const lexer = new Lexer_js_1.Lexer();
     lexer.startFromString(rustCode);
     const tokens = [];
     while (true) {
         const t = lexer.token;
         if (!t.isSpace())
-            tokens.push(`(${TokenCode[t.tokenCode]} ${t.value})`);
-        if (t.tokenCode == TokenCode.EOF)
+            tokens.push(`(${Lexer_js_1.TokenCode[t.tokenCode]} ${t.value})`);
+        if (t.tokenCode == Lexer_js_1.TokenCode.EOF)
             break;
         lexer.advance();
     }
-    expect("tokenizer", tokens).toBe(expected);
+    expect_js_1.default("tokenizer", tokens).toBe(expected);
 }
-export function testTokenizer() {
+function testTokenizer() {
     let rustCode = "\n\
     /// The amount of gas given to complete `vote` call.\n\
     const VOTE_GAS: u64 = 100_000_000_000_000;\n\
@@ -54,4 +57,5 @@ export function testTokenizer() {
         '(PUNCTUATION })',
         '(EOF )']);
 }
+exports.testTokenizer = testTokenizer;
 //# sourceMappingURL=test.Tokenizer.js.map

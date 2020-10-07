@@ -1,10 +1,13 @@
+"use strict";
 // The main class in this module is the Tokenizer
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Lexer = exports.Token = exports.TokenCode = void 0;
 // The Lexer translates code (a string or a file) into a list of anottated tokens ready to be parsed
 // --eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import "../util/String.extensions.js";
-import * as logger from '../util/logger.js';
-import { UTF8FileReader } from "../util/UTF8FileReader.js";
-export var TokenCode;
+require("../util/String.extensions.js");
+const logger = require("../util/logger.js");
+const UTF8FileReader_js_1 = require("../util/UTF8FileReader.js");
+var TokenCode;
 (function (TokenCode) {
     TokenCode[TokenCode["BOF"] = 0] = "BOF";
     TokenCode[TokenCode["EOF"] = 1] = "EOF";
@@ -20,7 +23,7 @@ export var TokenCode;
     TokenCode[TokenCode["BINARYNUMBER"] = 11] = "BINARYNUMBER";
     TokenCode[TokenCode["LITERAL_STRING"] = 12] = "LITERAL_STRING";
     TokenCode[TokenCode["LITERAL_OBJECT"] = 13] = "LITERAL_OBJECT";
-})(TokenCode || (TokenCode = {}));
+})(TokenCode = exports.TokenCode || (exports.TokenCode = {}));
 // ----------------------
 // The Token Class
 //= ==============
@@ -30,7 +33,7 @@ export var TokenCode;
 // -the column in the source line in which the token appears
 // class Token
 // constructor
-export class Token {
+class Token {
     constructor(owner, tokenCode, tokenText, line, column) {
         this.owner = owner;
         this.tokenCode = tokenCode;
@@ -62,10 +65,11 @@ export class Token {
         return `${this.line}:${(this.col)} ${this.toString()}`;
     }
 }
+exports.Token = Token;
 //= ==============
 // The Lexer Class
 //= ==============
-export class Lexer {
+class Lexer {
     /**
      * Init all the options for the tokenizer
      * @param options
@@ -286,7 +290,7 @@ export class Lexer {
      */
     openFile(filename) {
         this.filename = filename;
-        this.file = new UTF8FileReader();
+        this.file = new UTF8FileReader_js_1.UTF8FileReader();
         this.file.open(filename, 8 * 1024);
         // read the first chunk
         this.readString = this.file.readChunk();
@@ -568,5 +572,6 @@ export class Lexer {
         return inx;
     }
 }
+exports.Lexer = Lexer;
 Lexer.WHITESPACE_CHARS = ' \t\u00A0\u2028\u2029';
 //# sourceMappingURL=Lexer.js.map

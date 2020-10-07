@@ -1,45 +1,48 @@
-import * as nearCli from "./util/SpawnNearCli.js";
-import { options } from "./CLIOptions.js";
-import { cliConfig } from "./CLIConfig.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContractAPI = exports.nickname = void 0;
+const nearCli = require("./util/SpawnNearCli.js");
+const CLIOptions_js_1 = require("./CLIOptions.js");
+const CLIConfig_js_1 = require("./CLIConfig.js");
 // name of this script
-export const nickname = "tom";
+exports.nickname = "tom";
 // one function for each pub fn in the contract
 // get parameters by consuming from CommandLineParser
-export class ContractAPI {
+class ContractAPI {
     constructor() {
         this.deploy_help = `
-    deploy a WASM file into the account ${cliConfig.contractAccount} and call init function
+    deploy a WASM file into the account ${CLIConfig_js_1.cliConfig.contractAccount} and call init function
     
     usage:
-    > ${nickname} deploy [--account xx] code.WASM new { owner_id:string, stake_public_key:string, reward_fee_fraction: { numerator:x, denominator:y } }
+    > ${exports.nickname} deploy [--account xx] code.WASM new { owner_id:string, stake_public_key:string, reward_fee_fraction: { numerator:x, denominator:y } }
     
     example:
-    > ${nickname} deploy code.WASM new { owner_id:lucio.near, stake_public_key:"7fa387483934", reward_fee_fraction: { numerator:8, denominator:100 } }
-    willl deploy code.WASM at ${cliConfig.contractAccount} and then initialize it
+    > ${exports.nickname} deploy code.WASM new { owner_id:lucio.near, stake_public_key:"7fa387483934", reward_fee_fraction: { numerator:8, denominator:100 } }
+    willl deploy code.WASM at ${CLIConfig_js_1.cliConfig.contractAccount} and then initialize it
     `;
         this.ping_help = `
     Distributes rewards and restakes if needed.
     
     usage:
-    > ${nickname} ping `;
+    > ${exports.nickname} ping `;
         this.get_accounts_help = `
     get registered accounts from the contract
     
     usage:
-    > ${nickname} get_accounts { from_index:number, limit:number }
+    > ${exports.nickname} get_accounts { from_index:number, limit:number }
     
     example:
-    > ${nickname} get_accounts { from_index:0, limit:10 }
+    > ${exports.nickname} get_accounts { from_index:0, limit:10 }
     will get 10 accounts starting from 0
     `;
         this.deposit_help = `
     deposit into the contract for staking later
     
     usage:
-    > ${nickname} deposit --attach Near-amount
+    > ${exports.nickname} deposit --attach Near-amount
     
     example:
-    > ${nickname} deposit --attach 40N
+    > ${exports.nickname} deposit --attach 40N
     will deposit 40N on behalf of your account into the pool
     
     `;
@@ -47,10 +50,10 @@ export class ContractAPI {
 stake deposited unstaked amount
 
 usage:
-> ${nickname} stake { amount: 10N }
+> ${exports.nickname} stake { amount: 10N }
 
 example:
-> ${nickname} stake { amount: 10N }
+> ${exports.nickname} stake { amount: 10N }
 will stake 10N from the unstaked balance of myaccount.betanet 
 
 `;
@@ -58,12 +61,12 @@ will stake 10N from the unstaked balance of myaccount.betanet
     // this.view helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     view(command, fnJSONparams) {
-        return nearCli.view(cliConfig.contractAccount, command, fnJSONparams, options);
+        return nearCli.view(CLIConfig_js_1.cliConfig.contractAccount, command, fnJSONparams, CLIOptions_js_1.options);
     }
     // this.call helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     call(command, fnJSONparams) {
-        return nearCli.call(cliConfig.contractAccount, command, fnJSONparams, options);
+        return nearCli.call(CLIConfig_js_1.cliConfig.contractAccount, command, fnJSONparams, CLIOptions_js_1.options);
     }
     deploy(a) {
         const wasmFile = a.consumeString("wasmFile");
@@ -71,9 +74,9 @@ will stake 10N from the unstaked balance of myaccount.betanet
         const initArgs = a.consumeJSON("init fn params");
         a.noMoreArgs();
         nearCli.spawnNearCli([
-            'deploy', cliConfig.contractAccount, wasmFile,
+            'deploy', CLIConfig_js_1.cliConfig.contractAccount, wasmFile,
             "new", initArgs
-        ], options);
+        ], CLIOptions_js_1.options);
     }
     ping(a) {
         a.noMoreArgs(); // end of arguments
@@ -85,7 +88,7 @@ will stake 10N from the unstaked balance of myaccount.betanet
         return this.view("get_accounts", params);
     }
     deposit(a) {
-        a.requireOptionWithAmount(options.amount, "N"); // require --amount, in Nears
+        a.requireOptionWithAmount(CLIOptions_js_1.options.amount, "N"); // require --amount, in Nears
         a.noMoreArgs();
         this.call("deposit");
     }
@@ -107,4 +110,5 @@ will stake 10N from the unstaked balance of myaccount.betanet
         return this.view("get_staking_key");
     }
 }
+exports.ContractAPI = ContractAPI;
 //# sourceMappingURL=ContractAPI.js.map

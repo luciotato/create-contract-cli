@@ -1,9 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UTF8FileReader = void 0;
 // --------------------
 // UTF8FileReader
 // --------------------
-import * as fs from 'fs';
-import { StringDecoder } from "string_decoder";
-export class UTF8FileReader {
+const fs = require("fs");
+const string_decoder_1 = require("string_decoder");
+class UTF8FileReader {
     constructor() {
         this.isOpen = false;
     }
@@ -24,7 +27,7 @@ export class UTF8FileReader {
         this.readBuffer = Buffer.alloc(this.chunkSize);
         this.readFilePos = 0;
         // a StringDecoder is a buffered object that ensures complete UTF-8 multibyte decoding from a byte buffer
-        this.utf8decoder = new StringDecoder('utf8');
+        this.utf8decoder = new string_decoder_1.StringDecoder('utf8');
     }
     /**
      * read another chunk from the file
@@ -67,4 +70,5 @@ export class UTF8FileReader {
         this.utf8decoder.end();
     }
 }
+exports.UTF8FileReader = UTF8FileReader;
 //# sourceMappingURL=UTF8FileReader.js.map
