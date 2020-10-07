@@ -8,5 +8,5 @@
         "rootDir": "src",
     },
     "include": ["src"],
-    "exclude": ["z-old"]
+    "exclude": ["z-old","out","dist"]
 }

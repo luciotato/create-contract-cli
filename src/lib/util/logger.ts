@@ -1,192 +1,157 @@
 import * as color from './color.js'
 import { ControlledError } from './ControlledError.js'
 
-//Main namespace
-/*eslint no-inner-declarations: "off"*/
-export namespace logger {
+// Main namespace
+/* eslint no-inner-declarations: "off" */
 
-    //errorCount = 0
-    //warningCount = 0
+// errorCount = 0
+// warningCount = 0
 
-    //if storeMessages, messages are pushed at messages[] instead of console.
+// if storeMessages, messages are pushed at messages[] instead of console.
 
-    //storeMessages: boolean
-    //messages: string Array = []
+// storeMessages: boolean
+// messages: string Array = []
 
-    //Implementation
-    //---------------
+// Implementation
+// ---------------
 
-    //     properties
+//     properties
 
-    //errorCount = 0
-    //warningCount = 0
+// errorCount = 0
+// warningCount = 0
 
-    //if storeMessages, messages are pushed at messages[] instead of console.
+// if storeMessages, messages are pushed at messages[] instead of console.
 
-    export var storeMessages: boolean
-    export var verboseLevel = 1
-    export var errorCount = 0
-    export var warningLevel= 0
-    export var warningCount = 0
-    export var messages = []
-    export var verboseLevel = 1
+export let storeMessages: boolean
+export const verboseLevel = 1
+export let errorCount = 0
+export const warningLevel = 0
+export let warningCount = 0
+export let messages = []
 
-    export var debugLevel = 0
-    export var debugFrom = 0
-    export function setDebugLevel(level:number, fromLine?:number){
-        debugLevel = level
-        debugFrom = fromLine||0
+
+export let debugLevel = 0
+export let debugFrom = 0
+export function setDebugLevel(level:number, fromLine?:number): void {
+    debugLevel = level
+    debugFrom = fromLine || 0
+}
+
+//     method debug
+// ---------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debug(...args: any[]): void {
+    if (debugLevel) {
+        console.error(...args)
     }
+}
 
-    //     method debug
-    // ---------------------------
-    // eslint-disable-next-line no-shadow-restricted-names
-    export function debug(...vargs: any[]) {
-
-        //if options.debugEnabled
-        if (debugLevel) {
-
-            //var args = arguments.toArray()
-            var args = Array.prototype.slice.call(vargs)
-            //console.error.apply undefined,args
-            console.error.apply(undefined, args)
-        }
+//     method debugGroup
+// ---------------------------
+export function debugGroup(...args:string[]) : void{
+    if (debugLevel) {
+        console.error(...args)
+        console.group(...args)
     }
+}
 
-    //     method debugGroup
-    // ---------------------------
-    export function debugGroup() {
-
-        //if options.debugEnabled
-        if (debugLevel) {
-
-            //console.error.apply undefined,arguments
-            console.error.apply(undefined, Array.prototype.slice.call(arguments))
-            //console.group.apply undefined,arguments
-            console.group.apply(undefined, Array.prototype.slice.call(arguments))
-        }
+//     method debugGroupEnd
+// ---------------------------
+export function debugGroupEnd():void {
+    if (debugLevel) {
+        console.groupEnd()
     }
+}
 
-    //     method debugGroupEnd
-    // ---------------------------
-    export function debugGroupEnd() {
+//     method error
+// ---------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function error(...args: any[]):void {
+    errorCount++
+    // add "ERROR:", send to debug logger
+    args.unshift('ERROR:')
+    debug(...args)
 
-        //if options.debugEnabled
-        if (debugLevel) {
-
-            //console.groupEnd
-            console.groupEnd()
-        }
+    // if messages should be stored...
+    if (storeMessages) {
+        messages.push(args.join(' '))
+    } else {
+        args.unshift(color.red)
+        args.push(color.normal)
+        console.error.apply(args.join(' '))
     }
+}
 
-    //     method error
-    // ---------------------------
-    export function error(...vargs: any[]) {
+//     method warning
+// ---------------------------
+export function warning(...args: string[]): void {
+    warningCount++
 
-        errorCount++
-        var args = Array.prototype.slice.call(vargs)
+    args.unshift('WARNING:')
+    debug(...args)
 
-        //add "ERROR:", send to debug logger
-        args.unshift('ERROR:')
-        debug.apply(undefined, args)
-
-        //if messages should be stored...
+    if (warningLevel > 0) {
+        // if messages should be stored...
         if (storeMessages) {
             messages.push(args.join(' '))
-        }
-        else {
-            args.unshift(color.red)
+        } else {
+            args.unshift(color.yellow)
             args.push(color.normal)
-            console.error.apply(undefined, args)
+            console.error(args.join(' '))
         }
     }
-
-
-    //     method warning
-    // ---------------------------
-    export function warning(...vargs: string[]) {
-
-        warningCount++
-        var args = Array.prototype.slice.call(vargs)
-
-        args.unshift('WARNING:')
-        debug.apply(undefined, args)
-
-        if (warningLevel > 0) {
-
-            //if messages should be stored...
-            if (storeMessages) {
-                messages.push(args.join(' '))
-            }
-            else {
-                args.unshift(color.yellow)
-                args.push(color.normal)
-                console.error.apply(undefined, args)
-            }
-        }
-    }
-
-    //     method msg
-    // ---------------------------
-    export function msg(...vargs: string[]) {
-
-        var args = Array.prototype.slice.call(vargs)
-        debug.apply(undefined, args)
-        if (verboseLevel >= 1) {
-
-            //if messages should be stored...
-            if (storeMessages) {
-                messages.push(args.join(' '))
-            }
-            else {
-                console.log.apply(undefined, args)
-            }
-        }
-    }
-
-
-    //     method info
-    // ---------------------------
-    export function info() {
-
-        var args = Array.prototype.slice.call(arguments)
-        if (verboseLevel >= 2) {
-
-            //msg.apply(undefined,args)
-            msg.apply(undefined, args)
-        }
-    }
-
-    //     method extra
-    // ---------------------------
-    export function extra() {
-
-        var args = Array.prototype.slice.call(arguments)
-        if (verboseLevel >= 3) {
-            msg.apply(undefined, args)
-        }
-    }
-
-
-    //     method getMessages
-    // ---------------------------
-    export function getMessages() {
-        //get & clear
-        var result = messages
-        messages = []
-        return result
-    }
-
-
-    //     method throwControlled(msg)
-    // ---------------------------
-    export function throwControlled(errorMsg: string) {
-
-        //Throws Error, but with a "controlled" flag set,
-        //to differentiate from unexpected compiler errors
-
-        debug('Controlled ERROR:', errorMsg)
-        throw new ControlledError(errorMsg)
-    }
-
 }
+
+//     method msg
+// ---------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function msg(...args: any[]):void {
+    debug(...args)
+    if (verboseLevel >= 1) {
+        // if messages should be stored...
+        if (storeMessages) {
+            messages.push(args.join(' '))
+        } else {
+            console.log(...args)
+        }
+    }
+}
+
+//     method info
+// ---------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function info(...args:any[]):void {
+    if (verboseLevel >= 2) {
+        // msg.apply(undefined,args)
+        msg(...args)
+    }
+}
+
+//     method extra
+// ---------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extra(...args:any[]):void {
+    if (verboseLevel >= 3) {
+        msg(...args)
+    }
+}
+
+//     method getMessages
+// ---------------------------
+export function getMessages():string[] {
+    // get & clear
+    const result = messages
+    messages = []
+    return result
+}
+
+//     method throwControlled(msg)
+// ---------------------------
+export function throwControlled(errorMsg: string):void {
+    // Throws Error, but with a "controlled" flag set,
+    // to differentiate from unexpected compiler errors
+
+    debug('Controlled ERROR:', errorMsg)
+    throw new ControlledError(errorMsg)
+}
+

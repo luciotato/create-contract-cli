@@ -1,13 +1,12 @@
-﻿//--------------------
+// --------------------
 // UTF8FileReader
-//--------------------
-import * as fs from 'fs';
+// --------------------
+import * as fs from 'fs'
 
 export class UTF8FileWriter {
-
     filename: string;
     isOpen: boolean = false;
-    private fd: number; //file handle from fs.OpenFileSync
+    private fd: number; // file handle from fs.OpenFileSync
     indent: number=0
 
     /**
@@ -15,17 +14,14 @@ export class UTF8FileWriter {
      * @param filename
      */
     open(filename) {
-
         try {
-            this.fd = fs.openSync(filename, 'w');
-        }
-        catch (e) {
-            throw new Error("opening " + filename + ", error:" + e.toString());
+            this.fd = fs.openSync(filename, 'w')
+        } catch (e) {
+            throw new Error("opening " + filename + ", error:" + e.toString())
         }
 
-        this.filename = filename;
-        this.isOpen = true;
-
+        this.filename = filename
+        this.isOpen = true
     }
 
     /**
@@ -33,29 +29,26 @@ export class UTF8FileWriter {
      * (or throw)
      * */
     write(s: string) {
-
         if (!this.isOpen) {
             throw new Error(this.filename + " is closed.")
         }
-        
+
         try {
-            fs.writeSync(this.fd, s);
-        }
-        catch (e) {
-            throw new Error("writing to " + this.filename + ", error:" + e.toString());
+            fs.writeSync(this.fd, s)
+        } catch (e) {
+            throw new Error("writing to " + this.filename + ", error:" + e.toString())
         }
     }
 
     writeLine(s: string) {
         this.write(' '.repeat(this.indent) + s + '\n')
     }
-    
+
     close() {
         if (!this.isOpen) {
-            return;
+            return
         }
-        fs.closeSync(this.fd);
-        this.isOpen = false;
+        fs.closeSync(this.fd)
+        this.isOpen = false
     }
-
 }

@@ -1,12 +1,12 @@
-import { ASTBase } from "../Parser/ASTBase";
-import * as Grammar from "../Parser/Grammar";
-import { Parser } from "../Parser/Parser";
-import { CodeWriter } from "../Parser/CodeWriter";
+import { ASTBase } from "../Parser/ASTBase"
+import * as Grammar from "../Parser/Grammar"
+import { Parser } from "../Parser/Parser"
+import { CodeWriter } from "../Parser/CodeWriter"
 
 import * as Path from 'path'
 
-let globalTestFlag = false; //if the rust fn is decorated with "#[test]
-let debugProduceLineNumbers = false
+let globalTestFlag = false // if the rust fn is decorated with "#[test]
+const debugProduceLineNumbers = false
 
 class ASCodeWriter extends CodeWriter {
     importDone: boolean
@@ -18,32 +18,29 @@ class ASCodeWriter extends CodeWriter {
  * indented, one on each line
  * */
 class RustFnBodyWriter extends ASTBase {
-
     produceBody(indent: number = 4, insertReturn: boolean = true): void {
-
         const o = this.owner.codeWriter
         o.newLine()
         o.indent += indent
         let inx = 0
         for (const child of this.children) {
-
             globalTestFlag = child.writeComments("#[test]")
 
             if (debugProduceLineNumbers) {
                 o.write(`${child.sourceLineNum}: `)
                 if (child.sourceLineNum == 544) {
-                    o.write("*") //debug breakpoint here
+                    o.write("*") // debug breakpoint here
                 }
             }
 
             child.produce()
 
-            if (insertReturn && inx == this.children.length - 1) { //ultimo statement
-                if (child instanceof Grammar.VarRef
-                    || child instanceof Grammar.ObjectLiteral
-                    || child instanceof Grammar.MatchExpression
-                    || child instanceof Grammar.Expression
-                    || child instanceof Grammar.ParenExpression) {
+            if (insertReturn && inx == this.children.length - 1) { // ultimo statement
+                if (child instanceof Grammar.VarRef ||
+                    child instanceof Grammar.ObjectLiteral ||
+                    child instanceof Grammar.MatchExpression ||
+                    child instanceof Grammar.Expression ||
+                    child instanceof Grammar.ParenExpression) {
                     o.currLine.splice(0, 0, "return ")
                 }
             }
@@ -66,23 +63,23 @@ class ASTModuleWriter extends Grammar.ASTModule {
 }
 Grammar.ASTModule.prototype.produce = ASTModuleWriter.prototype.produce
 
-Grammar.UseDeclaration.prototype.produce = function () {
+Grammar.UseDeclaration.prototype.produce = function() {
     if (!this.owner.codeWriter.importDone) {
         this.owner.codeWriter.importDone = true
         this.owner.codeWriter.writeLine('import { Context, logging, storage } from "near-sdk-as".js')
     }
 }
 
-Grammar.StaticDeclaration.prototype.produce = function () {
+Grammar.StaticDeclaration.prototype.produce = function() {
     if (this.name != "ALLOC") {
         this.owner.codeWriter.writeLine('// static ' + this.name)
     }
 }
 
-Grammar.StructDeclaration.prototype.produce = function () {
-    //if (this.children.count == 1) {
+Grammar.StructDeclaration.prototype.produce = function() {
+    // if (this.children.count == 1) {
     this.owner.codeWriter.writeLine('// declare struct ' + this.name)
-    //}
+    // }
 }
 
 class ImplDeclarationWriter extends Grammar.ImplDeclaration {
@@ -95,7 +92,6 @@ class ImplDeclarationWriter extends Grammar.ImplDeclaration {
 Grammar.ImplDeclaration.prototype.produce = ImplDeclarationWriter.prototype.produceTS
 Grammar.ModDeclaration.prototype.produce = ImplDeclarationWriter.prototype.produceTS
 
-
 class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
     produceTS() {
         const o = this.owner.codeWriter
@@ -103,24 +99,24 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         o.write("function ")
         o.write(this.name)
 
-        //param decl
+        // param decl
         o.write("(")
         let inx = 0
         for (const paramDecl of this.paramsDeclarations.children) {
-            if (paramDecl.name != 'self') { //rust 'self' is implicit 'this' in ts
+            if (paramDecl.name != 'self') { // rust 'self' is implicit 'this' in ts
                 if (inx > 0) o.write(", ")
                 paramDecl.produce()
                 inx++
             }
         }
         o.write(")")
-        //end param decl
+        // end param decl
 
-        //Type Annotation
+        // Type Annotation
         this.typeAnnotation?.produce()
-        const hasReturnValue = (this.typeAnnotation!=undefined)
+        const hasReturnValue = (this.typeAnnotation != undefined)
 
-        //Body
+        // Body
         if (this.children.length) {
             o.write(' {')
             RustFnBodyWriter.prototype.produceBody.call(this, 4, hasReturnValue)
@@ -134,17 +130,17 @@ export class TypeAnnotationWriter extends Grammar.TypeAnnotation {
     produceTS() {
         const o = this.owner.codeWriter
         o.write(": ")
-        //this.optAddrOf()
-        //this.optMut()
+        // this.optAddrOf()
+        // this.optMut()
         let replaced = this.name.replace("::", ".")
         switch (replaced) {
-            case 'str': replaced = "string"; break
-            default:
+        case 'str': replaced = "string"; break
+        default:
         }
         o.write(replaced)
-        //if (this.opt('<')) {
+        // if (this.opt('<')) {
         //    this.children = this.reqSeparatedList(Identifier, ',', '>')
-        //}
+        // }
     }
 }
 Grammar.TypeAnnotation.prototype.produce = TypeAnnotationWriter.prototype.produceTS
@@ -156,24 +152,20 @@ export class VarDeclWriter extends Grammar.VariableDecl {
         this.typeAnnotation?.produce()
 
         if (this.assignedExpression) {
-
             o.write(" = ")
 
-            if (this.assignedExpression.name == 'env') { //rust 'env' => AS 'Context'
-
+            if (this.assignedExpression.name == 'env') { // rust 'env' => AS 'Context'
                 o.write('Context.')
 
                 switch (this.assignedExpression.root.name) {
-                    case 'env::signer_account_id':
-                        o.write('sender')
-                        break;
+                case 'env::signer_account_id':
+                    o.write('sender')
+                    break
 
-                    default:
-                        this.assignedExpression.root.produce()
+                default:
+                    this.assignedExpression.root.produce()
                 }
-            }
-
-            else {
+            } else {
                 this.assignedExpression.produce()
             }
         }
@@ -183,7 +175,7 @@ Grammar.VariableDecl.prototype.produce = VarDeclWriter.prototype.produceTS
 
 export class ExpressionWriter extends Grammar.Expression {
     produceTS() {
-        //const o = this.owner.codeWriter
+        // const o = this.owner.codeWriter
         this.root?.produce()
     }
 }
@@ -213,9 +205,9 @@ export class ConstDeclarationWriter extends Grammar.ConstDeclaration {
         const o = this.owner.codeWriter
         o.write("const ")
         o.write(this.name)
-        this.children[0].produce() //type annotation
+        this.children[0].produce() // type annotation
         o.write("  = ")
-        this.children[1].produce() //assigned expression
+        this.children[1].produce() // assigned expression
     }
 }
 Grammar.ConstDeclaration.prototype.produce = ConstDeclarationWriter.prototype.produceTS
@@ -234,16 +226,14 @@ Grammar.TypeDeclaration.prototype.produce = TypeDeclarationWriter.prototype.prod
 export class VarRefWriter extends Grammar.VarRef {
     produceTS() {
         const o = this.owner.codeWriter
-        if (this.name == 'self') { 
+        if (this.name == 'self') {
             o.write('this')
-        }
-        else if (this.name == 'env::log') { //rust 'env::log' => AS logging.log
+        } else if (this.name == 'env::log') { // rust 'env::log' => AS logging.log
             o.write('logging.log')
+        } else {
+            o.write(this.name.replace("::", "."))
         }
-        else {
-            o.write(this.name.replace("::","."))
-        }
-        //accessors 
+        // accessors
         this.produceChildren()
     }
 }
@@ -253,9 +243,9 @@ const superObjectLiteralProduce : Function = Grammar.ObjectLiteral.prototype.pro
 export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
     produceTS() {
         const o = this.owner.codeWriter
-        o.indent+=4
+        o.indent += 4
         superObjectLiteralProduce.call(this)
-        if (this.name) { //"struct-instantiation") {
+        if (this.name) { // "struct-instantiation") {
             o.write(` as ${this.name}`)
         }
         o.indent -= 4
@@ -263,14 +253,12 @@ export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
 }
 Grammar.ObjectLiteral.prototype.produce = ObjectLiteralWriter.prototype.produceTS
 
-
 export class FunctionArgumentWriter extends Grammar.FunctionArgument {
     produceTS() {
         const o = this.owner.codeWriter
         if (this.expression) {
             this.expression.produce()
-        }
-        else {
+        } else {
             o.write("undefined") // rust _ wildcard argument
         }
     }
@@ -278,8 +266,8 @@ export class FunctionArgumentWriter extends Grammar.FunctionArgument {
 Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.produceTS
 
 // ---------------------------
-//function outNativeRustConversionMapCollect(item: ASTBase) {
-//    //veo si al final de la expresion hay uno o mas .into() o .as_u128() .to_vec() .map() . collect() etc, 
+// function outNativeRustConversionMapCollect(item: ASTBase) {
+//    //veo si al final de la expresion hay uno o mas .into() o .as_u128() .to_vec() .map() . collect() etc,
 //    // que son sufijos de conversiones de rust y de map()
 //    const o = item.owner.codeWriter
 //    if (item.nativeSuffixes) {
@@ -291,7 +279,7 @@ Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.pr
 //            o.write(")")
 //        }
 //    }
-//}
+// }
 
 export class RustClosureWriter extends Grammar.RustClosure {
     produceTS() {
@@ -310,14 +298,12 @@ export class RustClosureWriter extends Grammar.RustClosure {
 }
 Grammar.RustClosure.prototype.produce = RustClosureWriter.prototype.produceTS
 
-
 export class MacroInvocationWriter extends Grammar.MacroInvocation {
-
     produceStringInterpolation(o: CodeWriter) {
-        const template = this.macroWords[1].slice(1, -1) //Remove quotes
-        const allParams: string = this.macroWords.slice(3,-1).join("") //remove macro!("template", and closing parenthesis
+        const template = this.macroWords[1].slice(1, -1) // Remove quotes
+        const allParams: string = this.macroWords.slice(3, -1).join("") // remove macro!("template", and closing parenthesis
         const paramUnits = allParams.split(",")
-        //const templateParams = this.macroWords.filter(word => word != ',' && word != ')') //exclude commas and the closing ")"
+        // const templateParams = this.macroWords.filter(word => word != ',' && word != ')') //exclude commas and the closing ")"
         let inx = 0
         const parts = template.split("{}")
         for (const part of parts) {
@@ -336,62 +322,60 @@ export class MacroInvocationWriter extends Grammar.MacroInvocation {
     produceMacroWords(name: string, o: CodeWriter) {
         o.write(name)
         for (const word of this.macroWords) {
-            let out = word;
-            if (word == "self") out = "this";
+            let out = word
+            if (word == "self") out = "this"
             o.write(out)
         }
     }
 
     produceTS() {
         const o = this.owner.codeWriter
-        let name = this.name
+        const name = this.name
         switch (name) {
-            case "format!": {
-                this.produceStringInterpolation(o)
-                break
-            }
-            case "println!": {
-                o.write("console.log(")
-                this.produceStringInterpolation(o)
+        case "format!": {
+            this.produceStringInterpolation(o)
+            break
+        }
+        case "println!": {
+            o.write("console.log(")
+            this.produceStringInterpolation(o)
+            o.write(")")
+            break
+        }
+        case "assert!": {
+            this.produceMacroWords("assert", o)
+            break
+        }
+        case "assert_eq!": {
+            if (globalTestFlag) {
+                o.write("expect(")
+                this.children[0].produce()
+                o.write(").toBe(")
+                this.children[1].produce()
                 o.write(")")
-                break
-            }
-            case "assert!": {
-                this.produceMacroWords("assert", o)
-                break;
-            }
-            case "assert_eq!": {
-                if (globalTestFlag) {
-                    o.write("expect(")
-                    this.children[0].produce()
-                    o.write(").toBe(")
-                    this.children[1].produce()
-                    o.write(")")
+            } else {
+                o.write("assert(")
+                this.children[0].produce()
+                o.write(" == ")
+                this.children[1].produce()
+                o.write(")")
+                if (this.children.length > 2) { // assert failed message
+                    o.write(" //")
+                    this.children[2].produce()
                 }
-                else {
-                    o.write("assert(")
-                    this.children[0].produce()
-                    o.write(" == ")
-                    this.children[1].produce()
-                    o.write(")")
-                    if (this.children.length > 2) { //assert failed message
-                        o.write(" //") 
-                        this.children[2].produce()
-                    }
-                }
-                break
             }
-            default:
-                this.produceMacroWords(this.name,o)
+            break
+        }
+        default:
+            this.produceMacroWords(this.name, o)
         }
     }
 }
 Grammar.MacroInvocation.prototype.produce = MacroInvocationWriter.prototype.produceTS
-//@ts-ignore
+// @ts-ignore
 Grammar.MacroInvocation.prototype.produceStringInterpolation = MacroInvocationWriter.prototype.produceStringInterpolation
-//@ts-ignore
+// @ts-ignore
 Grammar.MacroInvocation.prototype.produceMacroWords = MacroInvocationWriter.prototype.produceMacroWords
-
 
 export class MatchExpressionWriter extends Grammar.MatchExpression {
     produceTS() {
@@ -399,21 +383,19 @@ export class MatchExpressionWriter extends Grammar.MatchExpression {
         o.write("const value=")
         this.exprToMatch.produce()
         o.newLine()
-        let inx = 0;
+        let inx = 0
         for (const mp of this.children as Grammar.MatchPair[]) {
             if (inx >= 1) o.write(" : ")
             o.write("value==")
             if (mp.left) {
                 if (mp.left.name == "None") {
                     o.write("undefined")
-                }
-                else {
+                } else {
                     mp.left.produce()
                 }
                 o.write("? ")
                 mp.right.produce()
-            }
-            else {
+            } else {
                 mp.right.produce()
             }
             inx++
@@ -424,7 +406,7 @@ Grammar.MatchExpression.prototype.produce = MatchExpressionWriter.prototype.prod
 
 // ---------------------------
 export class IfStatementWriter extends Grammar.IfStatement {
-    //conditional: Expression
+    // conditional: Expression
     // ---------------------------
     produceTS() {
         const o = this.owner.codeWriter
@@ -444,9 +426,7 @@ Grammar.IfStatement.prototype.produce = IfStatementWriter.prototype.produceTS
 // end class IfStatement
 
 export class AssemblyScriptProducer {
-
     static produce(root: ASTBase, outFilename: string) {
-
         const parser: Parser = root.owner
         parser.codeWriter = new ASCodeWriter(outFilename, {})
 
@@ -455,6 +435,5 @@ export class AssemblyScriptProducer {
         root.produce()
 
         parser.codeWriter.close()
-
     }
 }

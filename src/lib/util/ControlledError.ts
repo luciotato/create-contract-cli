@@ -1,9 +1,7 @@
 export class ControlledError extends Error {
+    soft:boolean
 
-    soft:Boolean
-
-    constructor(message?:string){
+    constructor(message?:string) {
         super(message)
     }
-    
 }

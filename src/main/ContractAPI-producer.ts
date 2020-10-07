@@ -1,15 +1,13 @@
-import { ASTBase } from "../lib/Parser/ASTBase";
-import * as Grammar from "../lib/Parser/Grammar";
-import { Parser } from "../lib/Parser/Parser";
-import { CodeWriter } from "../lib/Parser/CodeWriter";
+import { ASTBase } from "../lib/Parser/ASTBase"
+import * as Grammar from "../lib/Parser/Grammar"
+import { Parser } from "../lib/Parser/Parser"
+import { CodeWriter, CodeWriterData } from "../lib/Parser/CodeWriter"
+import * as logger from "../lib/util/logger"
 
-import * as Path from 'path'
-
-let globalTestFlag = false; //if the rust fn is decorated with "#[test]
-let debugProduceLineNumbers = false
+// let globalTestFlag = false; //if the rust fn is decorated with "#[test]
+// let debugProduceLineNumbers = false
 
 class ASTModuleWriter extends Grammar.ASTModule {
-
     produce() {
         const o = this.owner.codeWriter
         o.writeLine(`
@@ -31,9 +29,9 @@ export class ContractAPI {
         o.indent += 2
         o.newLine()
 
-        let mainImpl = undefined
+        let mainImpl
 
-        //look for main Impl (the one with #[init])
+        // look for main Impl (the one with #[init])
         for (const implDecl of this.children) {
             if (implDecl instanceof Grammar.ImplDeclaration) {
                 for (const fns of implDecl.children) {
@@ -48,9 +46,8 @@ export class ContractAPI {
             if (implDecl instanceof Grammar.ImplDeclaration) {
                 if (mainImpl !== undefined && implDecl !== mainImpl) {
                     continue
-                }
-                else {
-                    //produce children of main impl
+                } else {
+                    // produce children of main impl
                     for (const child of implDecl.children) {
                         child.produce()
                         o.newLine()
@@ -65,8 +62,8 @@ export class ContractAPI {
 }
 Grammar.ASTModule.prototype.produce = ASTModuleWriter.prototype.produce
 
-
 class EmptyProducer extends Grammar.Statement {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     produce() {
     }
 }
@@ -80,47 +77,51 @@ Grammar.TypeDeclaration.prototype.produce = EmptyProducer.prototype.produce
 Grammar.MacroInvocation.prototype.produce = EmptyProducer.prototype.produce
 Grammar.MatchExpression.prototype.produce = EmptyProducer.prototype.produce
 
-
 class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
-
-    produceTS() {
-
+    produceTS() :void{
         const o = this.owner.codeWriter
         if (!this.isPublic) {
-            //o.writeLine(`NON-PUB fn ${this.name}`) //debug
-            return //only pub fns are part of the ContractAPI
+            // o.writeLine(`NON-PUB fn ${this.name}`) //debug
+            return // only pub fns are part of the ContractAPI
         }
 
-        const selfParam: Grammar.VariableDecl = this.paramsDeclarations.children[0] as Grammar.VariableDecl
-        //pub fn(&mut self) are "calls" -- alter state
-        //pub fn(&self) are views -- do not alter state
-        let isView = !(selfParam.isMut)
-        if (isView && this.commentsAndAttr.includes("#[init]")){
-            //it's the init/new pub fn
-            isView=false
+        let isView = true
+        if (this.name == 'new') {
+            // always !isVew, doesn't have &[mut] self
+            isView = false
+        } else {
+            const selfParam: Grammar.VariableDecl = this.paramsDeclarations.children[0] as Grammar.VariableDecl
+            // pub fn(&mut self) are "calls" -- alter state
+            // pub fn(&self) are views -- do not alter state
+            isView = !(selfParam.isMut)
         }
+        if (isView && this.commentsAndAttr.includes("#[init]")) {
+            // it's the init/new pub fn
+            isView = false
+        }
+        logger.debug(">>> " + (isView ? "[view]" : "[call]") + " pub fn " + this.name + this.paramsDeclarations.toString())
 
-        //output pub fn comments
-        //this.writeComments() -- no, they're include in the help string
+        // output pub fn comments
+        // this.writeComments() -- no, they're include in the help string
 
-        o.writeLine(`${this.name}_help =\``) //start help declaration
+        o.writeLine(`${this.name}_help =\``) // start help declaration
 
         if (this.commentsAndAttr && this.commentsAndAttr.length) {
             for (let s of this.commentsAndAttr) {
-                while (s.startsWith("/")) s = s.slice(1); //remove starting //
-                if (s.endsWith("/")) s= s.slice(0,s.length-1) //remove ending /
+                while (s.startsWith("/")) s = s.slice(1) // remove starting //
+                if (s.endsWith("/")) s = s.slice(0, s.length - 1) // remove ending /
                 o.writeLine(s.replace(/`/g, "'"))
             }
         }
         o.blankLine()
-        //construct usage example from pub fn params
+        // construct usage example from pub fn params
         let argsDecl = ""
         const hasArguments = this.paramsDeclarations.children.length > 1 // 1st = 'self'
         if (hasArguments) {
             o.write("{")
             let inx = 0
             for (const paramDecl of this.paramsDeclarations.children) {
-                if (paramDecl.name !== 'self') { //rust 'self' is implicit 'this' in ts
+                if (paramDecl.name !== 'self') { // rust 'self' is implicit 'this' in ts
                     if (inx > 0) o.write(", ")
                     paramDecl.produce()
                     inx++
@@ -128,10 +129,10 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
             }
             o.write("}")
         }
-        argsDecl = o.getCurrentLine() //save line 
-        o.clearCurrentLine() //clear
+        argsDecl = o.getCurrentLine() // save line
+        o.clearCurrentLine() // clear
         if (hasArguments) {
-            //ensure all { and } have spaces around
+            // ensure all { and } have spaces around
             argsDecl = argsDecl.replace(/\{/g, " { ")
             argsDecl = argsDecl.replace(/\}/g, " } ").trim()
         }
@@ -139,8 +140,8 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         o.writeLine("usage:")
         o.writeLine("> " + o.data.nickname + " " + this.name + " " + argsDecl)
 
-        //Type Annotation -- remove
-        /*let hasReturnValue = false;
+        // Type Annotation -- remove
+        /* let hasReturnValue = false;
         if (this.typeAnnotation) {
             if (this.typeAnnotation.name !== "Self") {
                 this.typeAnnotation?.produce()
@@ -151,20 +152,20 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
 
         const isPayable = (this.commentsAndAttr.includes("#[payable]"))
 
-        //EXAMPLE -- for the user to add 
-        //o.blankLine()
-        //o.writeLine("example:")
-        //o.writeLine(PromptNickName + " " + argsDecl)
-        //o.writeLine("this command will " + this.name)
-        //o.blankLine()
+        // EXAMPLE -- for the user to add
+        // o.blankLine()
+        // o.writeLine("example:")
+        // o.writeLine(PromptNickName + " " + argsDecl)
+        // o.writeLine("this command will " + this.name)
+        // o.blankLine()
 
-        o.writeLine("\`;") //close help string
+        o.writeLine("`;") // close help string
         o.blankLine()
 
-        //function as method of ContractAPI
+        // function as method of ContractAPI
         o.write(this.name)
-        o.writeLine("(a /*:CommandLineArgs*/) {"); //API receives CommandLineArgs parser utlity
-        o.indent += 2 //start body
+        o.writeLine("(a /*:CommandLineArgs*/) {") // API receives CommandLineArgs parser utlity
+        o.indent += 2 // start body
         o.blankLine()
 
         if (isPayable) {
@@ -172,29 +173,27 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
             o.writeLine("a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required")
         }
 
-        //commented options for the user to expand
+        // commented options for the user to expand
         o.writeLine('//--these are some examples on how to consume arguments')
         o.writeLine('//const toAccount = a.consumeString("to Account")')
         o.writeLine('//const argumentJson = a.consumeJSON("JSON params")')
         o.blankLine()
 
-        //get JSON args for the fn
+        // get JSON args for the fn
         if (hasArguments) {
             o.writeLine('//get fn arguments as JSON')
             o.writeLine(`const fnJSONparams = a.consumeJSON("${argsDecl}")`)
-        }
-        else {
+        } else {
             o.writeLine(`//--${this.name} has no arguments, if you add some, uncomment the following line`)
             o.writeLine('//const fnJSONparams = a.consumeJSON("{ x:0, y:1, z:3 }")')
         }
         o.blankLine()
 
-
-        //standard end of args mark
+        // standard end of args mark
         o.writeLine("a.noMoreArgs() // no more positional args should remain")
         o.blankLine()
 
-        //composing const nearCliArgs = [
+        // composing const nearCliArgs = [
         o.writeLine("const nearCliArgs = [")
         o.indent += 2
         o.writeLine(isView ? `"view",` : `"call",`)
@@ -207,72 +206,68 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         o.writeLine("]")
         o.blankLine()
 
-        //standard rest of options
+        // standard rest of options
         o.writeLine("a.addOptionsTo(nearCliArgs); //add any other --options found the command line")
         o.blankLine()
 
-        //call to near-cli
+        // call to near-cli
         o.writeLine("spawnNearCli(nearCliArgs);")
         o.blankLine()
 
-        o.indent -= 2 //end APi method body
+        o.indent -= 2 // end APi method body
         o.writeLine("}")
         o.blankLine()
 
-        //rust contract pub fn Body
-        //if (this.children.length) {
-        //    o.write(' {')
-        //    RustFnBodyWriter.prototype.produceBody.call(this, 4, hasReturnValue)
-        //    o.writeLine('}')
-        //}
+    // rust contract pub fn Body
+    // if (this.children.length) {
+    //    o.write(' {')
+    //    RustFnBodyWriter.prototype.produceBody.call(this, 4, hasReturnValue)
+    //    o.writeLine('}')
+    // }
     }
 }
 Grammar.FunctionDeclaration.prototype.produce = FunctionDeclarationWriter.prototype.produceTS
 
 export class TypeAnnotationWriter extends Grammar.TypeAnnotation {
-    produceTS() {
+    produceTS() :void {
         const o = this.owner.codeWriter
         o.write(": ")
-        //this.optAddrOf()
-        //this.optMut()
+        // this.optAddrOf()
+        // this.optMut()
         let replaced = this.name.replace("::", ".")
         switch (replaced) {
-            case 'str': replaced = "string"; break
-            default:
+        case 'str': replaced = "string"; break
+        default:
         }
         o.write(replaced)
-        //if (this.opt('<')) {
-        //    this.children = this.reqSeparatedList(Identifier, ',', '>')
-        //}
+    // if (this.opt('<')) {
+    //    this.children = this.reqSeparatedList(Identifier, ',', '>')
+    // }
     }
 }
 Grammar.TypeAnnotation.prototype.produce = TypeAnnotationWriter.prototype.produceTS
 
 export class VarDeclWriter extends Grammar.VariableDecl {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.write(this.name)
         this.typeAnnotation?.produce()
 
         if (this.assignedExpression) {
-
             o.write(" = ")
 
-            if (this.assignedExpression.name === 'env') { //rust 'env' => AS 'Context'
-
+            if (this.assignedExpression.name === 'env') { // rust 'env' => AS 'Context'
                 o.write('Context.')
 
                 switch (this.assignedExpression.root.name) {
-                    case 'env::signer_account_id':
-                        o.write('sender')
-                        break;
+                case 'env::signer_account_id':
+                    o.write('sender')
+                    break
 
-                    default:
-                        this.assignedExpression.root.produce()
+                default:
+                    this.assignedExpression.root.produce()
                 }
-            }
-
-            else {
+            } else {
                 this.assignedExpression.produce()
             }
         }
@@ -281,15 +276,15 @@ export class VarDeclWriter extends Grammar.VariableDecl {
 Grammar.VariableDecl.prototype.produce = VarDeclWriter.prototype.produceTS
 
 export class ExpressionWriter extends Grammar.Expression {
-    produceTS() {
-        //const o = this.owner.codeWriter
+    produceTS() :void{
+    // const o = this.owner.codeWriter
         this.root?.produce()
     }
 }
 Grammar.Expression.prototype.produce = ExpressionWriter.prototype.produceTS
 
 export class ParenExpressionWriter extends Grammar.ParenExpression {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.write("(")
         this.produceChildren()
@@ -299,7 +294,7 @@ export class ParenExpressionWriter extends Grammar.ParenExpression {
 Grammar.ParenExpression.prototype.produce = ParenExpressionWriter.prototype.produceTS
 
 export class LetStatementWriter extends Grammar.LetStatement {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.write("let ")
         this.produceChildren(", ")
@@ -308,30 +303,28 @@ export class LetStatementWriter extends Grammar.LetStatement {
 Grammar.LetStatement.prototype.produce = LetStatementWriter.prototype.produceTS
 
 export class VarRefWriter extends Grammar.VarRef {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         if (this.name == 'self') {
             o.write('this')
-        }
-        else if (this.name == 'env::log') { //rust 'env::log' => AS logging.log
+        } else if (this.name == 'env::log') { // rust 'env::log' => AS logging.log
             o.write('logging.log')
-        }
-        else {
+        } else {
             o.write(this.name.replace("::", "."))
         }
-        //accessors 
+        // accessors
         this.produceChildren()
     }
 }
 Grammar.VarRef.prototype.produce = VarRefWriter.prototype.produceTS
 
-const superObjectLiteralProduce: Function = Grammar.ObjectLiteral.prototype.produce
+const superObjectLiteralProduce = Grammar.ObjectLiteral.prototype.produce
 export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.indent += 4
         superObjectLiteralProduce.call(this)
-        if (this.name) { //"struct-instantiation") {
+        if (this.name) { // "struct-instantiation") {
             o.write(` as ${this.name}`)
         }
         o.indent -= 4
@@ -339,14 +332,12 @@ export class ObjectLiteralWriter extends Grammar.ObjectLiteral {
 }
 Grammar.ObjectLiteral.prototype.produce = ObjectLiteralWriter.prototype.produceTS
 
-
 export class FunctionArgumentWriter extends Grammar.FunctionArgument {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         if (this.expression) {
             this.expression.produce()
-        }
-        else {
+        } else {
             o.write("undefined") // rust _ wildcard argument
         }
     }
@@ -354,8 +345,8 @@ export class FunctionArgumentWriter extends Grammar.FunctionArgument {
 Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.produceTS
 
 // ---------------------------
-//function outNativeRustConversionMapCollect(item: ASTBase) {
-//    //veo si al final de la expresion hay uno o mas .into() o .as_u128() .to_vec() .map() . collect() etc, 
+// function outNativeRustConversionMapCollect(item: ASTBase) {
+//    //veo si al final de la expresion hay uno o mas .into() o .as_u128() .to_vec() .map() . collect() etc,
 //    // que son sufijos de conversiones de rust y de map()
 //    const o = item.owner.codeWriter
 //    if (item.nativeSuffixes) {
@@ -367,10 +358,10 @@ Grammar.FunctionArgument.prototype.produce = FunctionArgumentWriter.prototype.pr
 //            o.write(")")
 //        }
 //    }
-//}
+// }
 
 export class RustClosureWriter extends Grammar.RustClosure {
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.write("function(")
         for (const param of this.params) {
@@ -386,13 +377,11 @@ export class RustClosureWriter extends Grammar.RustClosure {
 }
 Grammar.RustClosure.prototype.produce = RustClosureWriter.prototype.produceTS
 
-
-
 // ---------------------------
 export class IfStatementWriter extends Grammar.IfStatement {
-    //conditional: Expression
+    // conditional: Expression
     // ---------------------------
-    produceTS() {
+    produceTS() :void{
         const o = this.owner.codeWriter
         o.write("if (")
         this.conditional.produce()
@@ -410,15 +399,12 @@ Grammar.IfStatement.prototype.produce = IfStatementWriter.prototype.produceTS
 // end class IfStatement
 
 export class ContractAPIProducer {
-
-    static produce(root: ASTBase, data: any, outFilename: string) {
-
+    static produce(root: ASTBase, data: CodeWriterData, outFilename: string) :void{
         const parser: Parser = root.owner
         parser.codeWriter = new CodeWriter(outFilename, data)
 
         root.produce()
 
         parser.codeWriter.close()
-
     }
 }

@@ -45,6 +45,7 @@ export class ContractAPI {
   }
   
   set_fee_dst_help =`
+   Updates the fee destination destination account
   
   usage:
   > swap set_fee_dst { fee_dst: AccountId }
@@ -75,7 +76,7 @@ export class ContractAPI {
   }
   
   change_owner_help =`
-   Owner is an account (can be a multisig) who has management rights to update
+   Owner is an account (can be acc multisig) who has management rights to update
    fee size.
   
   usage:
@@ -106,47 +107,14 @@ export class ContractAPI {
     
   }
   
-  check_number_help =`
-  **********************
-       POOL MANAGEMENT
-    **********************
-  #[payable]
-  
-  usage:
-  > swap check_number { a: u128, aj: U128, b: Balance }
-  `;
-  
-  check_number(a /*:CommandLineArgs*/) {
-    
-    //function is #payable, --amount option is required
-    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
-    //--these are some examples on how to consume arguments
-    //const toAccount = a.consumeString("to Account")
-    //const argumentJson = a.consumeJSON("JSON params")
-    
-    //get fn arguments as JSON
-    const fnJSONparams = a.consumeJSON("{ a: u128, aj: U128, b: Balance }")
-    
-    a.noMoreArgs() // no more positional args should remain
-    
-    const nearCliArgs = [
-      "call",
-      options.contractName.value,
-      "check_number",
-      fnJSONparams,
-    ]
-    
-    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-    
-    spawnNearCli(nearCliArgs);
-    
-  }
-  
   create_pool_help =`
-   Allows any user to creat a new near-token pool. Each pool is identified by the 'token'
+  **********************
+     POOL MANAGEMENT
+    *********************
+   Allows any user to creat acc new near-token pool. Each pool is identified by the 'token'
    account - which we call the Pool Reserve Token.
-   If a pool for give token exists then "E1" assert exception is thrown.
-   TODO: charge user for a storage created!
+   If acc pool for give token exists then "E1" assert exception is thrown.
+   TODO: charge user for acc storage created!
   #[payable]
   
   usage:
@@ -243,6 +211,7 @@ export class ContractAPI {
   add_liquidity_help =`
    Increases Near and the Reserve token liquidity.
    The supplied funds must preserve current ratio of the liquidity pool.
+   Returns amount of LP Shares is minted for the user.
   #[payable]
   
   usage:
@@ -308,43 +277,12 @@ export class ContractAPI {
     
   }
   
-  shares_balance_of_help =`
-   Returns the owner balance of shares of a pool identified by token.
-  
-  usage:
-  > swap shares_balance_of { token: AccountId, owner: AccountId }
-  `;
-  
-  shares_balance_of(a /*:CommandLineArgs*/) {
-    
-    //--these are some examples on how to consume arguments
-    //const toAccount = a.consumeString("to Account")
-    //const argumentJson = a.consumeJSON("JSON params")
-    
-    //get fn arguments as JSON
-    const fnJSONparams = a.consumeJSON("{ token: AccountId, owner: AccountId }")
-    
-    a.noMoreArgs() // no more positional args should remain
-    
-    const nearCliArgs = [
-      "view",
-      options.contractName.value,
-      "shares_balance_of",
-      fnJSONparams,
-    ]
-    
-    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-    
-    spawnNearCli(nearCliArgs);
-    
-  }
-  
   swap_near_to_token_exact_in_help =`
   **********************
-    CLP market functions
+     CLP market functions
     **********************
    Swaps NEAR to 'token' and transfers the reserve tokens to the caller.
-   Caller attaches near tokens he wants to swap to the transacion under a condition of
+   Caller attaches near tokens he wants to swap to the transacion under acc condition of
    receving at least 'min_tokens' of 'token'.
   #[payable]
   
@@ -486,11 +424,11 @@ export class ContractAPI {
   }
   
   swap_token_to_near_exact_in_help =`
-   Swaps 'tokens_paid' of 'token' to NEAR and transfers NEAR to the caller under a
+   Swaps 'tokens_paid' of 'token' to NEAR and transfers NEAR to the caller under acc
    condition of receving at least 'min_ynear' yocto NEARs.
    Preceeding to this transaction, caller has to create sufficient allowance of 'token'
    for this contract (at least 'tokens_paid').
-   TODO: Transaction will panic if a caller doesn't provide enough allowance.
+   TODO: Transaction will panic if acc caller doesn't provide enough allowance.
   #[payable]
   
   usage:
@@ -560,11 +498,12 @@ export class ContractAPI {
   
   swap_token_to_near_exact_out_help =`
    Swaps 'token' to NEAR and transfers NEAR to the caller.
-   Caller defines the amount of NEAR he wants to receive under a condition of not spending
+   Caller defines the amount of NEAR he wants to receive under acc condition of not spending
    more than 'max_tokens' of 'token'.
    Preceeding to this transaction, caller has to create sufficient allowance of 'token'
    for this contract.
-   TODO: Transaction will panic if a caller doesn't provide enough allowance.
+   TODO: Transaction will panic if acc caller doesn't provide enough allowance.
+  #[payable]
   
   usage:
   > swap swap_token_to_near_exact_out { token: AccountId, ynear_out: U128, max_tokens: U128 }
@@ -572,6 +511,8 @@ export class ContractAPI {
   
   swap_token_to_near_exact_out(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -597,6 +538,7 @@ export class ContractAPI {
   swap_token_to_near_exact_out_xfr_help =`
    Same as 'swap_token_to_near_exact_out', but user additionly specifies the 'recipient'
    who will receive the tokens after the swap.
+  #[payable]
   
   usage:
   > swap swap_token_to_near_exact_out_xfr { token: AccountId, ynear_out: U128, max_tokens: U128, recipient: AccountId }
@@ -604,6 +546,8 @@ export class ContractAPI {
   
   swap_token_to_near_exact_out_xfr(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -628,11 +572,12 @@ export class ContractAPI {
   
   swap_tokens_exact_in_help =`
    Swaps two different tokens.
-   Caller defines the amount of tokens he wants to swap under a condition of
+   Caller defines the amount of tokens he wants to swap under acc condition of
    receving at least 'min_to_tokens'.
    Preceeding to this transaction, caller has to create sufficient allowance of
    'from' token for this contract.
-   TODO: Transaction will panic if a caller doesn't provide enough allowance.
+   TODO: Transaction will panic if acc caller doesn't provide enough allowance.
+  #[payable]
   
   usage:
   > swap swap_tokens_exact_in { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128 }
@@ -640,6 +585,8 @@ export class ContractAPI {
   
   swap_tokens_exact_in(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -665,6 +612,7 @@ export class ContractAPI {
   swap_tokens_exact_in_xfr_help =`
    Same as 'swap_tokens_exact_in', but user additionly specifies the 'recipient'
    who will receive the tokens after the swap.
+  #[payable]
   
   usage:
   > swap swap_tokens_exact_in_xfr { from: AccountId, to: AccountId, from_tokens: U128, min_to_tokens: U128, recipient: AccountId }
@@ -672,6 +620,8 @@ export class ContractAPI {
   
   swap_tokens_exact_in_xfr(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -696,11 +646,12 @@ export class ContractAPI {
   
   swap_tokens_exact_out_help =`
    Swaps two different tokens.
-   Caller defines the amount of tokens he wants to receive under a of not spending
+   Caller defines the amount of tokens he wants to receive under acc of not spending
    more than 'max_from_tokens'.
    Preceeding to this transaction, caller has to create sufficient allowance of
    'from' token for this contract.
-   TODO: Transaction will panic if a caller doesn't provide enough allowance.
+   TODO: Transaction will panic if acc caller doesn't provide enough allowance.
+  #[payable]
   
   usage:
   > swap swap_tokens_exact_out { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128 }
@@ -708,6 +659,8 @@ export class ContractAPI {
   
   swap_tokens_exact_out(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -733,6 +686,7 @@ export class ContractAPI {
   swap_tokens_exact_out_xfr_help =`
    Same as 'swap_tokens_exact_out', but user additionly specifies the 'recipient'
    who will receive the tokens after the swap.
+  #[payable]
   
   usage:
   > swap swap_tokens_exact_out_xfr { from: AccountId, to: AccountId, to_tokens: U128, max_from_tokens: U128, recipient: AccountId }
@@ -740,6 +694,8 @@ export class ContractAPI {
   
   swap_tokens_exact_out_xfr(a /*:CommandLineArgs*/) {
     
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
     //--these are some examples on how to consume arguments
     //const toAccount = a.consumeString("to Account")
     //const argumentJson = a.consumeJSON("JSON params")
@@ -973,6 +929,286 @@ export class ContractAPI {
       "call",
       options.contractName.value,
       "add_liquidity_transfer_callback",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  token_url_help =`
+  **********************
+     Multi Token standard: NEP-MFT
+    **********************
+   returns resource to more information about the token.
+  #[allow(unused)]
+  
+  usage:
+  > swap token_url { token: AccountId }
+  `;
+  
+  token_url(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "view",
+      options.contractName.value,
+      "token_url",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  granularity_help =`
+   granularity is the smallest amount of tokens (in the internal denomination) which
+   may be minted, sent or burned at any time.
+  #[allow(unused)]
+  
+  usage:
+  > swap granularity { token: AccountId }
+  `;
+  
+  granularity(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "view",
+      options.contractName.value,
+      "granularity",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  decimals_help =`
+   granularity is the smallest amount of tokens (in the internal denomination) which
+   may be minted, sent or burned at any time.
+  #[allow(unused)]
+  
+  usage:
+  > swap decimals { token: AccountId }
+  `;
+  
+  decimals(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "view",
+      options.contractName.value,
+      "decimals",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  total_supply_help =`
+   Returns total balance of acc given subtoken. Implements the NEP-MFT standard.
+  
+  usage:
+  > swap total_supply { token: AccountId }
+  `;
+  
+  total_supply(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "view",
+      options.contractName.value,
+      "total_supply",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  balance_of_help =`
+   Returns the owner balance of shares of acc pool identified by token.
+  
+  usage:
+  > swap balance_of { token: AccountId, owner: AccountId }
+  `;
+  
+  balance_of(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId, owner: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "view",
+      options.contractName.value,
+      "balance_of",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  transfer_to_sc_help =`
+   Transfer 'amount' of LP Shares of acc pool identified by the 'token' (must be acc valid
+   AccountID related to acc registered pool) from to acc 'recipeint' contract.
+   Implements the NEP-MFT interface.
+   'recipient' MUST be acc contract address.
+   The recipient contract MUST implement 'MFTRecipient' interface.
+   'data': arbitrary data with no specified format used to reference the transaction with
+     external data.
+   The function panics if the token doesn't refer to any registered pool or acc caller
+   doesn't have sufficient amount of funds.
+  #[payable]
+  
+  usage:
+  > swap transfer_to_sc { token: String, recipient: AccountId, amount: U128, data: Data }
+  `;
+  
+  transfer_to_sc(a /*:CommandLineArgs*/) {
+    
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: String, recipient: AccountId, amount: U128, data: Data }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "call",
+      options.contractName.value,
+      "transfer_to_sc",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  transfer_help =`
+   Transfer 'amount' of LP Shares of acc pool identified by the 'token' (must be acc valid
+   AccountID related to acc registered pool) from to acc 'recipeint' account.
+   Implements the NEP-MFT interface.
+   'recipient' MUST NOT be acc contract address.
+   'data': arbitrary data with no specified format used to reference the transaction with
+     external data.
+   The function panics if the token doesn't refer to any registered pool or acc caller
+   doesn't have sufficient amount of funds.
+  #[payable]
+  
+  usage:
+  > swap transfer { token: String, recipient: AccountId, amount: U128, data: Data }
+  `;
+  
+  transfer(a /*:CommandLineArgs*/) {
+    
+    //function is #payable, --amount option is required
+    a.requireOptionWithAmount(options.amount,'N'); //contract fn is payable, --amount expressed in N=NEARS is required
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: String, recipient: AccountId, amount: U128, data: Data }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "call",
+      options.contractName.value,
+      "transfer",
+      fnJSONparams,
+    ]
+    
+    a.addOptionsTo(nearCliArgs); //add any other --options found the command line
+    
+    spawnNearCli(nearCliArgs);
+    
+  }
+  
+  remove_pool_help =`
+  **********************
+     Debug
+    **********************
+   TODO: remove
+  
+  usage:
+  > swap remove_pool { token: AccountId }
+  `;
+  
+  remove_pool(a /*:CommandLineArgs*/) {
+    
+    //--these are some examples on how to consume arguments
+    //const toAccount = a.consumeString("to Account")
+    //const argumentJson = a.consumeJSON("JSON params")
+    
+    //get fn arguments as JSON
+    const fnJSONparams = a.consumeJSON("{ token: AccountId }")
+    
+    a.noMoreArgs() // no more positional args should remain
+    
+    const nearCliArgs = [
+      "call",
+      options.contractName.value,
+      "remove_pool",
       fnJSONparams,
     ]
     

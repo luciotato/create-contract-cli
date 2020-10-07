@@ -1,52 +1,56 @@
 export const options = {
 
-    contractName:{
-        shortName: "c",
-        valueType: "string",
-        value:"${default-contract-name}", //default contract-accountId (where it's deployed)
-        helpText: `sets the contract account ID`
-    },
-
-    accountId:{
+    accountId: {
         shortName: "acc",
         valueType: "string",
-        value: "${default-user-accountId}", //default user accountId (signer)
-        helpText: `user accountId, sets signer`
+        value: "",
+        helpText: `signer accountId`
+    },
+
+    masterAccount: {
+        shortName: "ma",
+        valueType: "string",
+        value: "",
+        helpText: `master account`
     },
 
     help: {
         shortName: "h",
-        value:false,
+        value: false
     },
 
     info: {
         shortName: "i",
         value: false,
-        helpText: 'show configured contract account, default user accountId',
+        helpText: 'show configured contract account, default user accountId'
     },
 
     verbose: {
         shortName: "v",
         helpText: 'Prints out verbose output',
-        name: "verbose",
-
+        name: "verbose"
     },
 
     amount: {
         shortName: "am",
         valueType: "NEAR",
-        value:"",
+        value: "",
         helpText: `attach NEAR tokens to this call. Example: --amount 100N`
 
     },
-
-    networkId:{
+    networkId: {
         shortName: "net",
         valueType: "string",
         value: "",
-        helpText: 'NEAR network ID (default is NODE_ENV)',
+        helpText: 'NEAR network ID (default is NODE_ENV)'
+    }
+
+/*    contractName: {
+        shortName: "contract",
+        valueType: "string",
+        value: "",
+        helpText: `sets the contract account ID for deployment`
     },
-
-
+*/
 }
-
+// # sourceMappingURL=CLIOptions.js.map

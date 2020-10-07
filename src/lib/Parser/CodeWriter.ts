@@ -1,12 +1,15 @@
-//public helper class CodeWriter
+// public helper class CodeWriter
 
 import * as fs from 'fs'
 import * as mkPath from '../util/mkPath'
 import { assert } from 'console'
 import { EOL } from 'os'
 
-export class CodeWriter {
+export type CodeWriterData = {
+    nickname?:string
+}
 
+export class CodeWriter {
     lineNum: number
     column: number
     currLine: string[]
@@ -22,13 +25,13 @@ export class CodeWriter {
     lines
     browser: boolean
     exportNamespace: boolean
-    public data: any
-    
+    public data: CodeWriterData
+
     // ---------------------------
-    constructor(fn1: string, data: any, fn2: string = '', fn3: string = '') {
+    constructor(fn1: string, data: CodeWriterData, fn2: string = '', fn3: string = '') {
         this.filenames = [fn1, fn2, fn3]
         this.data = data
-        //Initialize output array
+        // Initialize output array
         this.lineNum = 1
         this.column = 1
         this.currLine = []
@@ -36,14 +39,14 @@ export class CodeWriter {
     }
 
     // ---------------------------
-    selectOutStream (index: 0|1|2) {
+    selectOutStream(index: 0|1|2) :void {
         this.newLine()
-        this.selectedStream= index
+        this.selectedStream = index
     }
 
     // ---------------------------
-    write (text: string) {
-        //put a string into produced code
+    write(text: string) :void{
+        // put a string into produced code
         if (text) {
             this.currLine.push(text)
             this.column += text.length
@@ -51,22 +54,22 @@ export class CodeWriter {
     }
 
     // ---------------------------
-    writeLine(text: string) {
+    writeLine(text: string) :void{
         this.write(text)
         this.newLine()
     }
 
     // ---------------------------
-    getIndent () {
-        //if no .currLine.length, return 0
+    getIndent() :number{
+        // if no .currLine.length, return 0
         if (!this.currLine.length) { return 0 }
         return this.currLine[0].countSpaces()
     }
 
     // ---------------------------
-    newLine () {
-        //Start New Line into produced code
-        //send the current line
+    newLine() :void{
+        // Start New Line into produced code
+        // send the current line
         if (this.currLine.length) {
             if (this.fileMode) {
                 if (!this.fileIsOpen[this.selectedStream]) {
@@ -74,78 +77,76 @@ export class CodeWriter {
                     const filename = this.filenames[this.selectedStream]
                     assert(filename)
                     mkPath.toFile(filename)
-                    //open output file
+                    // open output file
                     this.fHandles[this.selectedStream] = fs.openSync(filename, 'w')
                     this.fileIsOpen[this.selectedStream] = true
                 }
 
                 const fd = this.fHandles[this.selectedStream]
-                //save all the parts to file
+                // save all the parts to file
                 if (this.indent > 0) fs.writeSync(fd, ' '.repeat(this.indent))
-                //for each part in .currLine
+                // for each part in .currLine
                 for (const part of this.currLine) {
                     fs.writeSync(fd, part)
                 }
-                //close the line: "\n"
+                // close the line: "\n"
                 fs.writeSync(fd, EOL)
-            }
-            else {
-                //not fileMode
-                //store in array
+            } else {
+                // not fileMode
+                // store in array
                 this.lines[this.selectedStream].push(this.currLine.join(''))
             }
 
-            if (this.selectedStream=== 0) {
+            if (this.selectedStream === 0) {
                 this.lineNum++
             }
-
         }
 
         this.clearCurrentLine()
     }
 
-    //----------------------------
+    // ----------------------------
     // clear current working line
-    clearCurrentLine() {
-        //clear current line
+    clearCurrentLine() :void{
+        // clear current line
         this.currLine = []
         this.column = 1
     }
-    //----------------------------
+
+    // ----------------------------
     // return current working line
-    getCurrentLine() {
+    getCurrentLine() :string{
         return this.currLine.join("")
     }
 
     // ---------------------------
-    ensureNewLine () {
-        //if there's something on the line, start a new one
+    ensureNewLine() :void{
+        // if there's something on the line, start a new one
         if (this.currLine.length) { this.newLine() }
     }
 
     // ---------------------------
-    blankLine () {
+    blankLine() :void{
         this.newLine()
         this.currLine.push('')
         this.newLine()
     }
 
     // ---------------------------
-    getResult (inx: 0|1|2 = 0) {
-        //get result and clear memory
+    getResult(inx: 0|1|2 = 0) : string{
+        // get result and clear memory
 
         if (inx === undefined) inx = 0
 
-        this.selectedStream= inx
-        //#close last line
+        this.selectedStream = inx
+        // #close last line
         this.newLine()
         return this.lines[inx]
     }
 
     // ---------------------------
-    close () {
-
-        //save last pending line
+    close() :void{
+        // save last pending line
         this.newLine()
 
         if (this.fileMode) {
@@ -155,8 +156,6 @@ export class CodeWriter {
                     this.fileIsOpen[inx] = false
                 }
             }
-
         }
     }
-
 }

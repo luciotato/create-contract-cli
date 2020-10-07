@@ -1,4 +1,4 @@
-//test/index.ts
+// test/index.ts
 import { logger } from "../util/logger"
 import { Parser } from "../Parser/Parser"
 import { ContractCliProducer as Producer } from "../Producer/create-contract-cli-producer"
@@ -7,10 +7,9 @@ import * as path from "path"
 import { copyFileSync } from "fs"
 
 function main() {
-
     logger.debugEnabled = false
 
-    let parsedModule 
+    let parsedModule
 
     const data = {
         nickname: "tom",
@@ -23,42 +22,37 @@ function main() {
 
     console.log(path.join(process.cwd(), projectPath))
 
-    //parse
+    // parse
     try {
-
         const parser = new Parser()
         parsedModule = parser.parseFile('./src/tests/staking-pool/src/lib.rs')
-
-    }
-    catch (ex) {
+    } catch (ex) {
         console.log("Error parsing " + parsedModule.name)
         console.log(ex)
-        throw(ex)
+        throw (ex)
     }
 
     console.log("parsed ok: " + parsedModule.name)
-    //D3Visualization.saveForTree(parsedModule, "./data.json")
+    // D3Visualization.saveForTree(parsedModule, "./data.json")
 
-    //produce
+    // produce
     try {
         Producer.produce(parsedModule, data, path.join(projectPath, "ContractAPI.js"))
-    }
-    catch (ex) {
+    } catch (ex) {
         console.log("Error producing " + parsedModule.name)
         console.log(ex)
         throw (ex)
     }
 
-    //add auxiliary files
+    // add auxiliary files
     try {
         mkPath.create(path.join(projectPath, "util"))
         const modelPath = path.join("dist", "src", "tests", "model", "hand-coded-tom")
-        copyFileSync(path.join(modelPath, "tom.js"), path.join(projectPath, data.nickname+".js"))
+        copyFileSync(path.join(modelPath, "tom.js"), path.join(projectPath, data.nickname + ".js"))
         for (const file of ["CommandLineArgs", "CommonCLIOptions", "ShowHelpPage", "SpawnNearCli"]) {
             copyFileSync(path.join(modelPath, "util", file + ".js"), path.join(projectPath, "util", file + ".js"))
         }
-    }
-    catch (ex) {
+    } catch (ex) {
         console.log("copying files")
         console.log(ex)
         throw (ex)
@@ -70,13 +64,11 @@ function main() {
 try {
     console.log('Starting')
     main()
-}
-catch (ex) {
+} catch (ex) {
     console.log(ex)
 }
 
-
-/*process.stdin.setRawMode(true);
+/* process.stdin.setRawMode(true);
 process.stdin.resume();
 process.stdin.on('data', process.exit.bind(process, 0));
 */

@@ -1,12 +1,12 @@
 export const options = {
     help: {
         shortName: "h",
-        value: false,
+        value: false
     },
     verbose: {
         shortName: "v",
         helpText: 'Prints out verbose output',
-        name: "verbose",
+        name: "verbose"
     },
     amount: {
         shortName: "am",
@@ -18,7 +18,7 @@ export const options = {
         shortName: "net",
         valueType: "string",
         value: "",
-        helpText: 'NEAR network ID (default is NODE_ENV)',
+        helpText: 'NEAR network ID (default is NODE_ENV)'
     },
     accountId: {
         shortName: "acc",
@@ -31,6 +31,6 @@ export const options = {
         valueType: "string",
         value: "",
         helpText: `sets the contract account ID`
-    },
-};
-//# sourceMappingURL=CLIOptions.js.map
+    }
+}
+// # sourceMappingURL=CLIOptions.js.map

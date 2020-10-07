@@ -65,7 +65,7 @@
 
 import { ASTBase } from './ASTBase'
 import * as logger from '../util/logger.js'
-import { TokenCode } from '../Lexer/Lexer'
+import { Lexer, TokenCode } from '../Lexer/Lexer'
 import { Parser } from './Parser'
 import { EOL } from 'os'
 
@@ -124,7 +124,7 @@ export class Identifier extends ASTBase {
         while (this.opt('::')) {
             this.name += '::'
             if (this.opt("<")) {
-                this.typeParams = DelimitedWordList.parseOpened(this, '<', '>')
+                this.typeParams = DelimitedWordList.parse(this.owner.lexer, "", '<', '>')
             } else {
                 this.name += this.reqToken(TokenCode.WORD)
             }
@@ -248,23 +248,6 @@ export class RegExpLiteral extends ASTBase {
     }
 }
 // end class RegExpLiteral
-
-// ## Operand
-
-// ```
-// Operand: (
-// (NumberLiteral|StringLiteral|RegExpLiteral|ArrayLiteral|ObjectLiteral
-// |ParenExpression|FunctionDeclaration)[Accessors])
-// |VariableRef)
-// ```
-
-// Examples:
-// <br> 4 + 3 -> `Operand Oper Operand`
-// <br> -4    -> `UnaryOper Operand`
-
-// A `Operand` is the data on which the operator operates.
-// It's the left and right part of a binary operator.
-// It's the data affected (righ) by a UnaryOper.
 
 export class Operand extends ASTBase {
     // -------------------------
@@ -711,7 +694,7 @@ export class TypeAnnotation extends ASTBase {
             // check for (nested) type parameters
             const initial = (this.opt('<') || this.opt("<'")) as string
             if (initial) {
-                this.typeParams = DelimitedWordList.parseAfter(initial,this, '<', '>')
+                this.typeParams = DelimitedWordList.parse(this.owner.lexer, initial, '<', '>')
             }
         }
     }
@@ -767,28 +750,18 @@ export class TypeDeclaration extends ASTBase {
 }
 
 export class DelimitedWordList {
-
-    static parse(node: ASTBase,  opener: string, closer: string): string[] {
-        const initial = node.req(opener)
-        return DelimitedWordList.parseAfter(initial, node, opener,closer)
-    }
-
-    static parseOpened(node: ASTBase,  opener: string, closer: string): string[] {
-        return DelimitedWordList.parseAfter(opener, node, opener,closer)
-    }
-
-    static parseAfter(initial: string, node: ASTBase, opener: string, closer: string): string[] {
+    static parse(lexer: Lexer, initial: string, opener: string, closer: string): string[] {
         // read balanced openers/closers { } / () or up to ;
         // because it's a "macro" anything goes (can't use AST Body parser)
         const macroWords: string[] = []
         macroWords.push(initial)
         let openBalance = 1
         while (openBalance > 0) {
-            const word = node.owner.lexer.advance()
+            const word = lexer.advance()
             if (opener && word == opener) { openBalance++ } else if (word == closer) { openBalance-- }
             macroWords.push(word)
         }
-        node.owner.lexer.advance() // consume the closer
+        lexer.advance() // consume the closer
         return macroWords
     }
 }
@@ -801,7 +774,7 @@ export class MacroInvocation extends ASTBase {
         this.name += this.req('!')
         this.lock()
 
-        // handle standard rust macro parameter delimiters
+        // casos especiales de rust de como delimitan los parametros de la macro
         const initial = this.owner.lexer.token.value
         let opener = initial; let closer: string
         if (initial == '{') {
@@ -829,7 +802,7 @@ export class MacroInvocation extends ASTBase {
         } else {
             // read balanced openers/closers { } / () or up to ;
             // because it's a "macro" anything goes (can't use AST Body parser)
-            this.macroWords = DelimitedWordList.parseAfter(initial, this, opener, closer)
+            this.macroWords = DelimitedWordList.parse(this.owner.lexer, initial, opener, closer)
         }
 
         // check if the macro!() ends with .into() .as_bytes() .as_U128() etc
@@ -1006,6 +979,14 @@ export class FunctionDeclaration extends ASTBase {
         this.lock()
         this.name = this.reqToken(TokenCode.WORD)
 
+        // .parseParametersAndBody
+        this.parseParametersAndBody()
+    }
+
+    // ---------------------------
+    parseParametersAndBody() {
+        // This method is shared by functions, methods and constructors.
+        // `()` after `function` are optional. It parses: `'(' [VariableDecl,] ')' '->' Return-TypeAnnotation '{' Body '}'`
 
         // get parameters declarations
         this.paramsDeclarations = this.opt(FunctionParameters) as FunctionParameters
@@ -1018,18 +999,12 @@ export class FunctionDeclaration extends ASTBase {
         // now parse the body
         if (this.owner.lexer.token.value == ";") {
             // just a fn signature declaration (no body)
-        } 
-        else {
-            if (this.owner.options.skipFunctionBody){  //do not parse function body
-                DelimitedWordList.parse(this,"{","}")
-            }
-            else {
-                Body.parseIntoChildren(this)
-            }
+
+        } else {
+            this.req("{")
+            Body.parseIntoChildren(this)
         }
-
     }
-
 }
 // end class FunctionDeclaration
 
@@ -1132,6 +1107,34 @@ export class TraitDeclaration extends ASTBase {
 }
 // end class TraitDeclaration
 
+//    export class TryCatch extends ASTBase
+// constructor
+export class TryCatch extends ASTBase {
+    exceptionBlock
+    // ---------------------------
+    parse() {
+        this.req('try')
+        this.lock()
+        Body.reqAsChild(this, "try-block")
+        if (this.opt('catch')) {
+            Body.reqAsChild(this, "catch-block")
+        }
+        if (this.opt('finally')) {
+            Body.reqAsChild(this, "finally-block")
+        }
+    }
+}
+
+export class ThrowStatement extends ASTBase {
+    // ---------------------------
+    parse() {
+        this.req('throw')
+        // At this point we lock because it is definitely a `throw` statement
+        this.lock()
+        this.reqChild(Expression)
+    }
+}
+// end class ThrowStatement
 
 /**
  * 'return' [Expression]
@@ -1181,6 +1184,124 @@ export class WhileStatement extends ASTBase {
 }
 // end class WhileStatement
 
+// export class ElseIfStatement extends ASTBase {
+//    nextIf
+//    // ---------------------------
+//    parse () {
+//        //.req 'else'
+//        this.req('else');
+//        //.req 'if'
+//        this.req('if');
+//        //.lock()
+//        this.lock();
+
+//        //return the consumed 'if', to parse as a normal `IfStatement`
+
+//        //.lexer.returnToken()
+//        this.lexer.returnToken();
+//        //.nextIf = .req(IfStatement)
+//        this.nextIf = this.req(IfStatement);
+//    }
+// }// end class ElseIfStatement
+
+// Loops
+//= ====
+/*
+export class DoLoop extends ASTBase {
+    preWhileUntilExpression
+    body
+    postWhileUntilExpression
+    // ---------------------------
+    parse () {
+        //.req 'do'
+        this.req('do');
+        //if .opt('nothing')
+        if (this.opt('nothing')) {
+
+            //.throwParseFailed('is do nothing')
+            this.throwParseFailed('is do nothing');
+        };
+        //.opt ":"
+        this.opt(':');
+        //.lock()
+        this.lock();
+
+        //Get optional pre-condition
+
+        //.preWhileUntilExpression = .opt(WhileUntilExpression)
+        this.preWhileUntilExpression = this.opt(WhileUntilExpression);
+        //.body = .opt(Body)
+        this.body = this.opt(Body);
+        //.req "loop"
+        this.req('loop');
+
+        //Get optional post-condition
+
+        //.postWhileUntilExpression = .opt(WhileUntilExpression)
+        this.postWhileUntilExpression = this.opt(WhileUntilExpression);
+        //if .preWhileUntilExpression and .postWhileUntilExpression
+        if (this.preWhileUntilExpression && this.postWhileUntilExpression) {
+
+            //.sayErr "Loop: cannot have a pre-condition a and post-condition at the same time"
+            this.sayErr('Loop: cannot have a pre-condition a and post-condition at the same time');
+        };
+    }
+}// end class DoLoop
+
+//    export class WhileUntilLoop extends DoLoop
+// constructor
+export class WhileUntilLoop extends DoLoop {
+    // ---------------------------
+    parse () {
+        //.preWhileUntilExpression = .req(WhileUntilExpression)
+        this.preWhileUntilExpression = this.req(WhileUntilExpression);
+        //.lock()
+        this.lock();
+        //.body = .opt(Body)
+        this.body = this.opt(Body);
+    }
+}// end class WhileUntilLoop
+
+//    export helper class WhileUntilExpression extends ASTBase
+// constructor
+export class WhileUntilExpression extends ASTBase {
+    expr: Expression
+    // ---------------------------
+    parse () {
+        //.name = .req('while','until')
+        this.name = this.req('while', 'until');
+        //.lock()
+        this.lock();
+        //.expr = .req(Expression)
+        this.expr = this.req(Expression);
+    }
+}// end class WhileUntilExpression
+
+//    export class LoopControlStatement extends ASTBase
+// constructor
+export class LoopControlStatement extends ASTBase {
+    control
+    // ---------------------------
+    parse () {
+        //.control = .req('break','continue')
+        this.control = this.req('break', 'continue');
+        //.opt 'loop'
+        this.opt('loop');
+    }
+}// end class LoopControlStatement
+
+//    export class DoNothingStatement extends ASTBase
+// constructor
+export class DoNothingStatement extends ASTBase {
+    // ---------------------------
+    parse () {
+        //.req 'do'
+        this.req('do');
+        //.req 'nothing'
+        this.req('nothing');
+    }
+}// end class DoNothingStatement
+*/
 
 // ## Range Expression
 export class RangeExpression extends ASTBase {
@@ -1212,6 +1333,288 @@ export class ForStatement extends ASTBase {
     }
 }// end class ForStatement
 
+/*
+//##Variant 1) **for each [own] property**
+//###Loop over **object property names**
+
+//Grammar:
+//`ForEachProperty: for each [own] property name-VariableDecl ["," value-VariableDecl] in object-VariableRef [where Expression]`
+
+//where `name-VariableDecl` is a variable declared on the spot to store each property name,
+//and `object-VariableRef` is the object having the properties
+
+//    export class ForEachProperty extends ASTBase
+// constructor
+export class ForEachProperty extends ASTBase {
+    keyIndexVar: VariableDecl
+    valueVar: VariableDecl
+    iterable: Expression
+    where: ForWhereFilter
+    body
+    ownKey
+    // ---------------------------
+    parse () {
+        //.req('each')
+        this.req('each');
+
+        //optional "own"
+
+        //if .opt("own") into .ownKey
+        if ((this.ownKey = this.opt('own'))) {
+
+            //.lock()
+            this.lock();
+        };
+
+        //next we require: 'property', and lock.
+
+        //.req('property')
+        this.req('property');
+        //.lock()
+        this.lock();
+
+        //Get main variable name (to store property value)
+
+        //.valueVar = .req(VariableDecl)
+        this.valueVar = this.req(VariableDecl);
+
+        //if comma present, it was propName-index (to store property names)
+
+        //if .opt(",")
+        if (this.opt(',')) {
+
+            //.keyIndexVar = .valueVar
+            this.keyIndexVar = this.valueVar;
+            //.valueVar = .req(VariableDecl)
+            this.valueVar = this.req(VariableDecl);
+        };
+
+        //Then we require `in`, and the iterable-Expression (a object)
+
+        //.req 'in'
+        this.req('in');
+        //.iterable = .req(Expression)
+        this.iterable = this.req(Expression);
+
+        //optional where expression (filter)
+
+        //.where = .opt(ForWhereFilter)
+        this.where = this.opt(ForWhereFilter);
+
+        //Now, get the loop body
+
+        //.body = .req(Body)
+        this.body = this.req(Body);
+    }
+}// end class ForEachProperty
+
+//##Variant 2) **for each in**
+//### loop over **Arrays**
+
+//Grammar:
+//`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef [where Expression]`
+
+//where:
+//* `index-VariableDecl` is a variable declared on the spot to store each item index (from 0 to array.length)
+//* `item-VariableDecl` is a variable declared on the spot to store each array item (array[index])
+//and `array-VariableRef` is the array to iterate over
+
+//    export class ForEachInArray extends ASTBase
+// constructor
+export class ForEachInArray extends ASTBase {
+    intIndexVar: VariableDecl
+    keyIndexVar: VariableDecl
+    valueVar: VariableDecl
+    iterable: Expression
+    where: ForWhereFilter
+    body
+    // ---------------------------
+    parse () {
+
+        //first, require 'each'
+
+        //.req 'each'
+        this.req('each');
+
+        //Get value variable name.
+        //Keep it simple: index and value are always variables declared on the spot
+
+        //.valueVar = .req(VariableDecl)
+        this.valueVar = this.req(VariableDecl);
+
+        //a comma means: previous var was 'nameIndex', so register previous as index and get value var
+
+        //if .opt(',')
+        if (this.opt(',')) {
+
+            //.keyIndexVar = .valueVar
+            this.keyIndexVar = this.valueVar;
+            //.valueVar = .req(VariableDecl)
+            this.valueVar = this.req(VariableDecl);
+        };
+
+        //another comma means: full 3 vars: for each intIndex,nameIndex,value in iterable.
+        //Previous two where intIndex & nameIndex
+
+        //if .opt(',')
+        if (this.opt(',')) {
+
+            //.intIndexVar = .keyIndexVar
+            this.intIndexVar = this.keyIndexVar;
+            //.keyIndexVar = .valueVar
+            this.keyIndexVar = this.valueVar;
+            //.valueVar = .req(VariableDecl)
+            this.valueVar = this.req(VariableDecl);
+        };
+
+        //we now *require* `in` and the iterable: Object|Map|Array... any class having a iterableNext(iter) method
+
+        //.req 'in'
+        this.req('in');
+        //.lock()
+        this.lock();
+        //.isMap = .opt('map')
+        this.isMap = this.opt('map');
+        //.iterable = .req(Expression)
+        this.iterable = this.req(Expression);
+
+        //optional where expression
+
+        //.where = .opt(ForWhereFilter)
+        this.where = this.opt(ForWhereFilter);
+
+        //and then, loop body
+
+        //.body = .req(Body)
+        this.body = this.req(Body);
+    }
+}// end class ForEachInArray
+
+//##Variant 3) **for index=...**
+//### to do **numeric loops**
+
+//This `for` variant is just a verbose expressions of the standard C (and js) `for(;;)` loop
+
+//Grammar:
+//`ForIndexNumeric: for index-VariableDecl [","] (while|until|to|down to) end-Expression ["," increment-SingleLineBody]`
+
+//where `index-VariableDecl` is a numeric variable declared on the spot to store loop index,
+//`start-Expression` is the start value for the index (ussually 0)
+//`end-Expression` is:
+//- the end value (`to`)
+//- the condition to keep looping (`while`)
+//- the condition to end looping (`until`)
+//<br>and `increment-SingleLineBody` is the statement(s) used to advance the loop index.
+//If omitted the default is `index++`
+
+//    export class ForIndexNumeric extends ASTBase
+// constructor
+export class ForIndexNumeric extends ASTBase {
+    keyIndexVar: VariableDecl
+    conditionPrefix
+    endExpression
+    increment: Statement
+    body
+    // ---------------------------
+    parse () {
+        //.keyIndexVar = .req(VariableDecl)
+        this.keyIndexVar = this.req(VariableDecl);
+        //.lock()
+        this.lock();
+
+        //next comma is  optional, then
+        //get 'while|until|to' and condition
+
+        //.opt ','
+        this.opt(',');
+        //.conditionPrefix = .req('while','until','to','down')
+        this.conditionPrefix = this.req('while', 'until', 'to', 'down');
+        //if .conditionPrefix is 'down', .req 'to'
+        if (this.conditionPrefix === 'down') { this.req('to') };
+        //.endExpression = .req(Expression)
+        this.endExpression = this.req(Expression);
+
+        //another optional comma, and increment-Statement(s)
+        if (this.opt(',')) {
+            this.increment = this.req(Statement);
+        };
+
+        //Now, get the loop body
+        this.body = this.req(Body);
+    }
+}// end class ForIndexNumeric
+
+//    public helper class ForWhereFilter extends ASTBase
+// constructor
+export class ForWhereFilter extends ASTBase {
+    filterExpression
+    // ---------------------------
+    parse () {
+        //var optNewLine = .opt('NEWLINE')
+        var optNewLine = this.opt('NEWLINE');
+
+        //if .opt('where')
+        if (this.opt('where')) {
+
+            //.lock()
+            this.lock();
+            //.filterExpression = .req(Expression)
+            this.filterExpression = this.req(Expression);
+        }
+        //if .opt('where')
+
+        else {
+            //if optNewLine, .lexer.returnToken # return NEWLINE
+            if (optNewLine) { this.lexer.returnToken() };
+            //.throwParseFailed "expected '[NEWLINE] where'"
+            this.throwParseFailed("expected '[NEWLINE] where'");
+        };
+    }
+}// end class ForWhereFilter
+
+//--------------------------------
+
+//    public class DeleteStatement extends ASTBase
+// constructor
+export class DeleteStatement extends ASTBase {
+    varRef
+    // ---------------------------
+    parse () {
+        //.req('delete')
+        this.req('delete');
+        //.lock()
+        this.lock();
+        //.varRef = .req(VariableRef)
+        this.varRef = this.req(VariableRef);
+    }
+}// end class DeleteStatement
+*/
+
+/*
+ * Partial AssignmentStatement
+ * the L-Value has been parsed already
+ * a '=' followed by an Expression
+ * */
+// export class AssignmentStatement extends ASTBase {
+//     lvalue: VarRef
+//     rvalue: Expression
+//     // ---------------------------
+//     parse() {
+//         this.name = this.reqToken(TokenCode.ASSIGNMENT)
+//         this.lock()
+//         this.rvalue = this.reqClass(Expression) as Expression
+//     }
+//     toString() {
+//         return Function.apply(ASTBase.toString, this) + ' = ' + this.rvalue.name
+//     }
+//     produce() {
+//         const o = this.owner.codeWriter
+//         this.lvalue.produce()
+//         o.write(' ' + this.name + ' ')
+//         this.rvalue.produce()
+//     }
+// }
+// end class AssignmentStatement
 
 // -----------------------
 // ## Accessors
@@ -1432,6 +1835,737 @@ export class VarRef extends ASTBase {
 }
 // end class VariableRef
 
+// ## Operand
+
+// ```
+// Operand: (
+// (NumberLiteral|StringLiteral|RegExpLiteral|ArrayLiteral|ObjectLiteral
+// |ParenExpression|FunctionDeclaration)[Accessors])
+// |VariableRef)
+// ```
+
+// Examples:
+// <br> 4 + 3 -> `Operand Oper Operand`
+// <br> -4    -> `UnaryOper Operand`
+
+// A `Operand` is the data on which the operator operates.
+// It's the left and right part of a binary operator.
+// It's the data affected (righ) by a UnaryOper.
+
+// To make parsing faster, associate a token type/value,
+// with exact AST class to call parse() on.
+
+// var OPERAND_DIRECT_TYPE = map
+
+// 'STRING': StringLiteral
+// 'NUMBER': NumberLiteral
+// 'REGEX': RegExpLiteral
+// 'SPACE_BRACKET':ArrayLiteral # one or more spaces + "["
+
+/*
+//    public class DefinePropertyItem extends ASTBase
+// constructor
+export class DefinePropertyItem extends ASTBase {
+    negated: Boolean
+    // ---------------------------
+    parse () {
+        //.lock()
+        this.lock();
+        //.negated = .opt('not')
+        this.negated = this.opt('not');
+        //.name = .req('enumerable','configurable','writable')
+        //this.name = this.req('enumerable', 'configurable', 'writable');
+    }
+}// end class DefinePropertyItem
+
+//## NamespaceDeclaration
+
+//`NamespaceDeclaration: namespace IDENTIFIER Body`
+
+//Declares a namespace.
+//for js: creates a object with methods and properties
+//for LiteC, just declare a namespace. All classes created inside will have the namespace prepended with "_"
+
+//public class NamespaceDeclaration extends TraitDeclaration // NamespaceDeclaration is instance of TraitDeclaration
+// constructor
+export class NamespaceDeclaration extends TraitDeclaration {
+    constructor() { // default constructor
+        super(arguments)
+    };
+    // ---------------------------
+    parse () {
+
+        //.req 'namespace','Namespace'
+        this.req('namespace', 'Namespace');
+
+        //.lock()
+        this.lock();
+        //.name=.req('IDENTIFIER')
+        this.name = this.req('IDENTIFIER');
+
+        //Now get the namespace body
+
+        //.body = .req(Body)
+        this.body = this.req(Body);
+
+        //.body.validate
+        //PropertiesDeclaration
+        //MethodDeclaration
+        //TraitDeclaration
+        //NamespaceDeclaration
+
+        //## DebuggerStatement
+
+        //`DebuggerStatement: debugger`
+
+        //When a debugger is attached, break at this point.
+
+        //public class DebuggerStatement extends ASTBase
+        this.body.validate(PropertiesDeclaration, MethodDeclaration, TraitDeclaration, NamespaceDeclaration);
+    }
+}// end class NamespaceDeclaration
+
+//## DebuggerStatement
+
+//`DebuggerStatement: debugger`
+
+//When a debugger is attached, break at this point.
+
+//public class DebuggerStatement extends ASTBase
+// constructor
+export class DebuggerStatement extends ASTBase {
+    constructor() { // default constructor
+        super(arguments)
+    };
+    // ---------------------------
+    parse () {
+        //.name = .req("debugger")
+        this.name = this.req('debugger');
+    }
+}// end class DebuggerStatement
+
+//CompilerStatement
+//-----------------
+
+//`compiler` is a generic entry point to alter LiteScript compiler from source code.
+//It allows conditional complilation, setting compiler options, and execute macros
+//to generate code on the fly.
+//Future: allow the programmer to hook transformations on the compiler process itself.
+//<br>`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
+//<br>`set-CompilerStatement: compiler set (VariableDecl,)`
+//<br>`conditional-CompilerStatement: 'compile if IDENTIFIER Body`
+
+//public class CompilerStatement extends ASTBase
+// constructor
+export class CompilerStatement extends ASTBase {
+    kind
+    conditional: String
+    list
+    body
+    endLineInx
+    constructor() { // default constructor
+        super(arguments)
+        //properties
+        //kind, conditional:string
+        //list, body
+        //endLineInx
+    };
+    // ---------------------------
+    parse () {
+        //.req 'compiler','compile'
+        this.req('compiler', 'compile');
+        //.lock()
+        this.lock();
+
+        //.kind = .req('set','if','debugger','options')
+        this.kind = this.req('set', 'if', 'debugger', 'options');
+
+        //### compiler set
+        //get list of declared names, add to root node 'Compiler Vars'
+
+        //if .kind is 'set'
+        if (this.kind === 'set') {
+
+            //.list = .reqSeparatedList(VariableDecl,',')
+            this.list = this.reqSeparatedList(VariableDecl, ',');
+        }
+        //if .kind is 'set'
+
+        else if (this.kind === 'debugger') {
+
+            //debugger
+            debugger;
+        }
+        //else if .kind is 'debugger' #debug-pause the compiler itself, to debug compiling process
+
+        else {
+            //.sayErr 'invalid compiler command'
+            this.sayErr('invalid compiler command');
+        };
+    }
+}// end class CompilerStatement
+
+//## Import Statement
+
+//`ImportStatement: import (ImportStatementItem,)`
+
+//Example: `import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
+
+//Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),wait=require('./wait.for.js')`
+
+//public class ImportStatement extends ASTBase
+// constructor
+export class ImportStatement extends ASTBase {
+    global: Boolean
+    list: []
+    // ---------------------------
+    parse () {
+        //.req('import')
+        this.req('import');
+        //.lock
+        this.lock();
+
+        //if .lexer.options.browser, .throwError "'import' statement invalid in browser-mode. Do you mean 'global declare'?"
+        if (this.lexer.options.browser) { this.throwError("'import ' statement invalid in browser-mode. Do you mean 'global declare'?") };
+
+        //.list = .reqSeparatedList(ImportStatementItem,",")
+        this.list = this.reqSeparatedList(ImportStatementItem, ',');
+
+        //keep track of `import/require` calls
+
+        //var parentModule = .getParent(Module)
+        var parentModule = this.getParent(Module);
+        //for each item in .list
+        for (const item of this.list) {
+            //parentModule.requireCallNodes.push item
+            parentModule.requireCallNodes.push(item);
+        };// end for each in this.list
+
+    }
+}// end class ImportStatement
+
+//    export class ImportStatementItem extends ASTBase
+// constructor
+export class ImportStatementItem extends ASTBase {
+    importParameter: StringLiteral
+    constructor() { // default constructor
+        super(arguments)
+        //properties
+        //importParameter:StringLiteral
+    };
+    // ---------------------------
+    parse () {
+        //.name = .req('IDENTIFIER')
+        this.name = this.req('IDENTIFIER');
+        //if .opt('from')
+        if (this.opt('from')) {
+
+            //.lock()
+            this.lock();
+            //.importParameter = .req(StringLiteral)
+            this.importParameter = this.req(StringLiteral);
+        };
+        //end if
+
+        //## DeclareStatement
+
+        //Declare allows you to define a variable and/or its type
+        //*for the type-checker (at compile-time)*
+
+        //#####Declare variable:type
+        //`DeclareStatement: declare VariableRef:type-VariableRef`
+
+        //Declare a variable type on the fly, from declaration point onward
+
+        //Example: `declare name:string, parent:Grammar.Statement` #on the fly, from declaration point onward
+
+        //#####Global Declare
+        //`global declare (ImportStatementItem+)`
+        //Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects
+        //Example: `global declare jQuery,Document,Window`
+
+        //#####Declare [global] var
+        //`DeclareStatement: declare [global] var (VariableDecl,)+`
+
+        //Allows you to declare a preexistent [global] variable
+        //Example: `declare global var window:object`
+
+        //#####Declare global type for VariableRef
+
+        //Allows you to set the type on a existing variable
+        //globally for the entire compilation.
+
+        //Example:
+        //`declare global type for LocalData.user: Models.userData` #set type globally for the entire compilation
+
+        //#####Declare name affinity
+        //`DeclareStatement: name affinity (IDENTIFIER,)+`
+
+        //To be used inside a class declaration, declare var names
+        //that will default to Class as type
+
+        //Example
+        //```
+        //Class VariableDecl
+        //properties
+        //name: string, sourceLine, column
+        //declare name affinity varDecl
+        //```
+
+        //Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"**
+        //will assume `:VariableDecl` as type. (Class name is automatically included in 'name affinity')
+
+        //Example:
+        //`var varDecl, parentVariableDecl, childVarDecl, variableDecl`
+
+        //all three vars will assume `:VariableDecl` as type.
+
+        //#####Declare valid
+        //`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]`
+
+        //To declare, on the fly, known-valid property chains for local variables.
+        //Example:
+        //`declare valid data.user.name`
+        //`declare valid node.parent.parent.text:string`
+        //`declare valid node.parent.items[].name:string`
+
+        //#####Declare on
+        //`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+`
+
+        //To declare valid members on scope vars.
+        //Allows you to declare the valid properties for a local variable or parameter
+        //Example:
+        //
+        //    function startServer(options)
+        //        declare on options
+        //            name:string, useHeaders:boolean, port:number
+
+        //    export class DeclareStatement extends ASTBase
+
+    }
+}// end class ImportStatementItem
+
+//## DeclareStatement
+
+//Declare allows you to define a variable and/or its type
+//*for the type-checker (at compile-time)*
+
+//#####Declare variable:type
+//`DeclareStatement: declare VariableRef:type-VariableRef`
+
+//Declare a variable type on the fly, from declaration point onward
+
+//Example: `declare name:string, parent:Grammar.Statement` #on the fly, from declaration point onward
+
+//#####Global Declare
+//`global declare (ImportStatementItem+)`
+//Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects
+//Example: `global declare jQuery,Document,Window`
+
+//#####Declare [global] var
+//`DeclareStatement: declare [global] var (VariableDecl,)+`
+
+//Allows you to declare a preexistent [global] variable
+//Example: `declare global var window:object`
+
+//#####Declare global type for VariableRef
+
+//Allows you to set the type on a existing variable
+//globally for the entire compilation.
+
+//Example:
+//`declare global type for LocalData.user: Models.userData` #set type globally for the entire compilation
+
+//#####Declare name affinity
+//`DeclareStatement: name affinity (IDENTIFIER,)+`
+
+//To be used inside a class declaration, declare var names
+//that will default to Class as type
+
+//Example
+//```
+//Class VariableDecl
+//properties
+//name: string, sourceLine, column
+//declare name affinity varDecl
+//```
+
+//Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"**
+//will assume `:VariableDecl` as type. (Class name is automatically included in 'name affinity')
+
+//Example:
+//`var varDecl, parentVariableDecl, childVarDecl, variableDecl`
+
+//all three vars will assume `:VariableDecl` as type.
+
+//#####Declare valid
+//`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]`
+
+//To declare, on the fly, known-valid property chains for local variables.
+//Example:
+//`declare valid data.user.name`
+//`declare valid node.parent.parent.text:string`
+//`declare valid node.parent.items[].name:string`
+
+//#####Declare on
+//`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+`
+
+//To declare valid members on scope vars.
+//Allows you to declare the valid properties for a local variable or parameter
+//Example:
+//
+//    function startServer(options)
+//        declare on options
+//            name:string, useHeaders:boolean, port:number
+
+//FunctionCall
+//------------
+//`FunctionCall: VariableRef ["("] (FunctionArgument,) [")"]`
+
+export class FunctionCall extends ASTBase {
+    varRef: VariableRef
+    // ---------------------------
+    parse () {
+
+        //Check for VariableRef. - can include (...) FunctionAccess
+        this.varRef = this.reqClass(VariableRef);
+
+        //if the last accessor is function call, this is already a FunctionCall
+        //debug "#{.varRef.toString()} #{.varRef.executes?'executes':'DO NOT executes'}"
+
+        //if .varRef.executes
+        if (this.varRef.executes) {
+            //already a function call
+            return;
+        };
+
+        if (this.owner.tokenizer.token.type === TokenCode.EOF) {
+            // no more tokens
+            return;
+        };
+
+        // get parameters, add to varRef as FunctionAccess accessor,
+
+        var functionAccess = new FunctionAccess(this.varRef,'');
+        functionAccess.args = functionAccess.reqSeparatedList(FunctionArgument, ',',')');
+        //.varRef.addAccessor functionAccess
+        this.varRef.addAccessor(functionAccess);
+    }
+}// end class FunctionCall
+
+//## CaseStatement
+
+//`CaseStatement: case [VariableRef] [instance of] NEWLINE (when (Expression,) Body)* [else Body]`
+
+//Similar syntax to ANSI-SQL 'CASE', and ruby's 'case'
+//but it is a "statement" not a expression
+
+//Examples:
+//
+//
+//    case b
+//      when 2,4,6:
+//        print 'even'
+//      when 1,3,5:
+//        print 'odd'
+//      else
+//        print 'idk'
+//    end
+//
+//    // case instance of
+//    case b instance of
+//
+//      when VarStatement:
+//        print 'variables #{b.list}'
+//
+//      when AppendToDeclaration:
+//        print 'it is append to #{b.varRef}'
+//
+//      when NamespaceDeclaration:
+//        print 'namespace #{b.name}'
+//
+//      when TraitDeclaration:
+//        print 'a class, extends #{b.varRefSuper}'
+//
+//      else
+//        print 'unexpected class'
+//
+//    end
+//
+//    // case when TRUE
+//    var result
+//    case
+//        when a is 3 or b < 10:
+//            result = 'option 1'
+//        when b >= 10 or a<0 or c is 5:
+//            result= 'option 2'
+//        else
+//            result = 'other'
+//    end
+//
+
+//    public class CaseStatement extends ASTBase
+// constructor
+export class CaseStatement extends ASTBase {
+    varRef: VariableRef
+    isInstanceof: Boolean
+    cases: Array
+    elseBody: Body
+    constructor() { // default constructor
+        super(arguments)
+        //properties
+        //varRef: VariableRef
+        //isInstanceof: boolean
+        //cases: array of WhenSection
+        //elseBody: Body
+    };
+    // ---------------------------
+    parse () {
+
+        //.req 'case'
+        this.req('case');
+        //.lock
+        this.lock();
+
+        //.varRef = .opt(VariableRef)
+        this.varRef = this.opt(VariableRef);
+
+        //.isInstanceof = .opt('instance','instanceof') //case foo instance of
+        this.isInstanceof = this.opt('instance', 'instanceof');
+        //if .isInstanceof is 'instance', .opt('of')
+        if (this.isInstanceof === 'instance') { this.opt('of') };
+
+        //.req('NEWLINE')
+        this.req('NEWLINE');
+
+        //.cases=[]
+        this.cases = [];
+        //while .opt(WhenSection) into var whenSection
+        var whenSection:= undefined
+        while ((whenSection = this.opt(WhenSection))) {
+            //.cases.push whenSection
+            this.cases.push(whenSection);
+        };// end loop
+
+        //if .cases.length is 0, .sayErr 'no "when" sections found for "case" construction'
+        if (this.cases.length === 0) { this.sayErr('no "when" sections found for "case" construction') };
+
+        //if .opt('else')
+        if (this.opt('else')) {
+
+            //.elseBody = .req(Body)
+            this.elseBody = this.req(Body);
+        };
+    }
+}// end class CaseStatement
+
+//    public helper class WhenSection extends ASTBase
+// constructor
+export class WhenSection extends ASTBase {
+    expressions: Array
+    body
+    constructor() { // default constructor
+        super(arguments)
+        //properties
+        //expressions: Expression array
+        //body
+    };
+    // ---------------------------
+    parse () {
+
+        //.req 'when'
+        this.req('when');
+        //.lock
+        this.lock();
+        //.expressions = .reqSeparatedList(Expression, ",",":")
+        this.expressions = this.reqSeparatedList(Expression, ',', ':');
+
+        //if .lexer.token.type is 'NEWLINE'
+        if (this.owner.tokenizer.token.type === 'NEWLINE') {
+
+            //.body = .req(Body) //indented body block
+            this.body = this.req(Body);
+        }
+        //if .lexer.token.type is 'NEWLINE'
+
+        else {
+            //.body = .req(SingleLineBody)
+            this.body = this.req(SingleLineBody);
+        };
+    }
+}// end class WhenSection
+
+//#### Module level var: valid combinations adjective-statement
+
+//var validCombinations = map
+//export: ['class','namespace','function','var']
+//only: ['class','namespace']
+//generator: ['function','method']
+//nice: ['function','method']
+//shim: ['function','method','import']
+//helper:  ['function','method','class','namespace']
+//global: ['declare','class','namespace','function','var']
+
+//    append to class ASTBase
+var validCombinations = new Map().fromObject({
+    export: ['class', 'namespace', 'function', 'var']
+    , only: ['class', 'namespace']
+    , generator: ['function', 'method']
+    , nice: ['function', 'method']
+    , shim: ['function', 'method', 'import']
+    , helper: ['function', 'method', 'class', 'namespace']
+    , global: ['declare', 'class', 'namespace', 'function', 'var']
+});
+
+//    append to class ASTBase
+
+//      helper method hasAdjective(names:string) returns boolean
+// ---------------------------
+hasAdjective = function (names) {
+    //To check if a statement has one or more adjectives.
+    //We assume .parent is Grammar.Statement
+
+    //var stat:Statement = this.constructor is Statement? this else .getParent(Statement)
+    var stat = this.constructor === Statement ? this : this.getParent(Statement);
+    //if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{names}'): can't find a parent Statement"
+    if (!stat) { this.throwError(`[${.constructor.name}].hasAdjective('#{names}'): can't find a parent Statement`) };
+
+    //var allToSearch = names.split(" ")
+    var allToSearch = names.split(' ');
+    //for each name in allToSearch
+    for (const name of allToSearch) {
+        //if no name in stat.adjectives, return false
+        if (!(stat.adjectives.indexOf(name) >= 0)) { return false };
+    };// end for each in allToSearch
+
+    //return true //if all requested are adjectives
+    return true;
+};
+
+//## Trait bodt
+//Trait bodt is a semicolon-separated list of {fn}s
+export class TraitBody extends ASTBase {
+    fnDecls: FunctionDeclaration[]
+    // ---------------------------
+    parse() {
+        this.fnDecls = this.reqSeparatedList(FunctionDeclaration, ';', '}') as FunctionDeclaration[]
+    }
+}
+
+*/
+
+// ------------------------
+/*
+ * export class TypeDeclaration extends ASTBase {
+    mainType
+    keyType
+    itemType
+    // ---------------------------
+    parse() {
+
+        //parse type declaration:
+
+        //function [(VariableDecl,)]
+        //type-IDENTIFIER [array]
+        //[array of] type-IDENTIFIER
+        //map type-IDENTIFIER to type-IDENTIFIER
+
+        //if .opt('function','Function') #function as type
+        if (this.opt('function', 'Function')) {
+
+            //.lock
+            this.lock();
+            //.mainType= new VariableRef(this, 'Function')
+            this.mainType = new VariableRef(this, 'Function');
+            //if .lexer.token.value is '(', .parseAccessors
+            if (this.owner.tokenizer.token.value === '(') { this.parseAccessors() };
+            //return
+            return;
+        };
+
+        //check for 'array', e.g.: `var list : array of String`
+
+        //if .opt('array','Array')
+        if (this.opt('array', 'Array')) {
+
+            //.lock
+            this.lock();
+            //.mainType = 'Array'
+            this.mainType = 'Array';
+            //if .opt('of')
+            if (this.opt('of')) {
+
+                //.itemType = .req(VariableRef) #reference to an existing class
+                this.itemType = this.req(VariableRef);
+                //auto-capitalize core classes
+                //declare .itemType:VariableRef
+
+                //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+                this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+            };
+            //end if
+            //return
+
+            //return
+            return;
+        };
+
+        //Check for 'map', e.g.: `var list : map string to Statement`
+
+        //.mainType = .req(VariableRef) #reference to an existing class
+        this.mainType = this.req(VariableRef);
+        //.lock
+        this.lock();
+        //auto-capitalize core classes
+        //declare .mainType:VariableRef
+
+        //.mainType.name = autoCapitalizeCoreClasses(.mainType.name)
+        this.mainType.name = autoCapitalizeCoreClasses(this.mainType.name);
+
+        //if .mainType.name is 'Map'
+        if (this.mainType.name === 'Map') {
+
+            //.parent.isMap = true
+            this.parent.isMap = true;
+            //.extraInfo = 'map [type] to [type]' //extra info to show on parse fail
+            this.extraInfo = 'map [type] to [type]';
+            //.keyType = .req(VariableRef) #type for KEYS: reference to an existing class
+            this.keyType = this.req(VariableRef);
+            //auto-capitalize core classes
+            //declare .keyType:VariableRef
+
+            //.keyType.name = autoCapitalizeCoreClasses(.keyType.name)
+            this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
+            //.req('to')
+            this.req('to');
+            //.itemType = .req(VariableRef) #type for values: reference to an existing class
+            this.itemType = this.req(VariableRef);
+            //#auto-capitalize core classes
+            //declare .itemType:VariableRef
+
+            //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+        }
+        //if .mainType.name is 'Map'
+
+        else {
+            //#check for 'type array', e.g.: `var list : string array`
+            //if .opt('Array','array')
+            if (this.opt('Array', 'array')) {
+
+                //.itemType = .mainType #assign read mainType as sub-mainType
+                this.itemType = this.mainType;
+                //.mainType = 'Array' #real type
+                this.mainType = 'Array';
+            };
+        };
+    }// ---------------------------
+    toString () {
+        //return .mainType
+        return this.mainType;
+    }
+}// end class TypeDeclaration
+*/
 
 // ##Statement
 
@@ -1484,7 +2618,12 @@ export class Statement {
         while: WhileStatement,
         for: ForStatement,
         match: MatchExpression,
+        //, 'break': LoopControlStatement
+        //, 'continue': LoopControlStatement
         return: ReturnStatement,
+        throw: ThrowStatement,
+        raise: ThrowStatement,
+        try: TryCatch
     }
 
     // ---------------------------

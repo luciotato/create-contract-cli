@@ -142,7 +142,7 @@ impl MultiSigContract {
         self.confirmations
             .insert(&self.request_nonce, &confirmations);
         self.request_nonce += 1;
-        self.request_nonce - 1
+        return self.request_nonce - 1
     }
 
     /// Add request for multisig and confirm with the pk that added.

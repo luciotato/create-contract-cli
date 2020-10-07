@@ -1,10 +1,10 @@
 /**
  #Simple and minimum command line args parser
- * 
+ *
  ##Functionalities:
- * * Rebuilds JSON object from severral CL args. 
+ * * Rebuilds JSON object from severral CL args.
  *    --Note:  spaces *must* be used around { and }
- * 
+ *
 
 ##Separates positional arguments from --options
 -------------------------------
@@ -13,7 +13,7 @@
 
 result:
 positional:
-[ 
+[
     {
      account_id:"luciotato",
      dest:"otheraccount.betanet",
@@ -31,9 +31,9 @@ options:
 ### parse [ ]
 */
 
-import { sep } from "path"; //host OS path separator
-import { inspect } from "util";
-import { KeyObject } from "crypto";
+import { sep } from "path" // host OS path separator
+import { inspect } from "util"
+import { KeyObject } from "crypto"
 import * as color from './color.js'
 
 export type OptionDeclaration =
@@ -44,20 +44,20 @@ export type OptionDeclaration =
         value?: any
     }
 
-//----------------------------------------------------
-//construct and show help page based on valid options
-//----------------------------------------------------
+// ----------------------------------------------------
+// construct and show help page based on valid options
+// ----------------------------------------------------
 export function ShowHelpOptions(optionsDeclaration: any) {
-    //show help about declared options
+    // show help about declared options
     console.log()
-    console.log("-".repeat(60));
+    console.log("-".repeat(60))
     console.log("Options:")
-    for (let key in optionsDeclaration) {
+    for (const key in optionsDeclaration) {
         let line = ""
-        let opt = optionsDeclaration[key]
+        const opt = optionsDeclaration[key]
         let text = "--" + key
         if (opt.valueType) text = text + " " + opt.valueType
-        if (opt.shortName){
+        if (opt.shortName) {
             text = text + ", -" + opt.shortName
             if (opt.valueType) text = text + " " + opt.valueType
         }
@@ -65,102 +65,96 @@ export function ShowHelpOptions(optionsDeclaration: any) {
         console.log(line)
     }
     console.log("-".repeat(60))
-
 }
 
-//----------------------------------------------------
-//construct and show a help page based on the API for the commands
-//----------------------------------------------------
+// ----------------------------------------------------
+// construct and show a help page based on the API for the commands
+// ----------------------------------------------------
 export function ShowHelpPage(command: string, contractAPI: any, optionsDeclaration: any) {
-
     const commandsHelp: any = {}
 
-    //check all functions in the ContractAPI class, except the class constructor
+    // check all functions in the ContractAPI class, except the class constructor
     const methodNames =
         Object.getOwnPropertyNames(contractAPI.__proto__)
-            .filter(name => name !== "constructor" && (command === "" || name === command)) //filter requested command
+            .filter(name => name !== "constructor" && (command === "" || name === command)) // filter requested command
 
-    //populate commandsHelp
+    // populate commandsHelp
     methodNames.forEach((value) => commandsHelp[value] = "")
 
-    //see which functions have proper help text
-    //check all *_help string items in the ContractAPI class
+    // see which functions have proper help text
+    // check all *_help string items in the ContractAPI class
     const properHelpStrings = Object.getOwnPropertyNames(contractAPI)
     for (const item of properHelpStrings) {
         if (item.endsWith("_help") && typeof contractAPI[item] === "string") {
             const method = item.replace("_help", "")
-            if (command === "" || command == method) { //filter the requested help
-                commandsHelp[method] = contractAPI[item] as string //add proper help
+            if (command === "" || command == method) { // filter the requested help
+                commandsHelp[method] = contractAPI[item] as string // add proper help
             }
         }
     }
-    //print all commands and their help if it's there
+    // print all commands and their help if it's there
     for (const key in commandsHelp) {
-        console.log("-".repeat(60));
-        console.log('command: ' + key); //name the command
-        console.log(commandsHelp[key]); //print the help
+        console.log("-".repeat(60))
+        console.log('command: ' + key) // name the command
+        console.log(commandsHelp[key]) // print the help
     }
 
     ShowHelpOptions(optionsDeclaration)
 }
 
-//--------------------------
-//--  main exported class --
-//--------------------------
+// --------------------------
+// --  main exported class --
+// --------------------------
 export class CommandLineArgs {
+    clArgs: string[] // initial list process.argv
 
-    clArgs: string[] //initial list process.argv
-
-    positional: (string | {})[] //string or JSON objects -- positional arguments
+    positional: (string | {})[] // string or JSON objects -- positional arguments
 
     optDeclarations: any; // pointer to passed option declarations
 
     constructor(options: any) {
-
         this.clArgs = process.argv
-        this.optDeclarations = options 
+        this.optDeclarations = options
         this.positional = []
 
-        //remove 'node' if called as a node script
-        if (this.clArgs.length && (this.clArgs[0] === 'node'
-            || this.clArgs[0].endsWith(sep + 'node'))
-            || this.clArgs[0].endsWith(sep + 'node.exe')
+        // remove 'node' if called as a node script
+        if (this.clArgs.length && (this.clArgs[0] === 'node' ||
+            this.clArgs[0].endsWith(sep + 'node')) ||
+            this.clArgs[0].endsWith(sep + 'node.exe')
         ) {
-            this.clArgs = this.clArgs.slice(1);
-        };
+            this.clArgs = this.clArgs.slice(1)
+        }
 
-        //remove this script/executable name from command line arguments
-        this.clArgs = this.clArgs.slice(1);
+        // remove this script/executable name from command line arguments
+        this.clArgs = this.clArgs.slice(1)
 
-        //process each item separating options from posiitonal args
+        // process each item separating options from posiitonal args
 
-        //First: process --options 
+        // First: process --options
         for (const key in options) {
             const optionDecl = options[key]
-            //search for option name & variations 
+            // search for option name & variations
             const pos = this.searchOption(optionDecl)
-            if (pos >= 0) { //found in command line args
+            if (pos >= 0) { // found in command line args
+                const literal = this.clArgs[pos] // as written
+                this.clArgs.splice(pos, 1) // remove from cl args
 
-                const literal = this.clArgs[pos]; //as written
-                this.clArgs.splice(pos, 1); //remove from cl args
-
-                if (optionDecl.valueType) { //has a value
+                if (optionDecl.valueType) { // has a value
                     if (pos >= this.clArgs.length) {
                         color.logErr("expecting value after " + literal)
                         process.exit(1)
                     }
-                    const value = this.clArgs[pos]; //take value
-                    options[key].value = value //set value
-                    this.clArgs.splice(pos, 1); //also remove value from list
-                }
-                else //valueless option 
+                    const value = this.clArgs[pos] // take value
+                    options[key].value = value // set value
+                    this.clArgs.splice(pos, 1) // also remove value from list
+                } else // valueless option
                 {
-                    options[key].value = true //set as present 
+                    options[key].value = true // set as present
                 }
             }
         }
 
-        //if at this point there are still --options in the command line args array, those are unknown options
+        // if at this point there are still --options in the command line args array, those are unknown options
         let hasErrors = false
         for (const item of this.clArgs) {
             if (item.startsWith("-")) {
@@ -170,18 +164,17 @@ export class CommandLineArgs {
         }
         if (hasErrors) {
             ShowHelpOptions(options)
-            process.exit(1);
+            process.exit(1)
         }
 
-        //create consumible positional arguments, parsing also JSON command-line format
+        // create consumible positional arguments, parsing also JSON command-line format
         for (let index = 0; index < this.clArgs.length; index++) {
             const item = this.clArgs[index]
-            if (item == "{") { //a JSON object in the command line
+            if (item == "{") { // a JSON object in the command line
                 const extracted = this.extractJSONObject(index)
                 this.positional.push(extracted.value)
                 index = extracted.end
-            }
-            else {
+            } else {
                 this.positional.push(item)
             }
         }
@@ -192,14 +185,12 @@ export class CommandLineArgs {
      * returns "" if there's no arguments
      */
     getCommand() {
-
         if (this.positional.length > 0 && typeof this.positional[0] !== "string") {
             color.logErr("expected a command as first argument'")
             process.exit(1)
-        }
-        else {
+        } else {
             if (this.positional.length === 0) return ""
-            //take the first argument as this.command
+            // take the first argument as this.command
             return this.positional.shift() as string
         }
     }
@@ -211,18 +202,17 @@ export class CommandLineArgs {
      * @param which which string is expected
      */
     optionalString(which:string) {
-        
-        if (this.positional.length == 0) return false;
+        if (this.positional.length == 0) return false
 
-        if (typeof this.positional[0] != "string") {
+        if (typeof this.positional[0] !== "string") {
             color.logErr(`expected a string argument, got {... }`)
             process.exit(1)
         }
-        if (this.positional[0]==which) {
-            this.positional.shift() //consume
+        if (this.positional[0] == which) {
+            this.positional.shift() // consume
             return true
         }
-        return false //not the expected string
+        return false // not the expected string
     }
 
     /**
@@ -234,7 +224,7 @@ export class CommandLineArgs {
             color.logErr(`expected '${name}' argument`)
             process.exit(1)
         }
-        if (typeof this.positional[0] != "string") {
+        if (typeof this.positional[0] !== "string") {
             color.logErr(`expected ${name} string argument, got {... }`)
             process.exit(1)
         }
@@ -246,20 +236,20 @@ export class CommandLineArgs {
      * @param name
      */
     consumeAmount(name: string, units: "N" | "Y"): string {
-        let value = this.consumeString(name)
+        const value = this.consumeString(name)
         return this.convertAmount(value, units, name)
     }
 
     /**
      * requires a JSON as the next positional arg
-     * @param name 
+     * @param name
      */
     consumeJSON(name: string) {
         if (this.positional.length == 0) {
             color.logErr(`expected ${name} as { }`)
             process.exit(1)
         }
-        if (typeof this.positional[0] == "string") {
+        if (typeof this.positional[0] === "string") {
             color.logErr(`expected ${name} as {... } got a string: '${this.positional[0]}'`)
             process.exit(1)
         }
@@ -278,12 +268,12 @@ export class CommandLineArgs {
         }
     }
 
-    private findDeclarationKey(opt: OptionDeclaration){
-        for(const key in this.optDeclarations){
-            if (opt.shortName && this.optDeclarations[key].shortName==opt.shortName) return key;
-            if (opt.helpText && this.optDeclarations[key].helpText==opt.helpText) return key;
+    private findDeclarationKey(opt: OptionDeclaration) {
+        for (const key in this.optDeclarations) {
+            if (opt.shortName && this.optDeclarations[key].shortName == opt.shortName) return key
+            if (opt.helpText && this.optDeclarations[key].helpText == opt.helpText) return key
         }
-        throw new Error("shortName|helpText not found in declarations: "+inspect(opt))
+        throw new Error("shortName|helpText not found in declarations: " + inspect(opt))
     }
 
     /**
@@ -291,13 +281,11 @@ export class CommandLineArgs {
      * @param optionName option name
      */
     requireOptionString(opt: OptionDeclaration): void {
-
-        if (opt.value == undefined || opt.value == "" || opt.value== {}) {
-            let key= this.findDeclarationKey(opt)
+        if (opt.value == undefined || opt.value == "" || opt.value == {}) {
+            const key = this.findDeclarationKey(opt)
             color.logErr(`required --${key}`)
             process.exit(1)
         }
-
     }
 
     /**
@@ -305,32 +293,29 @@ export class CommandLineArgs {
  * @param optionName option name
  */
     requireOptionWithAmount(opt: OptionDeclaration, units: "N" | "Y"): void {
+        const value: string = opt.value.toString().trim()
 
-        let value: string = opt.value.toString().trim()
-
-        let key= this.findDeclarationKey(opt)
+        const key = this.findDeclarationKey(opt)
         if (!value) {
             color.logErr(`required --${key} [number]`)
             process.exit(1)
         }
 
-        const converted = this.convertAmount(value, units, key);
-        opt.value = converted; //store in the required units
-
+        const converted = this.convertAmount(value, units, key)
+        opt.value = converted // store in the required units
     }
 
     /**
-     * search for the presence of an option 
+     * search for the presence of an option
      * removes it from the options if found
-     * 
+     *
      * @param optionName option name
      */
     consumeOption(opt: OptionDeclaration, defaultValue?: string): string {
+        const value: string = opt.value as string
 
-        let value: string = opt.value as string
-
-        if (value) { //found
-            opt.value = undefined; //remove from options (consume)
+        if (value) { // found
+            opt.value = undefined // remove from options (consume)
         }
 
         return value
@@ -341,19 +326,17 @@ export class CommandLineArgs {
      * @param spawnProcessArgs prepared array for spawning anothe cli tool
      */
     addOptionsTo(spawnProcessArgs: string[]) {
-
-        //for each option 
-        for (let key in this.optDeclarations) {
-            const opt=this.optDeclarations[key] as OptionDeclaration
-            const value=opt.value
-            if (value) { //if it was set
-                spawnProcessArgs.push("--" + key) //add option presence 
-                if (opt.valueType) { //if the option included a value 
-                    spawnProcessArgs.push(opt.value) //add option value
+        // for each option
+        for (const key in this.optDeclarations) {
+            const opt = this.optDeclarations[key] as OptionDeclaration
+            const value = opt.value
+            if (value) { // if it was set
+                spawnProcessArgs.push("--" + key) // add option presence
+                if (opt.valueType) { // if the option included a value
+                    spawnProcessArgs.push(opt.value) // add option value
                 }
             }
         }
-
     }
 
     /**
@@ -363,55 +346,49 @@ export class CommandLineArgs {
      * convertAmount("1.25N","Y") => "12500000000000000000000000"
      * convertAmount("1365465465464564654654Y","N") => "0.00000000001365465465464564654654"
      * convertAmount("100_000_000Y","Y") => "100000000"
-     * 
+     *
      * @param value string as read from the command line
      * @param requiredUnits N|Y unit in which the amount is required
      */
     convertAmount(value: string, requiredUnits: "N" | "Y", name:string) {
-
         let result: string
-        name=color.yellow+name+color.normal
+        name = color.yellow + name + color.normal
 
-        if (value.length > 1 && value.endsWith("N")) { //NEARS
-            result = value.slice(0, -1) //remove N
-            result = result.replace("_", "") //allow 100_000_000, ignore _
-            if (requiredUnits == "N") return result; //already in Nears
+        if (value.length > 1 && value.endsWith("N")) { // NEARS
+            result = value.slice(0, -1) // remove N
+            result = result.replace("_", "") // allow 100_000_000, ignore _
+            if (requiredUnits == "N") return result // already in Nears
 
-            //Yoctos required -- convert to yoctos
-            let parts = result.split(".")
+            // Yoctos required -- convert to yoctos
+            const parts = result.split(".")
             if (parts.length > 2) {
-                color.logErr(name+": invalid amount format, too many decimal points: " + value)
+                color.logErr(name + ": invalid amount format, too many decimal points: " + value)
                 process.exit(1)
             }
-            if (parts.length == 1) parts.push("") //.0
-            let decimalString = parts[1].padEnd(24, '0')
+            if (parts.length == 1) parts.push("") // .0
+            const decimalString = parts[1].padEnd(24, '0')
             result = parts[0] + "" + decimalString // +""+ is for making sure + means concat here
             return result
-
-        }
-        else if (value.length > 1 && value.endsWith("Y")) { //YOCTOS
-
+        } else if (value.length > 1 && value.endsWith("Y")) { // YOCTOS
             if (value.includes(".")) {
-                color.logErr(name+": invalid amount format, YOCTOS can't have decimals: " + value)
+                color.logErr(name + ": invalid amount format, YOCTOS can't have decimals: " + value)
                 process.exit(1)
             }
 
             result = value.slice(0, -1) // remove Y
-            result = result.replace("_", "") //allow 100_000_000, ignore _
-            if (requiredUnits == "Y") return result; //already in Yoctos
+            result = result.replace("_", "") // allow 100_000_000, ignore _
+            if (requiredUnits == "Y") return result // already in Yoctos
 
-            //NEARS required -- convert to NEARS
+            // NEARS required -- convert to NEARS
             if (result.length <= 24) {
                 result = "0." + result.padStart(24, '0').slice(-24)
-            }
-            else {
-                //insert decimal point at 1e24
+            } else {
+                // insert decimal point at 1e24
                 result = result.slice(0, result.length - 24) + "." + result.slice(-24)
             }
             return result
-        }
-        else {
-            color.logErr(name+": invalid amount format, expecting [0-9.](Y|N). Received: " + value)
+        } else {
+            color.logErr(name + ": invalid amount format, expecting [0-9.](Y|N). Received: " + value)
             console.log("valid examples are: 0.5N | 100N | 100_000_000Y")
             process.exit(1)
         }
@@ -422,96 +399,91 @@ export class CommandLineArgs {
      * @param start open brace position in this.list
      */
     private extractJSONObject(start: number) {
-
         // find the closing "}"
         let opened = 1
         let end = -1
         for (let n = start + 1; n < this.clArgs.length; n++) {
             const item = this.clArgs[n]
             if (item == "{") {
-                opened++;
-            }
-            else if (item == "}") {
-                opened--;
+                opened++
+            } else if (item == "}") {
+                opened--
                 if (opened == 0) {
-                    end = n;
-                    break;
+                    end = n
+                    break
                 }
             }
         }
 
-        if (end == -1) { //unmatched opener error
+        if (end == -1) { // unmatched opener error
             color.logErr("Unmatched '{' . remember to put spaces around { and }")
-            this.clArgs[start] = color.yellow+"{"+color.normal
+            this.clArgs[start] = color.yellow + "{" + color.normal
             console.log(this.clArgs.join(" "))
             process.exit(1)
         }
 
-        //Here we have start & end for matching { }
-        let resultObj:any = {}
+        // Here we have start & end for matching { }
+        const resultObj:any = {}
         for (let index = start + 1; index < end; index++) {
-            let propName = this.clArgs[index];
-            let propValue = undefined
+            let propName = this.clArgs[index]
+            let propValue
 
-            if (propName == ",") continue;
+            if (propName == ",") continue
 
             if ("{}".includes(propName)) {
                 color.logErr("expected name:value")
-                this.clArgs[index] = color.yellow+propName+color.normal
-                console.log(this.clArgs.slice(start, end+1).join(" "))
+                this.clArgs[index] = color.yellow + propName + color.normal
+                console.log(this.clArgs.slice(start, end + 1).join(" "))
                 process.exit(1)
             }
 
-            let parts = propName.split(":")
-            if (parts.length>2) {
-                color.logErr(` too many ':' (found ${parts.length-1}) at ${propName}`)
+            const parts = propName.split(":")
+            if (parts.length > 2) {
+                color.logErr(` too many ':' (found ${parts.length - 1}) at ${propName}`)
                 process.exit(1)
             }
             propName = parts[0]?.trim()
             propValue = parts[1]?.trim()
 
             if (propValue == undefined || propValue == "") {
-                //let's assume the user typed "name: value" instead of "name:value"
-                index++ //take the next arg
+                // let's assume the user typed "name: value" instead of "name:value"
+                index++ // take the next arg
                 propValue = this.clArgs[index]
-                if (propValue.endsWith(":")){
+                if (propValue.endsWith(":")) {
                     color.logErr(` missing value after ':' for ${propName}`)
                 }
-                if (index>=end || propValue=="}"){
+                if (index >= end || propValue == "}") {
                     console.log(`ERROR: expected value after ${propName}`)
                     process.exit(1)
                 }
             }
 
-            if (propValue == "{") { //subornidated object
-                const subObj = this.extractJSONObject(index) //recursive***
-                //store as object
+            if (propValue == "{") { // subornidated object
+                const subObj = this.extractJSONObject(index) // recursive***
+                // store as object
                 resultObj[propName] = subObj.value
-                index = subObj.end //skip internal object
-                continue;
+                index = subObj.end // skip internal object
+                continue
             }
-            //it's a string
-            //remove ending "," if it's there
+            // it's a string
+            // remove ending "," if it's there
             if (propValue.endsWith(",")) propValue = propValue.slice(0, propValue.length - 1)
-            //check if it's a number
-            if (propValue.slice(0,1).match(/[0-9]/)) { //starts with a digit
-                if (propValue.endsWith("N")) { //amount in nears
-                    propValue= this.convertAmount(propValue,"Y",propName) //convert to yocto
-                }
-                else if (propValue.endsWith("Y")) { //amount in yocto
-                    propValue= propValue.slice(0,-1)
-                    propValue= propValue.replace("_", "") // just remove _'s 
+            // check if it's a number
+            if (propValue.slice(0, 1).match(/[0-9]/)) { // starts with a digit
+                if (propValue.endsWith("N")) { // amount in nears
+                    propValue = this.convertAmount(propValue, "Y", propName) // convert to yocto
+                } else if (propValue.endsWith("Y")) { // amount in yocto
+                    propValue = propValue.slice(0, -1)
+                    propValue = propValue.replace("_", "") // just remove _'s
                 }
             }
-            //store 
+            // store
             resultObj[propName] = propValue
+        } // end for
 
-        } //end for
-
-        //return positions and composed object
+        // return positions and composed object
         return { start: start, end: end, value: resultObj }
     }
-
 
     // ---------------------------
     /**
@@ -559,23 +531,21 @@ export class CommandLineArgs {
      * return position in the array where it was found|-1
      */
     private searchOption(option: OptionDeclaration): number {
+        const name = this.findDeclarationKey(option)
+        const shortName = option.shortName
 
-        let name = this.findDeclarationKey(option)
-        let shortName = option.shortName
+        // search several possible forms of the option, e.g. -o --o -outdir --outdir
+        const variants = ['-' + name, '--' + name]
+        if (shortName) { variants.push('--' + shortName, '-' + shortName) }
 
-        //search several possible forms of the option, e.g. -o --o -outdir --outdir
-        var variants = ['-' + name, '--' + name];
-        if (shortName) { variants.push('--' + shortName, '-' + shortName) };
-
-        //for each item in list
-        for(const variant of variants){
-            var inx = this.clArgs.indexOf(variant);
+        // for each item in list
+        for (const variant of variants) {
+            const inx = this.clArgs.indexOf(variant)
             if (inx >= 0) {
-                return inx //found
+                return inx // found
             }
         }
-        return -1;//not found
+        return -1// not found
     }
-
 }
 // end class CommandLineArgs

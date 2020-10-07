@@ -1,35 +1,54 @@
 #!/bin/node
-import { CommandLineArgs,ShowHelpPage } from "./util/CommandLineArgs.js"
-import { nickname, ContractAPI } from "./ContractAPI.js"
+import { config } from "./config.js"
+import { nickname } from "./ContractAPI.js"
 import { options } from "./CLIOptions.js"
-import * as color from "./util/color"
+import { CommandLineArgs, ShowHelpPage } from "./util/CommandLineArgs.js"
+import * as color from "./util/color.js"
+import * as nearCli from "./util/SpawnNearCli.js"
+import { ExtensionAPI } from "./ExtensionAPI.js"
 
-const API:any = new ContractAPI()
+// default accountId
+options.accountId.value = config.userAccount
 
+// process command line args
 const args = new CommandLineArgs(options)
 
-//command is the 1st positional argument
-let command = args.getCommand()
+// command is the 1st positional argument
+const command = args.getCommand()
 
-//Show info if requested 
+// Show info if requested
 if (options.info.value) {
-    console.log(`default ContractName: ${color.yellow}${options.contractName.value}${color.normal}`)
-    console.log(`default user AccountId: ${color.yellow}${options.accountId.value}${color.normal}`)
-    process.exit(0);
+    console.log(`config.js:`)
+    console.log(`  Your account    : ${color.yellow}${config.userAccount}${color.normal}`)
+    console.log(`  Contract account: ${color.yellow}${config.contractAccount}${color.normal}`)
+    process.exit(0)
 }
 
-//check the command is in the API
-if (command && typeof API[command] != "function") {
-    color.logErr("unknown command " + color.yellow+command+color.normal)
+// TODO configure
+// if (command=="configure") {
+//     args.requireOptionString(options.accountId,"default account Id")
+//     process.exit(0);
+// }
+
+// -------------------
+// PROCESS COMMAND //
+// -------------------
+
+// get contract API + Extensions
+const API = new ExtensionAPI()
+
+// check the command is in the API
+if (command && typeof (API as any)[command] !== "function") {
+    color.logErr("unknown command " + color.yellow + command + color.normal)
     console.log(`${nickname} --help to see a list of commands`)
     process.exit(1)
 }
 
-//Show help if requested or if no command
+// Show help if requested or if no command
 if (options.help.value || !command) {
     ShowHelpPage(command, API, options)
     process.exit(0)
 }
 
-//call the contract API -> near-cli
-API[command](args);
+// call the contract API function
+(API as any)[command](args)

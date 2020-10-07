@@ -1,34 +1,39 @@
-import { spawnNearCli } from "./util/SpawnNearCli.js"
+import * as nearCli from "./util/SpawnNearCli.js"
 import { CommandLineArgs } from "./util/CommandLineArgs.js"
 import { options } from "./CLIOptions.js"
+import { config } from "./config.js"
 
-//name of this script
+// name of this script
 export const nickname = "tom"
-//account id where this contrat is deployed
-export const defaultContractName = options.contractName.value
-//your account id -- default signer, default accountId parameter
-export const defaultUserAccountId = options.accountId.value
 
-//one function for each pub fn in the contract
-//get parameters by consuming from CommandLineParser
+// one function for each pub fn in the contract
+// get parameters by consuming from CommandLineParser
 export class ContractAPI {
+    // this.view helper function
+    view(command:string, fnJSONparams?:any) {
+        return nearCli.view(config.contractAccount, command, fnJSONparams, options)
+    }
+
+    // this.call helper function
+    call(command:string, fnJSONparams?:any) {
+        return nearCli.call(config.contractAccount, command, fnJSONparams, options)
+    }
 
     deploy_help = `
-    deploy a WASM file into the account ${defaultContractName} and call init function
+    deploy a WASM file into the account ${config.contractAccount} and call init function
     
     usage:
     > ${nickname} deploy [--account xx] code.WASM new { owner_id:string, stake_public_key:string, reward_fee_fraction: { numerator:x, denominator:y } }
     
     example:
     > ${nickname} deploy code.WASM new { owner_id:lucio.near, stake_public_key:"7fa387483934", reward_fee_fraction: { numerator:8, denominator:100 } }
-    willl deploy code.WASM at ${defaultContractName} and then initialize it
+    willl deploy code.WASM at ${config.contractAccount} and then initialize it
     `;
 
     deploy(a: CommandLineArgs) {
-
         const wasmFile = a.consumeString("wasmFile")
 
-        a.optionalString("new") //can be omitted
+        a.optionalString("new") // can be omitted
 
         const initArgs = a.consumeJSON("init fn params")
 
@@ -36,37 +41,24 @@ export class ContractAPI {
 
         const nearCliArgs = [
             'deploy',
-            options.contractName.value,
+            config.contractAccount,
             wasmFile,
             "new", JSON.stringify(initArgs)
         ]
 
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
-
+        nearCli.spawnNearCli(nearCliArgs, options)
     }
 
     ping_help = `
     Distributes rewards and restakes if needed.
     
     usage:
-    > tom ping `;
+    > ${nickname} ping `;
 
     ping(a: CommandLineArgs) {
+        a.noMoreArgs() // end of arguments
 
-        a.noMoreArgs() //end of arguments
-
-        const nearCliArgs = [
-            "call",
-            options.contractName.value,
-            "ping",
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
-
+        this.call("ping")
     }
 
     get_accounts_help: string = `
@@ -79,23 +71,13 @@ export class ContractAPI {
     > ${nickname} get_accounts { from_index:0, limit:10 }
     will get 10 accounts starting from 0
     `;
-    get_accounts(a: CommandLineArgs) {
 
+    get_accounts(a: CommandLineArgs) {
         const params = a.consumeJSON("{ from_index:number, limit:number }")
 
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'view',
-            options.contractName.value,
-            "get_accounts",
-            JSON.stringify(params)
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
-
+        return this.view("get_accounts", params)
     }
 
     deposit_help: string = `
@@ -109,20 +91,13 @@ export class ContractAPI {
     will deposit 40N on behalf of your account into the pool
     
     `;
-    deposit(a: CommandLineArgs) {
 
-        a.requireOptionWithAmount(options.amount, "N"); //require --amount, in Nears
+    deposit(a: CommandLineArgs) {
+        a.requireOptionWithAmount(options.amount, "N") // require --amount, in Nears
 
         a.noMoreArgs()
 
-        const nearCliArgs = ['call',
-            options.contractName.value,
-            "deposit",
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
+        this.call("deposit")
     }
 
     stake_help: string = `
@@ -136,111 +111,30 @@ example:
 will stake 10N from the unstaked balance of myaccount.betanet 
 
 `;
-    stake(a: CommandLineArgs) {
 
+    stake(a: CommandLineArgs) {
         const stakeJSONargs = a.consumeJSON("{ amount: x }")
 
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'call',
-            options.contractName.value,
-            "stake",
-            stakeJSONargs,
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
-    }
-
-    //function depo: example manually coded composed/aternative command
-    depo_help: string = `
-    shotcut for deposit
-
-    usage:
-    > ${nickname} depo amountN [and] [stake]
-
-    example:
-    > ${nickname} depo 40N 
-    will deposit 40N on into ${nickname}'s pool
-    > ${nickname} depo 40N and stake
-    will deposit 40N into ${nickname}'s pool and stake it in the same transaction
-
-    `;
-    depo(a: CommandLineArgs) {
-
-        options.amount.value = a.consumeAmount("amount to deposit", "N");
-
-        //check if [and] [stake] is next in the command line
-        a.optionalString("and")
-        let stake = a.optionalString("stake")
-
-        const fnToCall = stake ? "deposit_and_stake" : "deposit"
-
-        a.noMoreArgs()
-
-        const nearCliArgs = ['call',
-            options.contractName.value,
-            fnToCall
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
+        this.call("stake", stakeJSONargs)
     }
 
     get_total_staked_balance(a: CommandLineArgs) {
-
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'view',
-            options.contractName.value,
-            "get_total_staked_balance"
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
+        return this.view("get_total_staked_balance")
     }
 
     get_owner_id(a: CommandLineArgs) {
-
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'view',
-            options.contractName.value,
-            "get_owner_id"
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
+        return this.view("get_owner_id")
     }
 
     get_staking_key(a: CommandLineArgs) {
-
         a.noMoreArgs()
 
-        const nearCliArgs = [
-            'view',
-            options.contractName.value,
-            "get_staking_key"
-        ]
-
-        a.addOptionsTo(nearCliArgs); //add any other --options found the command line
-
-        spawnNearCli(nearCliArgs);
+        return this.view("get_staking_key")
     }
-
-    //function info: example manually coded composed command
-    info(a: CommandLineArgs) {
-        this.get_owner_id(a)
-        this.get_staking_key(a)
-        this.get_total_staked_balance(a)
-    }
-
 }
-

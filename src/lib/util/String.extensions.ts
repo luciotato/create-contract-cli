@@ -1,5 +1,5 @@
-//utils.ts
-//## utility methods 
+// utils.ts
+// ## utility methods
 
 interface String {
   replaceAll: (searched: string, newStr: string) => string;
@@ -7,36 +7,32 @@ interface String {
   countSpaces(): number;
 }
 
-String.prototype.replaceAll = function (searched: string, newStr: string) {
+String.prototype.replaceAll = function(searched: string, newStr: string) {
     return searched.replace(new RegExp(searched, 'g'), newStr)
 }
-String.prototype.quoted = function (quoteChar: string) {
+String.prototype.quoted = function(quoteChar: string) {
     return `${quoteChar}${this}${quoteChar}`
 }
-String.prototype.countSpaces = function () {
-    //var inx=0
+String.prototype.countSpaces = function() {
+    // var inx=0
     let inx = 0
-    //while inx<this.length
+    // while inx<this.length
     while (inx < this.length) {
-    //if this.charAt(inx) isnt ' ', break
+    // if this.charAt(inx) isnt ' ', break
         if (this.charAt(inx) !== ' ') { break }
-        //inx++
+        // inx++
         inx++
     }// end loop
 
-    //return inx
+    // return inx
     return inx
 }
-
-
-
 
 /*
 //Helper methods to class String.
 //Also add 'remove' & 'clear' to class Array
 
     //    append to class String
-
 
         //shim method startsWith(text:string)
         // ---------------------------
@@ -168,8 +164,6 @@ String.prototype.countSpaces = function () {
 
     //    append to namespace String
 
-
-
 //Checks if a name is Capitalized, unicode aware.
 //capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
 
@@ -225,10 +219,7 @@ String.prototype.countSpaces = function () {
             return -1;
         };
 
-
-
     //    append to class Array
-
 
 //method .remove(element)
 
@@ -249,7 +240,6 @@ String.prototype.countSpaces = function () {
         ,enumerable:false
         });
 
-
         //shim method clear       [not enumerable]
         // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(,'clear'))
@@ -267,11 +257,9 @@ String.prototype.countSpaces = function () {
         ,enumerable:false
         });
 
-
 //##Console group
 
     //    append to namespace console
-
 
 //Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
 //neither do older browsers

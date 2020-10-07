@@ -1,101 +1,149 @@
-import * as child_process from "child_process";
+import * as child_process from "child_process"
 import * as util from "util"
 import * as fs from "fs"
 
 let debug = 0
 export function setDebug(value: 0 | 1 | 2) { debug = value }
 
-export function spawnNearCli(args: string[]) {
+export function decodeHTMLEntities(str:string) {
+    str = str.replace(/\&\#(\d+);/g, function(match, dec) {
+        return String.fromCharCode(dec)
+    })
+    str = str.replace(/\&\#(x[A-F0-9]+);/g, function(match, dec) {
+        return String.fromCharCode(parseInt("0" + dec))
+    })
+    return str.replace(/\&quot;/g, "'")
+}
 
-    //-----------------------------
-    // near-cli uses NODE_ENV to define --networkId 
-    //-----------------------------
-    // get process.env, clone the actual env vars 
-    var env = Object.create(process.env);
-    const pos = args.indexOf("--networkId")
-    if (pos >= 0) {
-        const network = args[pos + 1]
-        env.NODE_ENV = network;
-        console.log(`NODE_ENV=${network}`);
-    }
-    //-----------------------------
+export function yton(yoctos:string) {
+    let units = yoctos
+    if (units.length < 25) units = units.padStart(25, '0')
+    units = units.slice(0, -24) + "." + units.slice(-24)
+    return units
+}
 
-    for (var i = 0; i < args.length; i++) {
-        //(windows-compat)
-        if (typeof args[i] != "string") { //JSON
-            args[i] = JSON.stringify(args[i])
-            args[i] = args[i].replace(/"/g, '\\"') //add escape before each quote (windows-compat)
+export function spawnNearCli(args:(string|any)[], options:any) {
+    // add options to args for near-cli
+    // for each option
+    for (const key in options) {
+        const opt = options[key]
+        const value = opt.value
+        if (value) { // if it was set
+            args.push("--" + key) // add option presence
+            if (opt.valueType) { // if the option included a value
+                args.push(opt.value) // add option value
+            }
         }
     }
 
-    console.log(`near ${args.join(" ")}`);
-    var execResult = child_process.spawnSync("near", args, { shell: true, env: env }); // shell:true => to be able to invoke near-cli on windows
+    // -----------------------------
+    // near-cli uses NODE_ENV to define --networkId
+    // -----------------------------
+    // get process.env, clone the actual env vars
+    const env = Object.create(process.env)
+    const pos = args.indexOf("--networkId")
+    if (pos >= 0) {
+        const network = args[pos + 1]
+        env.NODE_ENV = network
+        console.log(`NODE_ENV=${network}`)
+    }
+    // -----------------------------
 
-    //console.log(execResult.stdout.toString())
-    //console.log(execResult.stderr.toString())
+    for (let i = 0; i < args.length; i++) {
+        if (typeof args[i] !== "string") { // JSON
+            args[i] = JSON.stringify(args[i])
+            args[i] = args[i].replace(/"/g, '\\"') // add escape before each quote
+        }
+    }
+
+    if (debug || options.verbose?.value) console.log(`near ${args.join(" ")}`)
+    const execResult = child_process.spawnSync("near", args, { shell: true, env: env }) // shell:true => to be able to invoke near-cli on windows
+
+    // console.log(execResult.stdout.toString())
+    // console.log(execResult.stderr.toString())
 
     if (execResult.error) {
         console.log(execResult.error)
         process.exit(1)
     }
-    let stdo = "";
+    let stdo = ""
     if (execResult.stdout) {
-        //console.log("stdout:")
-        //console.log("-*-")
-        //fixes for  near-cli output
-        stdo = execResult.stdout.toString()
-        stdo = stdo.replace(/&#x2F;/g, "/")
-        stdo = stdo.replace(/&#39;/g, "'")
-        process.stdout.write(stdo);
-        //console.log("-*-")
-        //show large numbers converted to near
-        //get all numbers where number.lenght>=20
-        let numbersFound = stdo.match(/\d+/g);
-        if (numbersFound) {
-            let largeNumbers = numbersFound.filter((value) => value.length >= 12);
-            if (largeNumbers.length) {
-                //deduplicate
-                let numbers = [...new Set(largeNumbers)]
-                //show conversion to NEARs
-                console.log("numbers reference:")
-                for (let num of numbers) {
-                    if (num.length >= 20) {
-                        let near = num;
-                        if (near.length < 25) near = near.padStart(25, '0');
-                        near = near.slice(0, -24) + "." + near.slice(-24) + " NEAR"
-                        //show reference line
-                        console.log(num.padStart(36, ' ') + " => " + near.padStart(38, ' '))
-                    }
+        // console.log("stdout:")
+        // console.log("-*-")
+        // fixes for  near-cli output
+        stdo = decodeHTMLEntities(execResult.stdout.toString())
+        process.stdout.write(stdo)
+        // console.log("-*-")
+    }
+    if (execResult.stderr) {
+        // console.log("stderr:")
+        // console.log("-*-")
+        process.stdout.write(decodeHTMLEntities(execResult.stderr.toString()))
+        // console.log("-*-")
+    }
+
+    // show numbers in yoctos converted to more readable units
+    // get all numbers where number.lenght>=20
+    const numbersFound = stdo.match(/\d+/g)
+    if (numbersFound) {
+        const largeNumbers = numbersFound.filter((value) => value.length >= 12)
+        if (largeNumbers.length) {
+            // deduplicate
+            const numbers = [...new Set(largeNumbers)]
+            // show conversion to NEARs
+            console.log("amounts denomination:")
+            for (const num of numbers) {
+                if (num.length >= 20) {
+                    // show reference line
+                    console.log(num.padStart(36, ' ') + " Yoctos => " + yton(num).padStart(38, ' '))
                 }
             }
         }
-
-    }
-    if (execResult.stderr) {
-        //console.log("stderr:")
-        //console.log("-*-")
-        process.stdout.write(execResult.stderr)
-        //console.log("-*-")
     }
 
     if (execResult.status != 0) {
-        process.exit(execResult.status as number);
+        process.exit(execResult.status as number)
     }
-    return stdo;
-}
-//# sourceMappingURL=SpawnNearCli.js.map
 
-export function lastNumber(stdo) {
-    let items = stdo.split("\n")
-    if (items.length < 2) return "";
+    return stdo
+}
+
+// -------------------------------------
+// extension helper fns at ContractAPI
+// -------------------------------------
+function nearCli(cv:"call"|"view", contract:string, command:string, fnJSONparams:any, options:any) {
+    const nearCliArgs = [
+        cv,
+        contract,
+        command,
+        fnJSONparams
+    ]
+    return spawnNearCli(nearCliArgs, options)
+}
+// --------------------- call  contract
+export function call(contract: string, command: string, fnJSONparams: any, options:any) {
+    return nearCli("call", contract, command, fnJSONparams, options)
+}
+// --------------------- view on contract
+export function view(contract: string, command: string, fnJSONparams: any, options:any) {
+    return nearCli("view", contract, command, fnJSONparams, options)
+}
+
+// format output helper functions
+// get single number output on a near view call
+export function lastNumber(stdo:string) {
+    if (!stdo) return ""
+    const items = stdo.split("\n")
+    if (items.length < 2) return ""
     return items[items.length - 2].replace(/'/g, "")
 }
 
-export function thsep(stdonum) {
+// formats a large amount adding _ as thousands separator
+export function thsep(stdonum:string) {
     if (stdonum && stdonum.length > 3) {
         for (let n = stdonum.length - 3; n >= 1; n -= 3) {
-            stdonum = stdonum.slice(0, n) + "_" + stdonum.slice(n )
+            stdonum = stdonum.slice(0, n) + "_" + stdonum.slice(n)
         }
     }
-    return stdonum;
+    return stdonum
 }

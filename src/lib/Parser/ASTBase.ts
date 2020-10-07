@@ -1,152 +1,158 @@
 
-//This module defines the base abstract syntax tree node used by the grammar.
-//It's main purpose is to provide utility methods used in the grammar
-//for **req**uired tokens, **opt**ional tokens
-//and comma or semicolon **Separated Lists** of symbols.
+// This module defines the base abstract syntax tree node used by the grammar.
+// It's main purpose is to provide utility methods used in the grammar
+// for **req**uired tokens, **opt**ional tokens
+// and comma or semicolon **Separated Lists** of symbols.
 
 import { TokenCode } from '../Lexer/Lexer'
 import { ControlledError } from '../util/ControlledError'
 
-import { logger } from '../util/logger'
+import * as logger from '../util/logger.js'
 import { Parser } from './Parser'
-import { ArrayLiteral, TypeAnnotation} from './Grammar'
+import { TypeAnnotation } from './Grammar'
 import { EOL } from 'os'
-import { options } from '../../main/CLIOptions'
 
 export class ASTBase {
-
     owner: Parser
     parent: ASTBase
     children: ASTBase[] = []
     keyword: string
     name: string
     typeAnnotation: TypeAnnotation
-    //AST node position in source
+    // AST node position in source
     sourceLineNum
     sourceColumn
-    //wile-parsing info
+    // wile-parsing info
     locked: boolean
-    commentsAndAttr: string[] //comments and #attributes
+    commentsAndAttr: string[] // comments and #attributes
     attachedComment: string
-    //extraInfo // if parse failed, extra information
+    // extraInfo // if parse failed, extra information
     extraInfo
     isPublic: boolean = false
     isMut: boolean = false
     isRef: boolean
     decorators: string[]
     nativeSuffixes: ASTBase // to_vec, as_u128, .map, .collect etc.
+    deRef: boolean
 
-    constructor(parent, name) {
+    constructor(parent:ASTBase, name:string) { 
         this.parent = parent
         this.name = name
 
-        //Get owner from parent
+        // Get owner from parent
         if (parent) {
-
             this.owner = parent.owner
 
-            //Remember this node source position.
-            //Also remember line index in tokenized lines, and indent
+            // Remember this node source position.
+            // Also remember line index in tokenized lines, and indent
             if (this.owner) {
-                //this.sourceLineNum = this.lexer.sourceLineNum
-                //this.column = this.lexer.token.column
-                //this.indent = this.lexer.indent
-                //this.lineInx = this.lexer.lineInx
+                // this.sourceLineNum = this.lexer.sourceLineNum
+                // this.column = this.lexer.token.column
+                // this.indent = this.lexer.indent
+                // this.lineInx = this.lexer.lineInx
             }
         }
     }
 
-
     // ---------------------------
-    lock() {
-        //**lock** marks this node as "locked", meaning we are certain this is the right class
-        //for the given syntax. For example, if the `FunctionDeclaration` class see the token `function`,
-        //we are certain this is the right class to use, so we 'lock()'.
-        //Once locked, any **req**uired token not present causes compilation to fail.
+    lock():void {
+        //* *lock** marks this node as "locked", meaning we are certain this is the right class
+        // for the given syntax. For example, if the `FunctionDeclaration` class see the token `function`,
+        // we are certain this is the right class to use, so we 'lock()'.
+        // Once locked, any **req**uired token not present causes compilation to fail.
 
-        //.locked = true
+        // .locked = true
         this.locked = true
     }
-    // ---------------------------
-    getParent(searchedClass) {
-        //**getParent** method searchs up the AST tree until a specfied node class is found
 
-        //var node = this.parent
-        let node = this.parent
-        //while node and node isnt instance of searchedClass
-        while (node && !(node instanceof searchedClass)) {
-            //node = node.parent # move to parent
-            node = node.parent
-        }// end loop
-        //return node
-        return node
-    }
     // ---------------------------
-    positionText() {
+    // @ts-ignore
+    // getParent(searchedClass):ASTBase { 
+    //     //* *getParent** method searchs up the AST tree until a specfied node class is found
+
+    //     // var node = this.parent
+    //     let node = this.parent
+    //     // while node and node isnt instance of searchedClass
+    //     while (node && !(node instanceof searchedClass)) {
+    //         // node = node.parent # move to parent
+    //         node = node.parent
+    //     }// end loop
+    //     // return node
+    //     return node
+    // }
+
+    // ---------------------------
+    positionText() :string{
         if (!this.owner) { return '(compiler-defined)' }
         return `${this.owner.lexer.filename}:${this.sourceLineNum}:${this.sourceColumn || 0}`
     }
+
     // ---------------------------
-    toString() {
+    toString():string {
         return `[${this.constructor.name}]` + (this.keyword ? this.keyword + ' ' : '') + this.name
     }
+
     // ---------------------------
-    sayErr(msg) {
+    sayErr(msg:string) :void{
         logger.error(this.positionText(), msg)
     }
+
     // ---------------------------
-    warn(msg) {
+    warn(msg:string) :void{
         logger.warning(this.positionText(), msg)
     }
+
     // ---------------------------
-    throwError(msg) {
-        //**throwError** add node position info and throws a 'controlled' error.
+    throwError(msg:string) :void{
+        //* *throwError** add node position info and throws a 'controlled' error.
 
-        //A 'controlled' error, shows only err.message
+        // A 'controlled' error, shows only err.message
 
-        //A 'un-controlled' error is an unhandled exception in the compiler code itself,
-        //and it shows error message *and stack trace*.
+        // A 'un-controlled' error is an unhandled exception in the compiler code itself,
+        // and it shows error message *and stack trace*.
 
         logger.throwControlled(`${this.positionText()}. ${msg}`)
     }
+
     // ---------------------------
-    throwParseFailed(msg) {
-        //throws a parseFailed-error
+    throwParseFailed(msg:string):void {
+        // throws a parseFailed-error
 
-        //During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
-        //"parse failed" signals a failure to parse the tokens from the stream,
-        //however the syntax might still be valid for another AST node.
-        //If the AST node was locked-on-target, it is a hard-error.
-        //If the AST node was NOT locked, it's a soft-error, and will not abort compilation
-        //as the parent node will try other AST classes against the token stream before failing.
+        // During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
+        // "parse failed" signals a failure to parse the tokens from the stream,
+        // however the syntax might still be valid for another AST node.
+        // If the AST node was locked-on-target, it is a hard-error.
+        // If the AST node was NOT locked, it's a soft-error, and will not abort compilation
+        // as the parent node will try other AST classes against the token stream before failing.
 
-        //var cErr = new ControlledError("#{.lexer.posToString()}. #{msg}")
+        // var cErr = new ControlledError("#{.lexer.posToString()}. #{msg}")
         const cErr = new ControlledError(`${this.owner.lexer.token.posToString()}. ${msg}`)
         cErr.soft = !(this.locked)
         throw cErr
     }
+
     // ---------------------------
-    parse() {
-        //abstract method representing the TRY-Parse of the node.
-        //Child classes _must_ override this method
+    parse():void {
+        // abstract method representing the TRY-Parse of the node.
+        // Child classes _must_ override this method
         this.throwError('ASTBase parse is abstract')
     }
 
     // ---------------------------
-    /**produce():string is the method to produce target code for this node.
+    /** produce():string is the method to produce target code for this node.
      * derived classes _should_ override this, if the default production isnt: this.name
      * Default behavior is to
      * recursively produce the entire sub-tree to a UTF file
-     * 
+     *
      */
     produce(): void {
         this.owner.codeWriter.write(this.name)
         this.produceChildren()
     }
 
-    produceChildren(separator?): void {
-        const o=this.owner.codeWriter
-        let inx=0
+    produceChildren(separator?:string): void {
+        const o = this.owner.codeWriter
+        let inx = 0
         for (const child of this.children) {
             if (inx > 0 && separator) o.write(separator)
             if (separator && separator.includes(EOL)) o.write(' '.repeat(o.indent))
@@ -154,7 +160,7 @@ export class ASTBase {
             child.produce()
             inx++
         }
-        //if (separator == EOL) o.write(separator)
+        // if (separator == EOL) o.write(separator)
     }
 
     /**
@@ -173,26 +179,25 @@ export class ASTBase {
         o.indent -= indent
     }
 
-
     writeComments(watchForThis?: string): boolean {
-        let result = false;
+        let result = false
         if (this.commentsAndAttr && this.commentsAndAttr.length) {
             for (const s of this.commentsAndAttr) {
                 if (!s.startsWith("/")) this.owner.codeWriter.write('//')
-                if (watchForThis && watchForThis == s) result = true;
+                if (watchForThis && watchForThis == s) result = true
                 this.owner.codeWriter.writeLine(s)
             }
         }
-        return result;
+        return result
     }
 
-    //--- helper
+    // --- helper
     tokVal(): string {
         return this.owner.lexer.token.value
     }
 
     // ---------------------------
-    //parseDirect(key, directMap) {
+    // parseDirect(key, directMap) {
 
     //    //We use a DIRECT associative array to pick the exact AST node to parse
     //    //based on the actual token value or type.
@@ -216,34 +221,36 @@ export class ASTBase {
     //        //return parsed statement or nothing
     //        return statement
     //    }
-    //}
+    // }
 
     // ---------------------------
     optList(list: (string | number | typeof ASTBase)[]): string | ASTBase {
-        //**opt** (optional) parses optional parts of a grammar. It attempts to parse
-        //the token stream using one of the classes or token types specified.
-        //This method takes a variable number of arguments.
-        //For example:
-        //calling `.opt IfStatement, Expression, 'IDENTIFIER'`
-        //would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
-        //to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
-        //If all of those fail, it will return `undefined`.
+        //* *opt** (optional) parses optional parts of a grammar. It attempts to parse
+        // the token stream using one of the classes or token types specified.
+        // This method takes a variable number of arguments.
+        // For example:
+        // calling `.opt IfStatement, Expression, 'IDENTIFIER'`
+        // would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
+        // to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
+        // If all of those fail, it will return `undefined`.
 
-        //Method start:
+        // Method start:
 
         const t = this.owner.lexer.token
-        //For each argument, -a class or a string-, we will attempt to parse the token stream
-        //with the class, or match the token type to the string.
+        // For each argument, -a class or a string-, we will attempt to parse the token stream
+        // with the class, or match the token type to the string.
 
-        //for each searched in arguments.toArray()
+        // Remember the actual position, to rewind if parse soft-fails
+        this.owner.lexer.savePosition()
+
+        // for each searched in arguments.toArray()
         for (const searched of list) {
-
-            //skip empty, null & undefined
+            // skip empty, null & undefined
             if (!searched) { continue }
 
             let found: boolean = false
 
-            //For strings, we check the token **value** 
+            // For strings, we check the token **value**
             if (typeof searched === 'string') {
                 const searchedString: string = searched
                 found = (t.value == searchedString)
@@ -252,8 +259,8 @@ export class ASTBase {
                 }
             }
 
-            //For numbers, we assume it's a TokenCode
-            else if (typeof searched === 'number') { //it's a TokenCode
+            // For numbers, we assume it's a TokenCode
+            else if (typeof searched === 'number') { // it's a TokenCode
                 const searchedToken: TokenCode = searched as TokenCode
                 found = (t.tokenCode == searchedToken)
                 if (found && logger.debugLevel) {
@@ -261,94 +268,84 @@ export class ASTBase {
                 }
             }
 
-            if (found) { //simple string/Token match
-                //Ok, type/value found! now we return: token.value
-                //Note: we shouldn't return the 'token' object, because returning objects (here and in js)
-                //is "pass-by-reference" for the object members. You return a "pointer" to the object.
-                //If we return the 'token' object, the calling function will recive a "pointer"
-                //and it can inadvertedly alter the token object members in the token stream. (it should not, leads to subtle bugs)
+            if (found) { // simple string/Token match
+                // Ok, type/value found! now we return: token.value
+                // Note: we shouldn't return the 'token' object, because returning objects (here and in js)
+                // is "pass-by-reference" for the object members. You return a "pointer" to the object.
+                // If we return the 'token' object, the calling function will recive a "pointer"
+                // and it can inadvertedly alter the token object members in the token stream. (it should not, leads to subtle bugs)
 
-                //Consume this token
+                // Consume this token
                 this.owner.lexer.advance()
-                //discard saved position
+                // discard saved position
                 this.owner.lexer.discardSavedPosition()
-                //return token value
+                // return token value
                 return t.value
-            }
-
-            else if (typeof searched === 'function') { //it's a Grammar class
-
+            } else if (typeof searched === 'function') { // it's a Grammar class
                 const searchedClass = searched as (typeof ASTBase)
 
                 logger.debug(this.constructor.name, 'TRY', searchedClass.name, 'on', t.toString())
 
-                //if the argument is an AST node class, we instantiate the class and try the `parse()` method.
-                //`parse()` can throw `ParseFailed` if the syntax do not matches the parse
-
-                //Remember the actual position, to rewind if parse soft-fails
-                this.owner.lexer.savePosition()
+                // if the argument is an AST node class, we instantiate the class and try the `parse()` method.
+                // `parse()` can throw `ParseFailed` if the syntax do not matches the parse
 
                 try {
-
-                    //create required ASTNode, to try method parse()
+                    // create required ASTNode, to try method parse()
                     const astNode = new searchedClass(this, t.value)
                     astNode.sourceLineNum = t.line
                     astNode.sourceColumn = t.col
 
-                    //if it can't parse, will raise an exception
+                    // if it can't parse, will raise an exception
                     astNode.parse()
 
-                    //logger.debug spaces, 'Parsed OK!->',searched.name
+                    // logger.debug spaces, 'Parsed OK!->',searched.name
                     logger.debug('Parsed OK!->', searchedClass.name)
 
-                    //discard saved position
+                    // discard saved position
                     this.owner.lexer.discardSavedPosition()
-                    //parsed ok!, return instance
+                    // parsed ok!, return instance
                     return astNode
-
-                }
-                catch (err) {
-
-                    if (!(err instanceof ControlledError)) { //non-controlled error
-                        //discard saved position
+                } catch (err) {
+                    if (!(err instanceof ControlledError)) { // non-controlled error
+                        // discard saved position
                         this.owner.lexer.discardSavedPosition()
                         throw err
                     }
 
-                    //If parsing fail, but the AST node was not 'locked' on target, (that is, if it was a "soft" exception),
-                    //we try other AST nodes.
+                    // If parsing fail, but the AST node was not 'locked' on target, (that is, if it was a "soft" exception),
+                    // we try other AST nodes.
 
-                    //if err.soft => no match, try next
+                    // if err.soft => no match, try next
                     if (err.soft) {
                         this.owner.lexer.softError = err
                         logger.debug(searchedClass.name, 'parse failed.', err.message)
-                        //rewind the token stream, to try other AST nodes
+                        // rewind the token stream, to try other AST nodes
                         this.owner.lexer.restoreSavedPosition()
                         logger.debug('<<REW to', this.owner.lexer.token?.toStringDebug())
-                    }
-                    else {
-                        //else: it's a hard-error. The AST node were locked-on-target.
-                        //We abort parsing and throw.
+                    } else {
+                        // else: it's a hard-error. The AST node were locked-on-target.
+                        // We abort parsing and throw.
 
-                        //discard saved position
+                        // discard saved position
                         this.owner.lexer.discardSavedPosition()
 
-                        //# the first hard-error is the most informative, the others are cascading ones
-                        //if .lexer.hardError is null, .lexer.hardError = err
+                        // # the first hard-error is the most informative, the others are cascading ones
+                        // if .lexer.hardError is null, .lexer.hardError = err
                         if (this.owner.hardError === null) { this.owner.hardError = err }
 
-                        //raise up, abort parsing
+                        // raise up, abort parsing
                         throw err
-                    } //end if - type of error
+                    } // end if - type of error
+                }// end catch
+            }// end if - string/TokenCode/ASTclass
+        }// end loop - try the next argument
 
-                }//end catch
+        // No more arguments.
 
-            }//end if - string/TokenCode/ASTclass
+        // discard saved position
+        this.owner.lexer.discardSavedPosition()
 
-        }//end loop - try the next argument
-
-        //No more arguments.
-        //`opt` returns `undefined` if none of the arguments can be use to parse the token stream.
+        // `opt` returns `undefined` if none of the arguments can be use to parse the token stream.
         return undefined
     }
 
@@ -360,21 +357,20 @@ export class ASTBase {
     // ---------------------------
     /**
      * Require one of a list
-     * 
+     *
      * @param list to try parsing, in order, one of the list must parse
      */
     reqList(list: (string | number | typeof ASTBase)[]): string | ASTBase {
+        //* *req** (required) try to parse *required* symbols of the grammar.
+        // It works the same way as `opt` except that it throws an error if none of the arguments
+        // can be used to parse the stream.
 
-        //**req** (required) try to parse *required* symbols of the grammar.
-        //It works the same way as `opt` except that it throws an error if none of the arguments
-        //can be used to parse the stream.
-
-        //We first call `opt` to try the arguments in order.
-        //If a value is returned, the parsing was successful,
-        //so we just return the node that `opt` found.
+        // We first call `opt` to try the arguments in order.
+        // If a value is returned, the parsing was successful,
+        // so we just return the node that `opt` found.
         const result = this.optList(list)
 
-        //If `opt` returned "undefined" (no match), we give the user a useful error message.
+        // If `opt` returned "undefined" (no match), we give the user a useful error message.
         if (!result) {
             this.throwParseFailed(`${this.constructor.name}:${this.extraInfo || ''} found ${this.owner.lexer.token.toString()} but ${ASTBase.listToString(list)} required`)
         }
@@ -385,20 +381,24 @@ export class ASTBase {
     req(item: string): string {
         return this.reqList([item]) as string
     }
+
     // ---------------------------
     reqClass(ASTClass: typeof ASTBase): ASTBase {
         return this.reqList([ASTClass]) as ASTBase
     }
+
     // ---------------------------
     reqChild(ASTClass: typeof ASTBase): void {
         this.children.push(this.reqList([ASTClass]) as ASTBase)
     }
+
     optChild(ASTClass: typeof ASTBase): void {
         const result = this.opt(ASTClass) as ASTBase
         if (result) {
             this.children.push(result)
         }
     }
+
     // ---------------------------
     reqToken(tokenCode: TokenCode): string {
         return this.reqList([tokenCode]) as string
@@ -406,31 +406,29 @@ export class ASTBase {
 
     // ---------------------------
     reqOneOf(list: string[]): string {
-        //(performance) check before try to parse, that the next token is in the list
-        //if .lexer.token.value in arr
+        // (performance) check before try to parse, that the next token is in the list
+        // if .lexer.token.value in arr
         if (list.includes(this.owner.lexer.token.value)) {
             return this.reqList(list) as string
-        }
-        else {
+        } else {
             this.throwParseFailed('not in list')
         }
     }
 
     /**
-     * a [separator] separated list of [astClass] ended by [closer] 
-     * 
+     * a [separator] separated list of [astClass] ended by [closer]
+     *
      * the last closer is consumed
-     * 
+     *
      * @param astClass
      * @param separator
      * @param closer
      */
     // ---------------------------
     optSeparatedList(astClass: typeof ASTBase, separator: string, closer: string): ASTBase[] {
-
-        //Start optSeparatedList
-        //normal separated list,
-        //loop until closer found
+        // Start optSeparatedList
+        // normal separated list,
+        // loop until closer found
 
         const result: ASTBase[] = []
 
@@ -439,130 +437,133 @@ export class ASTBase {
         const startLine = this.owner.lexer.token.line
 
         while (true) {
-            if (this.owner.lexer.token.tokenCode == TokenCode.EOF) break //break on EOF
-            if (closer && this.opt(closer)) break //if closer set, and closer found, break
+            if (this.owner.lexer.token.tokenCode == TokenCode.EOF) break // break on EOF
+            if (closer && this.opt(closer)) break // if closer set, and closer found, break
 
-            //pre comments and attrs
+            // pre comments and attrs
             const preComments: string[] = []
             this.owner.lexer.consumeCommentsAndAttr(preComments)
 
-            //get an item
+            // get an item
             const item = this.reqClass(astClass) as ASTBase
             this.lock()
 
-            //add item to result
+            // add item to result
             result.push(item)
 
             item.commentsAndAttr = preComments
-            //post comments and attr - NO, se come pre comments del siguiente
-            //this.owner.tokenizer.consumeCommentsAndAttr(item.commentsAndAttr )
+            // post comments and attr - NO, se come pre comments del siguiente
+            // this.owner.tokenizer.consumeCommentsAndAttr(item.commentsAndAttr )
 
-            //if .opt(closer) then break #closer found
+            // if .opt(closer) then break #closer found
             if (this.opt(closer)) { break }
 
-            //here, a 'separator' (comma/semicolon) means: 'there is another item'.
-            //Any token other than 'separator' means 'end of list'
+            // here, a 'separator' (comma/semicolon) means: 'there is another item'.
+            // Any token other than 'separator' means 'end of list'
 
-            //if no .opt(separator)
+            // if no .opt(separator)
             if (!this.opt(separator)) {
-                //# any token other than comma/semicolon means 'end of comma separated list'
-                //# but if a closer was required, then "other" token is an error
-                //if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
-                if (closer) { this.throwError(`Expected '${closer}' to end list started at line ${startLine}, got '${this.owner.lexer.token.value}'`) }
+                // # any token other than comma/semicolon means 'end of comma separated list'
+                // # but if a closer was required, then "other" token is an error
+                // if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
+                if (closer) {
+                    if (this.owner.lexer.semiNotRequired) {
+                        // after blocks separators are not required
+                        this.owner.lexer.semiNotRequired = false
+                        continue
+                    }
+                    this.throwError(`Expected '${closer}' to end list started at line ${startLine}, got '${this.owner.lexer.token.value}'`)
+                }
                 break
             }
-
         }// try another item after the separator
 
-        if (closer == '}') this.owner.lexer.semiNotRequired = true //semicolon not required if list closed by '}'
+        if (closer == '}') this.owner.lexer.semiNotRequired = true // semicolon not required if list closed by '}'
 
         return result
     }
 
     // ---------------------------
     reqSeparatedList(astClass: typeof ASTBase, separator: string, closer: string): ASTBase[] {
-        //**reqSeparatedList** is the same as `optSeparatedList` except that it throws an error
-        //if the list is empty
+        //* *reqSeparatedList** is the same as `optSeparatedList` except that it throws an error
+        // if the list is empty
 
-        //First, call optSeparatedList
+        // First, call optSeparatedList
         const result = this.optSeparatedList(astClass, separator, closer)
         if (result.length === 0) { this.throwParseFailed(`${this.constructor.name}: Get list: At least one [${astClass.name}] was expected`) }
 
         return result
     }
 
-    //------------------------
-    optPub() {
-        //manage special prefixes like 'pub'
+    // ------------------------
+    optPub():void {
+        // manage special prefixes like 'pub'
         if (this.owner.lexer.token.value == 'pub') {
             this.isPublic = true
             this.owner.lexer.advance()
         }
     }
-    optRef() {
-        //manage special prefixes like '&'
+
+    optRef():void {
+        // manage special prefixes like '&'
         if (this.owner.lexer.token.value == '&') {
             this.isRef = true
             this.owner.lexer.advance()
         }
     }
-    optMut() {
-        //manage special prefixes like 'mut'
+
+    optDeRef():void {
+        // manage special prefixes like '*'
+        if (this.owner.lexer.token.value == '*') {
+            this.deRef = true
+            this.owner.lexer.advance()
+        }
+    }
+
+    optMut():void {
+        // manage special prefixes like 'mut'
         if (this.owner.lexer.token.value == 'mut') {
             this.isMut = true
             this.owner.lexer.advance()
         }
     }
-    optDecorators() {
-        //manage decorators like #[callback]
-        if (this.owner.lexer.filename.includes("lockup") && this.owner.lexer.token.line>50){
-            console.log("DEBUG")
-            logger.setDebugLevel(1)
-        }
 
-        if (this.owner.lexer.token.value == '#' && this.owner.lexer.nextToken().value=="[" ) {
+    optDecorators():void {
+        // manage decorators like #[callback]
+        if (this.owner.lexer.token.value == '#' && this.owner.lexer.nextToken().value == "[") {
             this.owner.lexer.advance()
             this.owner.lexer.advance()
-            if (!this.decorators) this.decorators=[]
+            if (!this.decorators) this.decorators = []
             this.decorators.push(this.owner.lexer.token.value)
             this.req("]")
         }
     }
-    
 
     // ---------------------------
     /**
      * Helper function toString of an argument list to opt() or req()
      * @param args
      */
-    static listToString(args: (string | number | typeof ASTBase)[]) {
-        //listArgs list arguments (from opt or req). used for debugging
-        //and syntax error reporting
+    static listToString(args: (string | number | typeof ASTBase)[]) :string {
+        // listArgs list arguments (from opt or req). used for debugging
+        // and syntax error reporting
 
-        //var msg = []
+        // var msg = []
         const msg = []
-        //for each i in args
+        // for each i in args
         for (const i of args) {
-
-            //if typeof i is 'string'
+            // if typeof i is 'string'
             if (typeof i === 'string') {
                 msg.push(`'${i}'`)
-            }
-
-            else if (i) {
-
+            } else if (i) {
                 if (typeof i === 'function') {
                     msg.push(`[${i.name}]`)
-                }
-                else if (typeof i === 'number') {
+                } else if (typeof i === 'number') {
                     msg.push(`[${TokenCode[i]}]`)
+                } else {
+                    msg.push(`<${i}>`)
                 }
-                else {
-                    msg.push(`<${i["name"]}>`)
-                }
-            }
-
-            else {
+            } else {
                 msg.push('[null]')
             }
         }
@@ -667,7 +668,6 @@ export class ASTBase {
 
         }//end loop, next item
 
-
     }
 
     /*
@@ -740,6 +740,4 @@ export class ASTBase {
         return ' '.repeat(indent)
     }
     */
-
 }
-

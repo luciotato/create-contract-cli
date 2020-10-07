@@ -5,11 +5,9 @@ export const yellow = '\x1b[93m'
 export const green = '\x1b[32m'
 
 export function logErr(text: string) {
-        console.error(red + "ERR: " + normal + text)
+    console.error(red + "ERR: " + normal + text)
 }
 
 export function greenOK() {
-        console.log(green + "OK" + normal)
+    console.log(green + "OK" + normal)
 }
-
-

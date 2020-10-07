@@ -1,43 +1,42 @@
 export const options = {
 
-    contractAccount:{
+    contractAccount: {
         shortName: "c",
         helpText: `AccountId where the contract is deployed`,
         valueType: "string",
-        value: "",
+        value: ""
     },
 
-    accountId:{
+    accountId: {
         shortName: "acc",
         valueType: "string",
-        value: "", 
+        value: "",
         helpText: `default user accountId, sets signer`
     },
 
     help: {
         shortName: "h",
-        value: false,
+        value: false
     },
 
     verbose: {
         shortName: "v",
         helpText: 'Prints out verbose output',
-        value: false,
+        value: false
     },
 
-    networkId:{
+    networkId: {
         shortName: "net",
         helpText: 'default NEAR network ID for the cli-tool being created (defaults to NODE_ENV)',
         valueType: "string",
-        value: "",
+        value: ""
     },
 
-    output:{
+    output: {
         shortName: "o",
         valueType: "string",
         helpText: `output path (Default .)`,
-        value:".",
-    },
+        value: "."
+    }
 
 }
-

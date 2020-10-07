@@ -1,5 +1,5 @@
-import { ASTBase } from "../Parser/ASTBase";
-import { writeFileSync } from "fs";
+import { ASTBase } from "../Parser/ASTBase"
+import { writeFileSync } from "fs"
 
 type treeNodeData = {
     id?: number;
@@ -8,29 +8,27 @@ type treeNodeData = {
 }
 
 // @ts-ignore
-ASTBase.prototype.getTreeData = function () {
+ASTBase.prototype.getTreeData = function() {
     const childrenData = []
-    global["level"] = global["level"] + 1
-    if (global["level"] < 3) {
+    global.level = global.level + 1
+    if (global.level < 3) {
         for (const child of this.children) {
             childrenData.push(child.getTreeData())
         }
     }
-    global["level"] = global["level"] - 1
-    global["treeNodeID"] = global["treeNodeID"] +1
+    global.level = global.level - 1
+    global.treeNodeID = global.treeNodeID + 1
     return {
-        id: global["treeNodeID"],
+        id: global.treeNodeID,
         text: this.toString(),
         children: childrenData
     }
 }
 
 export class D3Visualization {
-
     static saveForTree(root: ASTBase, outFilename: string) {
-
-        global["treeNodeID"] = 1
-        global["level"] = 0
+        global.treeNodeID = 1
+        global.level = 0
 
         // @ts-ignore
         const data = root.getTreeData()
@@ -38,6 +36,5 @@ export class D3Visualization {
         writeFileSync(outFilename, JSON.stringify(data))
 
         console.log(process.cwd())
-
     }
 }
