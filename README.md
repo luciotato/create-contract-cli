@@ -18,6 +18,13 @@ Let's create a cli to manage that contract from my account
 
 `> create-contract-cli lucky core-contracts/staking-pool --contractName luckystaker.stakehouse.betanet --accountId luciotato.betanet`
 
+´´´
+Creating dir lucky-cli......................................: OK
+Parsing core-contracts/staking-pool/src/lib.rs..............: OK
+Producing lucky-cli/ContractAPI.js..........................: OK
+Completing from create-contract-cli/model...................: OK
+´´´
+
 and.... **done!**
 
 We just parsed `core-contracts/staking-pool/scr/lib.rs` and created a new cli called "lucky" with commands to control a staking-pool contract
@@ -101,6 +108,6 @@ Rust is specially hard to parse, if the tool can't parse your /lib.rs create an 
 
 * --target ts => Create a .ts cli
 
- It will be nice if the tool can generate a .ts based cli to allow expansion form a type-checked base
+ It will be nice if the tool can generate a .ts based cli to allow building from a type-checked base
 
 * Parse AssemblyScript contracts
