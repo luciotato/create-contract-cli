@@ -1,7 +1,7 @@
 {
   "name": "{nickname}",
   "version": "1.0.0",
-  "description": "command cli for ${contract} smart contract at ${contractAddress}}",
+  "description": "command cli for {contract} smart contract at {contractAddress}}",
   "main": "{nickname}",
   "bin": {
     "{nickname}": "cli.js"
@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/${contractAddress}"
+    "url": "git+https://github.com/{contractAddress}"
   },
   "keywords": [
     "near",
     "contract",
     "cli",
     "tool",
-    "${contract}",
-    "${contractAddress}"
+    "{contract}",
+    "{contractAddress}"
   ],
   "author": "luciotato@gmail.com",
   "license": "ISC",
