@@ -18,12 +18,12 @@ Let's create a cli to manage that contract from my account
 
 `> create-contract-cli lucky core-contracts/staking-pool --contractName luckystaker.stakehouse.betanet --accountId luciotato.betanet`
 
-´´´
+```
 Creating dir lucky-cli......................................: OK
 Parsing core-contracts/staking-pool/src/lib.rs..............: OK
 Producing lucky-cli/ContractAPI.js..........................: OK
 Completing from create-contract-cli/model...................: OK
-´´´
+```
 
 and.... **done!**
 
