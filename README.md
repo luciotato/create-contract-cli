@@ -44,26 +44,27 @@ Yes! Just point it to your contract code!
 
 ### Prerequisites:
 
-* nodejs >= 12.17 (v14 preferred)
 * near-cli
+* nodejs v10+
 
 To install prerequisites:
-
-check your node version
-
-```
-> node -v
-v14.x.y
-```
-
-If your version is < v12.17, you must install nodejs from [nodejs.org](nodejs.org) (windows/linux), 
-or use [nvm](https://github.com/nvm-sh/nvm) (linux) to install node stable
-
-`> nvm install stable`
 
 You can use npm to install near-cli
 
 `> npm install -g near-cli`
+
+and you can check your node version
+
+```
+> node -v
+v12.x.y
+```
+
+If your version is <v10, you must install nodejs from [nodejs.org](nodejs.org) (windows/linux), 
+or use [nvm](https://github.com/nvm-sh/nvm) (linux) to install node stable
+
+`> nvm install stable`
+
 
 ### Generated cli-tool Usage:
 
@@ -98,12 +99,8 @@ Rust is specially hard to parse, if the tool can't parse your /lib.rs create an 
 
 ## Road Map
 
-* --target:ES2015 => Create a node v10 compatible cli
-
-Today there's a requisite of node v13 because the generated code uses type:module & ES2020 imports. Next step will be to create a ES2015 CommonJS compatible cli to remove node version requisites
-
 * --target ts => Create a .ts cli
 
-The generated cli is easily expandible. I'll be nice if the tool can generate a .ts based cli to allow expansion form a solid base
+ It will be nice if the tool can generate a .ts based cli to allow expansion form a type-checked base
 
 * Parse AssemblyScript contracts

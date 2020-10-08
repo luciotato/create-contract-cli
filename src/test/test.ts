@@ -1,10 +1,12 @@
 import { testTokenizer } from "./test.Tokenizer.js"
 import { testContractAPIProducer } from "./test.ContractAPI.js"
-import { CommandLineArgs } from "../model-TS/util/CommandLineArgs"
-import { options } from "../model-TS/CLIOptions.js"
 import expect from "./expect.js"
 import * as child_process from "child_process"
 import * as color from '../lib/util/color.js'
+
+import CommandLineArgs = require("../../res/model-ES2018/util/CommandLineArgs.js")
+import options = require("../../res/model-ES2018/CLIOptions.js")
+
 
 const nickname="testy"
 const contractCliPath="out/"+nickname+"-cli"
@@ -64,17 +66,46 @@ function cli(args: string, spawnOpt?: Record<string, unknown>): number {
 
 //-----------------------------
 function testCLIparser() {
-    const cmdline = `node nearswap add_liquidity { token: "gold.nearswap.testnet", max_tokens: 10, min_shares: 5 } --amount 10`
+
+    let cmdline = `node nearswap add_liquidity { token: "gold.nearswap.testnet", max_tokens: 10, min_shares: 5 } --amount 10`
 
     process.argv = cmdline.split(' ')
 
-    const a = new CommandLineArgs(options)
+    let a = new CommandLineArgs(options)
 
     expect("command", a.consumeString("cmd")).toBe("add_liquidity")
 
-    expect("JSON", a.consumeJSON("json args")).toBe({ token: '"gold.nearswap.testnet"', max_tokens: "10" + "".padEnd(24, "0"), min_shares: "5" + "".padEnd(24, "0") })
+    expect("JSON", a.consumeJSON("json args")).toBe({ token:'"gold.nearswap.testnet"', max_tokens: "10" + "".padEnd(24, "0"), min_shares: "5" + "".padEnd(24, "0") })
 
     expect("options.amount", options.amount.value).toBe(10)
+
+    //no spaces around { }
+    cmdline = `node nearswap add_liquidity {token:gold.nearswap.testnet max_tokens:10 min_shares:5} --amount 10`
+
+    process.argv = cmdline.split(' ')
+
+    a = new CommandLineArgs(options)
+
+    expect("command", a.consumeString("cmd")).toBe("add_liquidity")
+
+    expect("JSON", a.consumeJSON("json args")).toBe({ token:"gold.nearswap.testnet", max_tokens: "10" + "".padEnd(24, "0"), min_shares: "5" + "".padEnd(24, "0") })
+
+    expect("options.amount", options.amount.value).toBe(10)
+
+    //no spaces around { } v2
+    cmdline = `node staky new {account:lucio.testnet, reward_fee_fraction: {numerator:10i, denominator:8i} } --amount 10N`
+
+    process.argv = cmdline.split(' ')
+
+    a = new CommandLineArgs(options)
+
+    expect("command", a.consumeString("cmd")).toBe("new")
+
+    expect("JSON", a.consumeJSON("json args")).toBe({ account:"lucio.testnet",reward_fee_fraction:{numerator:10, denominator:8}})
+
+    expect("options.amount", options.amount.value).toBe("10N")
+
+
 }
 
 //------------------------------------------------------
@@ -90,6 +121,7 @@ testContractAPIProducer()
 
 console.log("---------- END PARSE TESTS ---------")
 
+//------------------------------------------------------
 console.log("---------- START dist/main/create-contract-cli TEST ---------")
 
 const contractAccount="AcontractAccount"
@@ -98,6 +130,9 @@ const outDir="out"
 
 //create contract-cli named 'staky' for the deployed staking-pool
 node(`dist/main/create-contract-cli`, `${nickname} res/test/rust/staking-pool --contractName ${contractAccount} --accountId ${userAccount} --nolink -o ${outDir}`)
+
+//test json parsing
+
 
 //test configure contractName & accountId
 cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount.near")

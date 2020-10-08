@@ -49,6 +49,7 @@ expect.prototype.toBe = function (expected) {
         console.log(red + "ERR: expect failed: " + savedTitle + normal);
         console.log("      received: " + yellow + util_1.inspect(saveReceived, { depth: 10 }) + normal);
         console.log("      expected: " + green + util_1.inspect(expected, { depth: 10 }) + normal);
+        process.exit(1);
     }
     else {
         console.log(green + "OK: " + normal + savedTitle);

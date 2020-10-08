@@ -112,6 +112,28 @@ class CommandLineArgs {
             process.exit(1)
         }
 
+        //JSON pre-process:
+        //ideally the user adds spaces around { }, but let's be forgiving
+        //if an item starts with "{..." => splice into its own item "{"
+        //if an item ends with "..}" => splice into its own item "}"
+        for(let i=0;i<this.clArgs.length;i++){
+            let item=this.clArgs[i]
+            if (item!="{" && item.startsWith("{")){
+                //remove the starting {
+                item=item.slice(1)
+                this.clArgs[i]=item
+                //insert as its own item
+                this.clArgs.splice(i,0,"{")
+            }
+            if (item!="}" && item.endsWith("}")){
+                //remove the endint }
+                item=item.slice(0,-1)
+                this.clArgs[i]=item
+                //insert as its own item
+                this.clArgs.splice(i+1,0,"}")
+            }
+        }
+
         // create consumible positional arguments, parsing also JSON command-line format
         for (let index = 0; index < this.clArgs.length; index++) {
             const item = this.clArgs[index]
