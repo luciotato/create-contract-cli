@@ -3,7 +3,7 @@
 
 ### What's this tool for?
 
-This tool can create a cli for any rust contract by parsing the contract code
+This tool can create a cli for any NEAR smart contract by parsing the contract code
 
 It works for any rust-coded contract
 
@@ -20,7 +20,7 @@ Let's create a cli to manage that contract from my account
 
 and.... **done!**
 
-`create-contract-cli` parsed `core-contracts/staking-pool/scr/lib.rs` and created a new cli called "lucky" with commands to control a staking-pool contract
+We just parsed `core-contracts/staking-pool/scr/lib.rs` and created a new cli called "lucky" with commands to control a staking-pool contract
 
 The new cli is at ./lucky-cli and its nickname is "lucky"
 
