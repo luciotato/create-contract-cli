@@ -89,14 +89,19 @@ The cli parses the command line to create a JSON parameter for the contract. You
 
 * numbers are by default in NEAR, so they'll be converted to yoctos before passing them to the contract. You can use "**i**" to indicate the number is an integer, "**y**" to indicate you're stating yoctos, and "**N**" (default) to indicate the amount is in NEAR. For contract params, numbers expressed in NEAR are converted to U128 Yoctos. That's the default parameter convention
 
-For eaxmple:
-`lucky get_accounts { from_index:1i limit: 10i }`  
+
+#### Examples:
+
+`lucky get_accounts { from_index:1i limit: 10i }`
+
 executes: `near call luckystaker.near "{\"from_index\":1,\"limit\":10}"`
 
-`lucky stake { amount:10 }`  | `lucky stake { amount:10N }` 
+`lucky stake { amount:10 }`  | `lucky stake { amount:10N }`
+
 executes: `near call luckystaker.near "{\"amount\":\"1000000000000000000000000\"}"`
 
-`lucky stake { amount:500000000000000y }`  
+`lucky stake { amount:500000000000000y }`
+
 executes: `near call luckystaker.near "{\"amount\":\"500000000000000\"}"`
 
 ## Caveats
