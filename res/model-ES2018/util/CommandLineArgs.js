@@ -131,6 +131,7 @@ class CommandLineArgs {
                 this.clArgs[i]=item
                 //insert as its own item
                 this.clArgs.splice(i+1,0,"}")
+                i-- //re-check for }}
             }
         }
 

@@ -74,7 +74,7 @@ function testCLIparser() {
     expect_js_1.default("JSON", a.consumeJSON("json args")).toBe({ token: "gold.nearswap.testnet", max_tokens: "10" + "".padEnd(24, "0"), min_shares: "5" + "".padEnd(24, "0") });
     expect_js_1.default("options.amount", options.amount.value).toBe(10);
     //no spaces around { } v2
-    cmdline = `node staky new {account:lucio.testnet, reward_fee_fraction: {numerator:10i, denominator:8i} } --amount 10N`;
+    cmdline = `node staky new {account:lucio.testnet, reward_fee_fraction: {numerator:10i, denominator:8i}} --amount 10N`;
     process.argv = cmdline.split(' ');
     a = new CommandLineArgs(options);
     expect_js_1.default("command", a.consumeString("cmd")).toBe("new");

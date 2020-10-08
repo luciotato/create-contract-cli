@@ -93,7 +93,7 @@ function testCLIparser() {
     expect("options.amount", options.amount.value).toBe(10)
 
     //no spaces around { } v2
-    cmdline = `node staky new {account:lucio.testnet, reward_fee_fraction: {numerator:10i, denominator:8i} } --amount 10N`
+    cmdline = `node staky new {account:lucio.testnet, reward_fee_fraction: {numerator:10i, denominator:8i}} --amount 10N`
 
     process.argv = cmdline.split(' ')
 
