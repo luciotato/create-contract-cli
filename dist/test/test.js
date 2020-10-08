@@ -8,7 +8,7 @@ const expect_js_1 = require("./expect.js");
 const child_process = require("child_process");
 const color = require("../lib/util/color.js");
 const nickname = "testy";
-const contractCli = "out/" + nickname + "-cli";
+const contractCliPath = "out/" + nickname + "-cli";
 //-----------------------------------
 // helper fn spawn 
 //-----------------------------------
@@ -52,12 +52,13 @@ function node(command, args, spawnOpt) {
 function cli(args, spawnOpt) {
     console.log(color.yellow, ">", nickname, args, color.normal);
     const argsArray = args.split(" ");
-    argsArray.unshift(contractCli);
+    argsArray.unshift(contractCliPath);
     if (!spawnOpt)
         spawnOpt = {};
     spawnOpt["hideCommand"] = true;
     return spawn("node", argsArray, spawnOpt);
 }
+//-----------------------------
 function testCLIparser() {
     const cmdline = `node nearswap add_liquidity { token: "gold.nearswap.testnet", max_tokens: 10, min_shares: 5 } --amount 10`;
     process.argv = cmdline.split(' ');
@@ -66,7 +67,9 @@ function testCLIparser() {
     expect_js_1.default("JSON", a.consumeJSON("json args")).toBe({ token: '"gold.nearswap.testnet"', max_tokens: "10" + "".padEnd(24, "0"), min_shares: "5" + "".padEnd(24, "0") });
     expect_js_1.default("options.amount", CLIOptions_js_1.options.amount.value).toBe(10);
 }
+//------------------------------------------------------
 console.log("---------- START PARSE TESTS ---------");
+spawn("rm", ["-rf", "out"]);
 testCLIparser();
 test_Tokenizer_js_1.testTokenizer();
 test_ContractAPI_js_1.testContractAPIProducer();
@@ -82,5 +85,7 @@ cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount
 cli("--info");
 cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`);
 cli("--info");
+//cleanup
+spawn("rm", ["-rf", "out"]);
 console.log("---------- dist/main/create-contract-cli ---------");
 //# sourceMappingURL=test.js.map

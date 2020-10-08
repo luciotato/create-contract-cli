@@ -7,7 +7,7 @@ import * as child_process from "child_process"
 import * as color from '../lib/util/color.js'
 
 const nickname="testy"
-const contractCli="out/"+nickname+"-cli"
+const contractCliPath="out/"+nickname+"-cli"
 
 //-----------------------------------
 // helper fn spawn 
@@ -55,13 +55,14 @@ function cli(args: string, spawnOpt?: Record<string, unknown>): number {
 
 
     const argsArray = args.split(" ")
-    argsArray.unshift(contractCli)
+    argsArray.unshift(contractCliPath)
 
     if (!spawnOpt) spawnOpt = {}
     spawnOpt["hideCommand"] = true
     return spawn("node", argsArray, spawnOpt)
 }
 
+//-----------------------------
 function testCLIparser() {
     const cmdline = `node nearswap add_liquidity { token: "gold.nearswap.testnet", max_tokens: 10, min_shares: 5 } --amount 10`
 
@@ -76,7 +77,10 @@ function testCLIparser() {
     expect("options.amount", options.amount.value).toBe(10)
 }
 
+//------------------------------------------------------
 console.log("---------- START PARSE TESTS ---------")
+
+spawn("rm",["-rf","out"])
 
 testCLIparser()
 
@@ -91,6 +95,7 @@ console.log("---------- START dist/main/create-contract-cli TEST ---------")
 const contractAccount="AcontractAccount"
 const userAccount="AuserAccount"
 const outDir="out"
+
 //create contract-cli named 'staky' for the deployed staking-pool
 node(`dist/main/create-contract-cli`, `${nickname} res/test/rust/staking-pool --contractName ${contractAccount} --accountId ${userAccount} --nolink -o ${outDir}`)
 
@@ -99,6 +104,9 @@ cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount
 cli("--info")
 cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`)
 cli("--info")
+
+//cleanup
+spawn("rm",["-rf","out"])
 
 console.log("---------- dist/main/create-contract-cli ---------")
 

@@ -114,6 +114,10 @@ function main() {
     let projectDir = `${nickname}-cli`
     if (options.output.value) projectDir = path.join(options.output.value, projectDir)
     color.action(`Creating dir ${projectDir}`)
+    if (mkPath.dirExists(projectDir)){
+        color.logErr("dir already exists: "+projectDir)
+        process.exit(1)
+    }
     try {
         mkPath.create(projectDir)
     } catch (ex) {

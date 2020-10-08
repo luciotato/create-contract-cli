@@ -107,6 +107,10 @@ function main() {
     if (CLIOptions_1.options.output.value)
         projectDir = path.join(CLIOptions_1.options.output.value, projectDir);
     color.action(`Creating dir ${projectDir}`);
+    if (mkPath.dirExists(projectDir)) {
+        color.logErr("dir already exists: " + projectDir);
+        process.exit(1);
+    }
     try {
         mkPath.create(projectDir);
     }
