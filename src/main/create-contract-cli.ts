@@ -9,7 +9,7 @@ import { ContractAPIProducer as Producer } from "./ContractAPI-producer"
 import { ASTModule } from "../lib/Parser/Grammar"
 import { CommandLineArgs, ShowHelpOptions } from "../lib/util/CommandLineArgs"
 import { options } from "./CLIOptions"
-import { URL } from "url"
+//import { URL } from "url"
 
 type dataInfo = {
     nickname: string;
@@ -106,7 +106,7 @@ function main() {
         process.exit(1)
     }
 
-    // both -c -acc are required
+    // both -c & -acc are required
     args.requireOptionString(options.contractName)
     args.requireOptionString(options.accountId)
 
@@ -139,7 +139,8 @@ function main() {
     //console.log(__dirname);
     // Prints: /Users/mjr
     //console.log(path.dirname(__filename));
-    // Prints: /Users/mjr    let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
+    // Prints: /Users/mjr    
+    //let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
     if (basedir.startsWith("\\")) basedir = basedir.slice(1) // windows compat remove extra "\"
     basedir=path.relative(process.cwd(),basedir)
     
@@ -148,30 +149,32 @@ function main() {
         mkPath.create(path.join(projectDir, "util"))
 
         //create package.json
-        let pkg = fs.readFileSync(path.join(basedir, "res", "package.json")).toString()
-        pkg = pkg.replace(/nickname/g, nickname)
-        pkg = pkg.replace("${contract}", pathToRustProject.replace(/\\/g, "/")) // windows compat: c.\./
-        pkg = pkg.replace("${contractAddress}", options.contractName.value)
+        let pkg = fs.readFileSync(path.join(basedir, "res", "packageES2018.json")).toString()
+        pkg = pkg.replace(/{nickname}/g, nickname)
+        pkg = pkg.replace(/{contract}/g, pathToRustProject.replace(/\\/g, "/")) // windows compat: c.\./
+        pkg = pkg.replace(/{contractAddress}/g, options.contractName.value)
         fs.writeFileSync(path.join(projectDir, "package.json"), pkg)
 
         //create cli.js
         let cli = fs.readFileSync(path.join(basedir, "res", "cli.js")).toString()
-        cli = cli.replace(/nickname/g, nickname)
+        cli = cli.replace(/{nickname}/g, nickname)
         fs.writeFileSync(path.join(projectDir, "cli.js"), cli)
-
-        //create ${nickname}.js
-        const modelPath = path.join(basedir, "dist", "model", "hand-coded-tom")
-        fs.copyFileSync(path.join(modelPath, "tom.js"), path.join(projectDir, nickname + ".js"))
 
         //create CLIConfig.js
         const cliConfigPath = path.join(projectDir, "CLIConfig.js")
         const text = `
         module.exports = {
-                userAccount: "${options.accountId.value}",
-                contractAccount: "${options.contractName.value}"
+            nickname: "${nickname}",
+            userAccount: "${options.accountId.value}",
+            contractAccount: "${options.contractName.value}"
         }
         `;
         fs.writeFileSync(cliConfigPath, text)
+
+        //create ${nickname}.js from model
+        //type:module const modelPath = path.join(basedir, "dist", "model", "hand-coded-tom")
+        const modelPath = path.join(basedir, "res", "model-ES2018")
+        fs.copyFileSync(path.join(modelPath, "tomES2018.js"), path.join(projectDir, nickname + ".js"))
 
         //copy common files - main dir
         for (const file of ["CLIOptions", "ExtensionAPI"]) {

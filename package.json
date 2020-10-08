@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "creates a cli tool based on a NEAR smart contract",
   "main": "dist/main/create-contract-cli",
-  "type": "module",
   "bin": "bin/cli.js",
   "directories": {
     "test": "dist/test"

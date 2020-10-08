@@ -1,0 +1,22 @@
+{
+  "name": "hand-coded-tom-es2018",
+  "version": "1.0.0",
+  "description": "model for create-command-cli",
+  "main": "tomES2018.js",
+  "scripts": {
+    "test": "tomES2018 --help|more"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luciotato/create-contract-cli.git"
+  },
+  "keywords": [
+    "create-command-cli"
+  ],
+  "author": "Lucio Tato",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luciotato/create-contract-cli/issues"
+  },
+  "homepage": "https://github.com/luciotato/create-contract-cli/#readme"
+}

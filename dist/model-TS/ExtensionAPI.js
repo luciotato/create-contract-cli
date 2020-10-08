@@ -179,4 +179,5 @@ class ExtensionAPI extends ContractAPI_js_1.ContractAPI {
     }
 }
 exports.ExtensionAPI = ExtensionAPI;
+module.exports = ExtensionAPI;
 //# sourceMappingURL=ExtensionAPI.js.map

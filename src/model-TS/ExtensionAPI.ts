@@ -185,3 +185,4 @@ export class ExtensionAPI extends ContractAPI {
     */
 
 }
+module.exports = ExtensionAPI

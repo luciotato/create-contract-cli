@@ -77,7 +77,7 @@ export function testContractAPIProducer() : void{
     // logger.setDebugLevel(1,500)
 
     testFor('./res/test/rust/staking-pool/src/lib.rs', "./res/test/expected/staking-pool-API.js",
-        { nickname: "tom", defaultContractName: "tomstaker.stakehouse.betanet" }
+        { nickname: "staky", defaultContractName: "tomstaker.stakehouse.betanet" }
     )
 
     // logger.setDebugLevel(0)

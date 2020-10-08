@@ -1,0 +1,29 @@
+{
+  "name": "{nickname}",
+  "version": "1.0.0",
+  "description": "command cli for ${contract} smart contract at ${contractAddress}}",
+  "main": "{nickname}",
+  "bin": {
+    "{nickname}": "cli.js"
+  },
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/${contractAddress}"
+  },
+  "keywords": [
+    "near",
+    "contract",
+    "cli",
+    "tool",
+    "${contract}",
+    "${contractAddress}"
+  ],
+  "author": "luciotato@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luciotato/create-contract-cli/issues"
+  },
+  "homepage": "https://github.com/luciotato/create-contract-cli#readme"
+}

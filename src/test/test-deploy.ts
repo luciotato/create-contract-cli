@@ -72,7 +72,8 @@ if (!validNetworks.includes(process.env.NODE_ENV)) {
 }
 
 // @ts-ignore -- import.meta.url
-let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
+//let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
+let basedir = path.join(__dirname, "..","..")
 if (basedir.startsWith("\\")) basedir = basedir.slice(1) // windows compat remove extra "\"
 basedir = path.relative(process.cwd(), basedir)
 console.log(`basedir: ${basedir}`)
@@ -149,11 +150,5 @@ cli("withdraw_all")
     const result = near("delete", [contractAccount, "lucio.testnet"], { ignoreExitStatus: true })
     if (result == 0) fs.unlinkSync(contractAccountFile) //rm file
 }
-
-//test configure contractName & accountId
-cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount.near")
-cli("--info")
-cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`)
-cli("--info")
 
 console.log("---------- END TESTNET DEPLOY TESTS ---------")

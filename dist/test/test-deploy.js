@@ -65,7 +65,8 @@ if (!validNetworks.includes(process.env.NODE_ENV)) {
     process.exit(1);
 }
 // @ts-ignore -- import.meta.url
-let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..");
+//let basedir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..")
+let basedir = path.join(__dirname, "..", "..");
 if (basedir.startsWith("\\"))
     basedir = basedir.slice(1); // windows compat remove extra "\"
 basedir = path.relative(process.cwd(), basedir);
@@ -129,10 +130,5 @@ cli("withdraw_all");
     if (result == 0)
         fs.unlinkSync(contractAccountFile); //rm file
 }
-//test configure contractName & accountId
-cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount.near");
-cli("--info");
-cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`);
-cli("--info");
 console.log("---------- END TESTNET DEPLOY TESTS ---------");
 //# sourceMappingURL=test-deploy.js.map
