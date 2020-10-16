@@ -1,5 +1,4 @@
-#IDES
-.vs
+#note: /dist is included so the user don't has to npm instal/build to use it
 
 #products
 out
@@ -9,4 +8,5 @@ neardev
 #packages
 node_modules
 
-#note: /dist is included so the user don't has to npm instal/build to use it
+#inner dist
+**/model-TS/dist
