@@ -77,45 +77,79 @@ or use [nvm](https://github.com/nvm-sh/nvm) (linux) to install node stable
 
 #### JSON parameteres 
 
-The cli parses the command line to create a JSON parameter for the contract. You must
+The cli parses command line arguments to create JSON parameters for the contract. You must:
 
 * Put spaces around  { and }
 
-`lucky get_accounts { from_index: 1i, limit: 10i }`
+        lucky withdraw { amount:10 }
 
-* commas are optional
+* Numbers are by default in NEAR, so they'll be converted to U128 yoctos before passing them to the contract. This means `lucky withdraw { amount: 10 }` will be converted to `near call lucky.near withdraw {amount:"100000000000000000000"}`
+
+* You can also use "**N**" to expressely indicate the amount is in NEAR
+
+        lucky withdraw { amount:10N }
+
+* In some uncommon cases, you can use "**y**" to indicate you're stating yoctos, and the number will just be enclosed in quotes (It's uncommon to use yoctos to express parameters)
+
+        lucky witdraw { amount:6500000000000000000000y } 
+        => call lucky.near withdraw {\"amount\":\"6500000000000000000000\"}
+
+* Because the default denomination is NEAR, you can state numbers with a decimal point and they will be converted to U128 Yoctos, that means multiplied by 1e24 and enclosed in quotes, so `amount:0.065` becomes `"amount":"6500000000000000000000"`. This is the default parameter convention
+
+        lucky witdraw { amount: 0.065 } 
+        => call lucky.near withdraw {\"amount\":\"6500000000000000000000\"}
+
+* And finally, you can use "**i**" to indicate the number is an integer and should be sent as it is, not converted or enclosed in quotes
+
+        lucky get_accounts { from_index: 1i, limit: 10i } 
+        => view lucky.near get_accounts {\"from_index\":1,\"limit\":10}
+
+* Note: Commas are optional
+
+        lucky get_accounts { from_index:1i limit:10i }
+        => view lucky.near get_accounts {\"from_index\":1,\"limit\":10}
+
+
+
+### More Conversion Examples:
+
+--- 
+
+`lucky stake { amount:10 }` or `lucky stake { amount:10N }`
+
+both execute:
+```
+near call lucky.near stake "{\"amount\":\"1000000000000000000000000\"}"`
+```
+---
+
+`lucky stake { amount:0.0005 }`<br>
+or `lucky stake { amount:0.0005N }`<br>
+or `lucky stake { amount:500000000000000000000y }`<br>
+
+all of them execute:
+```
+near call luckystaker.near stake "{\"amount\":\"500000000000000000000\"}"`
+```
+
+---
 
 `lucky get_accounts { from_index:1i limit: 10i }`
 
-* numbers are by default in NEAR, so they'll be converted to yoctos before passing them to the contract. You can use "**i**" to indicate the number is an integer, "**y**" to indicate you're stating yoctos, and "**N**" (default) to indicate the amount is in NEAR. For contract params, numbers expressed in NEAR are converted to U128 Yoctos. That's the default parameter convention
+executes:
+```
+near view luckystaker.near get_accounts "{\"from_index\":1,\"limit\":10}"
+```
 
-
-#### Examples:
-
-`lucky get_accounts { from_index:1i limit: 10i }`
-
-executes: `near call luckystaker.near "{\"from_index\":1,\"limit\":10}"`
-
-`lucky stake { amount:10 }`  | `lucky stake { amount:10N }`
-
-executes: `near call luckystaker.near "{\"amount\":\"1000000000000000000000000\"}"`
-
-`lucky stake { amount:500000000000000y }`
-
-executes: `near call luckystaker.near "{\"amount\":\"500000000000000\"}"`
 
 ## Caveats
 
 * Should work for any contract
 
-Rust is specially hard to parse, if the tool can't parse your /lib.rs create an [issue](https://github.com/luciotato/create-contract-cli/issues) including the /lib.rs
+... but Rust is specially hard to parse, if the tool can't parse your `lib.rs`, please report the issue [here](https://github.com/luciotato/create-contract-cli/issues) including some failing `lib.rs` sample code
 
 * Should work on Windows
 
 ## Road Map
-
-* --target ts => Create a .ts cli
-
- It will be nice if the tool can generate a .ts based cli to allow building from a type-checked base
 
 * Parse AssemblyScript contracts
