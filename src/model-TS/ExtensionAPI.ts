@@ -59,7 +59,7 @@ export class ExtensionAPI extends ContractAPI {
         //get path from command line
         const wasmFile = a.consumeString("path/to/contract.wasm")
         //spawn near-cli, command=deploy
-        nearCli.spawnNearCli(["deploy",wasmFile], options)
+        nearCli.spawnNearCli(["deploy", cliConfig.contractAccount, wasmFile], options);
     }
 
 

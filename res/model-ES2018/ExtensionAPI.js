@@ -57,13 +57,6 @@ class ExtensionAPI extends ContractAPI {
 
     // deploy extension example
     deploy_HELP(){ return `
-    call near deploy on ${cliConfig.contractAccount} 
-    
-    Example: 
-    >${nickname} deploy path/to/wasm
-    `}
-
-    deploy_HELP(){ return `
     deploy a WASM file into the account ${cliConfig.contractAccount} 
     
     usage:
@@ -78,7 +71,7 @@ class ExtensionAPI extends ContractAPI {
         //get path from command line
         const wasmFile = a.consumeString("path/to/contract.wasm")
         //spawn near-cli, command=deploy
-        nearCli.spawnNearCli(["deploy",wasmFile], options)
+        nearCli.spawnNearCli(["deploy", cliConfig.contractAccount, wasmFile], options);
     }
 
 
