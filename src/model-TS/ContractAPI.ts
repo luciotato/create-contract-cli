@@ -11,12 +11,12 @@ export const nickname = "tom"
 export class ContractAPI {
     // this.view helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    view(command:string, fnJSONparams?:any): string {
+    _view(command:string, fnJSONparams?:any): string {
         return nearCli.view(cliConfig.contractAccount, command, fnJSONparams, options)
     }
     // this.call helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    call(command:string, fnJSONparams?:any): string {
+    _call(command:string, fnJSONparams?:any): string {
         return nearCli.call(cliConfig.contractAccount, command, fnJSONparams, options)
     }
 
@@ -56,7 +56,7 @@ export class ContractAPI {
     ping(a: CommandLineArgs) :void{
         a.noMoreArgs() // end of arguments
 
-        this.call("ping")
+        this._call("ping")
     }
 
     get_accounts_help: string = `
@@ -75,7 +75,7 @@ export class ContractAPI {
 
         a.noMoreArgs()
 
-        return this.view("get_accounts", params)
+        return this._view("get_accounts", params)
     }
 
     deposit_help: string = `
@@ -95,7 +95,7 @@ export class ContractAPI {
 
         a.noMoreArgs()
 
-        this.call("deposit")
+        this._call("deposit")
     }
 
     stake_help: string = `
@@ -115,24 +115,24 @@ will stake 10N from the unstaked balance of myaccount.betanet
 
         a.noMoreArgs()
 
-        this.call("stake", stakeJSONargs)
+        this._call("stake", stakeJSONargs)
     }
 
     get_total_staked_balance(a: CommandLineArgs) :string{
         a.noMoreArgs()
 
-        return this.view("get_total_staked_balance")
+        return this._view("get_total_staked_balance")
     }
 
     get_owner_id(a: CommandLineArgs) : string{
         a.noMoreArgs()
 
-        return this.view("get_owner_id")
+        return this._view("get_owner_id")
     }
 
     get_staking_key(a: CommandLineArgs) :string{
         a.noMoreArgs()
 
-        return this.view("get_staking_key")
+        return this._view("get_staking_key")
     }
 }

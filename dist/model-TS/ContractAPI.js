@@ -60,12 +60,12 @@ will stake 10N from the unstaked balance of myaccount.betanet
     }
     // this.view helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    view(command, fnJSONparams) {
+    _view(command, fnJSONparams) {
         return nearCli.view(CLIConfig_js_1.cliConfig.contractAccount, command, fnJSONparams, CLIOptions_js_1.options);
     }
     // this.call helper function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    call(command, fnJSONparams) {
+    _call(command, fnJSONparams) {
         return nearCli.call(CLIConfig_js_1.cliConfig.contractAccount, command, fnJSONparams, CLIOptions_js_1.options);
     }
     deploy(a) {
@@ -80,34 +80,34 @@ will stake 10N from the unstaked balance of myaccount.betanet
     }
     ping(a) {
         a.noMoreArgs(); // end of arguments
-        this.call("ping");
+        this._call("ping");
     }
     get_accounts(a) {
         const params = a.consumeJSON("{ from_index:number, limit:number }");
         a.noMoreArgs();
-        return this.view("get_accounts", params);
+        return this._view("get_accounts", params);
     }
     deposit(a) {
         a.requireOptionWithAmount(CLIOptions_js_1.options.amount, "N"); // require --amount, in Nears
         a.noMoreArgs();
-        this.call("deposit");
+        this._call("deposit");
     }
     stake(a) {
         const stakeJSONargs = a.consumeJSON("{ amount: x }");
         a.noMoreArgs();
-        this.call("stake", stakeJSONargs);
+        this._call("stake", stakeJSONargs);
     }
     get_total_staked_balance(a) {
         a.noMoreArgs();
-        return this.view("get_total_staked_balance");
+        return this._view("get_total_staked_balance");
     }
     get_owner_id(a) {
         a.noMoreArgs();
-        return this.view("get_owner_id");
+        return this._view("get_owner_id");
     }
     get_staking_key(a) {
         a.noMoreArgs();
-        return this.view("get_staking_key");
+        return this._view("get_staking_key");
     }
 }
 exports.ContractAPI = ContractAPI;
