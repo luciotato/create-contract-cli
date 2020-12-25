@@ -89,6 +89,7 @@ function main() {
     }
     const nickname = args.consumeString("nickname");
     const pathToRustProject = args.consumeString("path/to/rust-project");
+    //TODO - parse other files besides lib.rs (see core-contracts/lockup)
     // check if we can find the rust source
     const rustSourceFile = path.join(pathToRustProject, "src", "lib.rs");
     try {
@@ -127,6 +128,7 @@ function main() {
         defaultContractName: CLIOptions_1.options.contractName.value,
         defaultUserAccountId: CLIOptions_1.options.accountId.value
     };
+    //TODO - parse other files besides lib.rs (see core-contracts/lockup)
     parseAndProduceAPIfor(rustSourceFile, data, generatedContractAPI);
     // add auxiliary files
     //console.log("Current dir: " +process.cwd())

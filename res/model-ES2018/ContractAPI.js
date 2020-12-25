@@ -10,11 +10,11 @@ const nickname = cliConfig.nickname
 class ContractAPI {
 
     // this.view helper function
-    view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+    _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
         return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
     }
     // this.call helper function
-    call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+    _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
         return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
     }
 
@@ -26,7 +26,7 @@ class ContractAPI {
 
     ping(a /*:CommandLineArgs*/ ) /*:void*/{
         a.noMoreArgs() // end of arguments
-        this.call("ping")
+        this._call("ping")
     }
 
     get_accounts_HELP() { return  `
@@ -43,7 +43,7 @@ class ContractAPI {
     get_accounts(a /*:CommandLineArgs*/ ) {
         const params = a.consumeJSON("{ from_index:number, limit:number }")
         a.noMoreArgs()
-        return this.view("get_accounts", params)
+        return this._view("get_accounts", params)
     }
 
     deposit_HELP() { return  `
@@ -61,7 +61,7 @@ class ContractAPI {
     deposit(a /*:CommandLineArgs*/ ) /*:void*/{
         a.requireOptionWithAmount(options.amount, "N") // require --amount, in Nears
         a.noMoreArgs()
-        this.call("deposit")
+        this._call("deposit")
     }
 
     stake_HELP() { return  `
@@ -79,25 +79,25 @@ class ContractAPI {
     stake(a /*:CommandLineArgs*/ ) /*:void*/{
         const stakeJSONargs = a.consumeJSON("{ amount: x }")
         a.noMoreArgs()
-        this.call("stake", stakeJSONargs)
+        this._call("stake", stakeJSONargs)
     }
 
     get_total_staked_balance(a /*:CommandLineArgs*/ ) /*:string*/ {
         a.noMoreArgs()
 
-        return this.view("get_total_staked_balance")
+        return this._view("get_total_staked_balance")
     }
 
     get_owner_id(a /*:CommandLineArgs*/ ) /*:string*/ {
         a.noMoreArgs()
 
-        return this.view("get_owner_id")
+        return this._view("get_owner_id")
     }
 
     get_staking_key(a /*:CommandLineArgs*/ ) /*:string*/ {
         a.noMoreArgs()
 
-        return this.view("get_staking_key")
+        return this._view("get_staking_key")
     }
 }
 

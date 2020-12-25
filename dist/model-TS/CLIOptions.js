@@ -44,12 +44,12 @@ exports.options = {
         shortName: "c",
         valueType: "string",
         value: "",
-        helpText: `sets the contract accountId for near deploy and --cliConfig`
+        helpText: `Sets default contract account when used with --cliconfig. Otherwise, sets --contractName argument for the near call`
     },
     cliConfig: {
-        shortName: "cliconf",
+        shortName: "cliconfig",
         value: false,
-        helpText: `config this cli, you must include --contractName xx and --accountId yy to set default contract accountId and user`
+        helpText: `config this cli, add --contractName xx and --accountId yy to set default contract accountId and user`
     },
 };
 // # sourceMappingURL=CLIOptions.js.map

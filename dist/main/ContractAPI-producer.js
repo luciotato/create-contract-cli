@@ -27,11 +27,11 @@ class ASTModuleWriter extends Grammar.ASTModule {
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -194,10 +194,10 @@ class FunctionDeclarationWriter extends Grammar.FunctionDeclaration {
         // make the view/call
         let invoke;
         if (isView) {
-            invoke = "return this.view";
+            invoke = "return this._view";
         }
         else {
-            invoke = "this.call";
+            invoke = "this._call";
         }
         let invokeArgs = `"${fnName}"`;
         if (hasJSONArguments)
