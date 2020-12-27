@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -67,7 +67,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new",fnJSONParams)
+    this._call("new",fnJSONParams)
     
   }
   

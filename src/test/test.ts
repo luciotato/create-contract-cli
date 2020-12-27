@@ -9,7 +9,7 @@ import options = require("../../res/model-ES2018/CLIOptions.js")
 
 
 const nickname="testy"
-const contractCliPath="out/"+nickname+"-cli"
+const testyContractCliPath="out/"+nickname+"-cli"
 
 //-----------------------------------
 // helper fn spawn 
@@ -37,10 +37,10 @@ function spawn(cmd: string, args: string[], spawnOpt?: Record<string, unknown>):
 //-----------------------------------
 // helper fn near => spawn near-cli
 //-----------------------------------
-function near(command: string, args: string[], spawnOpt?: Record<string, unknown>): number {
-    args.unshift(command)
-    return spawn("near", args, spawnOpt)
-}
+// function near(command: string, args: string[], spawnOpt?: Record<string, unknown>): number {
+//     args.unshift(command)
+//     return spawn("near", args, spawnOpt)
+// }
 //-----------------------------------
 // helper fn node => spawn node
 //-----------------------------------
@@ -57,7 +57,7 @@ function cli(args: string, spawnOpt?: Record<string, unknown>): number {
 
 
     const argsArray = args.split(" ")
-    argsArray.unshift(contractCliPath)
+    argsArray.unshift(testyContractCliPath)
 
     if (!spawnOpt) spawnOpt = {}
     spawnOpt["hideCommand"] = true
@@ -126,7 +126,7 @@ console.log("---------- START dist/main/create-contract-cli TEST ---------")
 
 const contractAccount="AcontractAccount"
 const userAccount="AuserAccount"
-const outDir="out"
+const outDir = "out" // will add out/testy-cli
 
 //create contract-cli named 'staky' for the deployed staking-pool
 node(`dist/main/create-contract-cli`, `${nickname} res/test/rust/staking-pool --contractName ${contractAccount} --accountId ${userAccount} --nolink -o ${outDir}`)
@@ -140,8 +140,8 @@ cli("--info")
 cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`)
 cli("--info")
 
-//cleanup
-spawn("rm",["-rf","out"])
+//cleanup (leave /out for meld comparisions)
+//spawn("cd",["out", "&&", "rm","-rf", "testy-cli"])
 
 console.log("---------- dist/main/create-contract-cli ---------")
 

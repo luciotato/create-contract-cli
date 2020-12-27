@@ -1453,6 +1453,8 @@ class Body extends ASTBase_1.ASTBase {
                 break; // on closer:'}', break - end of body, (a single extra separator before closer is allowed)
             if (logger.debugFrom && node.owner.lexer.token.line > logger.debugFrom)
                 logger.setDebugLevel(1);
+            if (logger.debugTo && node.owner.lexer.token.line > logger.debugTo)
+                logger.setDebugLevel(0);
             // -----------------------
             // here we assume it's a Statement
             // Statement.tryParse will return the right AST class parsed

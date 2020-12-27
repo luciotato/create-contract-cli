@@ -8,7 +8,7 @@ const color = require("../lib/util/color.js");
 const CommandLineArgs = require("../../res/model-ES2018/util/CommandLineArgs.js");
 const options = require("../../res/model-ES2018/CLIOptions.js");
 const nickname = "testy";
-const contractCliPath = "out/" + nickname + "-cli";
+const testyContractCliPath = "out/" + nickname + "-cli";
 //-----------------------------------
 // helper fn spawn 
 //-----------------------------------
@@ -34,10 +34,10 @@ function spawn(cmd, args, spawnOpt) {
 //-----------------------------------
 // helper fn near => spawn near-cli
 //-----------------------------------
-function near(command, args, spawnOpt) {
-    args.unshift(command);
-    return spawn("near", args, spawnOpt);
-}
+// function near(command: string, args: string[], spawnOpt?: Record<string, unknown>): number {
+//     args.unshift(command)
+//     return spawn("near", args, spawnOpt)
+// }
 //-----------------------------------
 // helper fn node => spawn node
 //-----------------------------------
@@ -52,7 +52,7 @@ function node(command, args, spawnOpt) {
 function cli(args, spawnOpt) {
     console.log(color.yellow, ">", nickname, args, color.normal);
     const argsArray = args.split(" ");
-    argsArray.unshift(contractCliPath);
+    argsArray.unshift(testyContractCliPath);
     if (!spawnOpt)
         spawnOpt = {};
     spawnOpt["hideCommand"] = true;
@@ -92,7 +92,7 @@ console.log("---------- END PARSE TESTS ---------");
 console.log("---------- START dist/main/create-contract-cli TEST ---------");
 const contractAccount = "AcontractAccount";
 const userAccount = "AuserAccount";
-const outDir = "out";
+const outDir = "out"; // will add out/testy-cli
 //create contract-cli named 'staky' for the deployed staking-pool
 node(`dist/main/create-contract-cli`, `${nickname} res/test/rust/staking-pool --contractName ${contractAccount} --accountId ${userAccount} --nolink -o ${outDir}`);
 //test json parsing
@@ -101,7 +101,7 @@ cli("--cliConfig --contractName contract.account.testnet --accountId yourAccount
 cli("--info");
 cli(`--cliConfig --contractName ${contractAccount} --accountId test.near`);
 cli("--info");
-//cleanup
-spawn("rm", ["-rf", "out"]);
+//cleanup (leave /out for meld comparisions)
+//spawn("cd",["out", "&&", "rm","-rf", "testy-cli"])
 console.log("---------- dist/main/create-contract-cli ---------");
 //# sourceMappingURL=test.js.map

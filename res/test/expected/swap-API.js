@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -43,7 +43,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new")
+    this._call("new")
     
   }
   
@@ -65,7 +65,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("set_fee_dst",fnJSONParams)
+    this._call("set_fee_dst",fnJSONParams)
     
   }
   
@@ -88,7 +88,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("change_owner",fnJSONParams)
+    this._call("change_owner",fnJSONParams)
     
   }
   
@@ -119,7 +119,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("create_pool",fnJSONParams)
+    this._call("create_pool",fnJSONParams)
     
   }
   
@@ -141,7 +141,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("pool_info",fnJSONParams)
+    return this._view("pool_info",fnJSONParams)
     
   }
   
@@ -163,7 +163,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("list_pools")
+    return this._view("list_pools")
     
   }
   
@@ -190,7 +190,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("add_liquidity",fnJSONParams)
+    this._call("add_liquidity",fnJSONParams)
     
   }
   
@@ -214,7 +214,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("withdraw_liquidity",fnJSONParams)
+    this._call("withdraw_liquidity",fnJSONParams)
     
   }
   
@@ -244,7 +244,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_near_to_token_exact_in",fnJSONParams)
+    this._call("swap_near_to_token_exact_in",fnJSONParams)
     
   }
   
@@ -270,7 +270,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_near_to_token_exact_in_xfr",fnJSONParams)
+    this._call("swap_near_to_token_exact_in_xfr",fnJSONParams)
     
   }
   
@@ -298,7 +298,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_near_to_token_exact_out",fnJSONParams)
+    this._call("swap_near_to_token_exact_out",fnJSONParams)
     
   }
   
@@ -324,7 +324,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_near_to_token_exact_out_xfr",fnJSONParams)
+    this._call("swap_near_to_token_exact_out_xfr",fnJSONParams)
     
   }
   
@@ -353,7 +353,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_token_to_near_exact_in",fnJSONParams)
+    this._call("swap_token_to_near_exact_in",fnJSONParams)
     
   }
   
@@ -379,7 +379,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_token_to_near_exact_in_xfr",fnJSONParams)
+    this._call("swap_token_to_near_exact_in_xfr",fnJSONParams)
     
   }
   
@@ -409,7 +409,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_token_to_near_exact_out",fnJSONParams)
+    this._call("swap_token_to_near_exact_out",fnJSONParams)
     
   }
   
@@ -435,7 +435,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_token_to_near_exact_out_xfr",fnJSONParams)
+    this._call("swap_token_to_near_exact_out_xfr",fnJSONParams)
     
   }
   
@@ -465,7 +465,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_tokens_exact_in",fnJSONParams)
+    this._call("swap_tokens_exact_in",fnJSONParams)
     
   }
   
@@ -491,7 +491,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_tokens_exact_in_xfr",fnJSONParams)
+    this._call("swap_tokens_exact_in_xfr",fnJSONParams)
     
   }
   
@@ -521,7 +521,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_tokens_exact_out",fnJSONParams)
+    this._call("swap_tokens_exact_out",fnJSONParams)
     
   }
   
@@ -547,7 +547,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("swap_tokens_exact_out_xfr",fnJSONParams)
+    this._call("swap_tokens_exact_out_xfr",fnJSONParams)
     
   }
   
@@ -570,7 +570,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_near_to_token_in",fnJSONParams)
+    return this._view("price_near_to_token_in",fnJSONParams)
     
   }
   
@@ -593,7 +593,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_near_to_token_out",fnJSONParams)
+    return this._view("price_near_to_token_out",fnJSONParams)
     
   }
   
@@ -615,7 +615,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_token_to_near_in",fnJSONParams)
+    return this._view("price_token_to_near_in",fnJSONParams)
     
   }
   
@@ -638,7 +638,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_token_to_near_out",fnJSONParams)
+    return this._view("price_token_to_near_out",fnJSONParams)
     
   }
   
@@ -660,7 +660,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_token_to_token_in",fnJSONParams)
+    return this._view("price_token_to_token_in",fnJSONParams)
     
   }
   
@@ -683,7 +683,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("price_token_to_token_out",fnJSONParams)
+    return this._view("price_token_to_token_out",fnJSONParams)
     
   }
   
@@ -704,7 +704,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("add_liquidity_transfer_callback",fnJSONParams)
+    this._call("add_liquidity_transfer_callback",fnJSONParams)
     
   }
   
@@ -730,7 +730,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("token_url",fnJSONParams)
+    return this._view("token_url",fnJSONParams)
     
   }
   
@@ -754,7 +754,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("granularity",fnJSONParams)
+    return this._view("granularity",fnJSONParams)
     
   }
   
@@ -778,7 +778,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("decimals",fnJSONParams)
+    return this._view("decimals",fnJSONParams)
     
   }
   
@@ -800,7 +800,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("total_supply",fnJSONParams)
+    return this._view("total_supply",fnJSONParams)
     
   }
   
@@ -822,7 +822,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("balance_of",fnJSONParams)
+    return this._view("balance_of",fnJSONParams)
     
   }
   
@@ -855,7 +855,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("transfer_to_sc",fnJSONParams)
+    this._call("transfer_to_sc",fnJSONParams)
     
   }
   
@@ -887,7 +887,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("transfer",fnJSONParams)
+    this._call("transfer",fnJSONParams)
     
   }
   
@@ -912,7 +912,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("remove_pool",fnJSONParams)
+    this._call("remove_pool",fnJSONParams)
     
   }
   

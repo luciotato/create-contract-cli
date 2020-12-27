@@ -89,6 +89,7 @@ export class Lexer {
     filename: string
     private file: UTF8FileReader
     private readString = '' // data already read from the file 
+    private startedFromString = false;
 
     private curReadLine = 1
     private curReadCol = 1
@@ -200,7 +201,7 @@ export class Lexer {
         if (threeChars == 'r#"') { // raw literal string
             const endQuotePos = this.untilUnescaped('"#', 3)
             // return new Token 'LITERAL_STRING'
-            return [TokenCode.LITERAL_STRING, endQuotePos + 2] // includes opening (r#") and closing quotes ("#)
+            return [TokenCode.LITERAL_STRING, endQuotePos + 2] // includes opening (r#") and closing quotes ("#) and \n if multiline
         }
 
         // rust 3-char assignment operators
@@ -340,9 +341,13 @@ export class Lexer {
     // ---------------------------
     startFromString(code: string): void {
         this.readString = code
+        this.startedFromString = true
         this.initTokenList()
     }
 
+    get moreToRead():boolean {
+        return !this.startedFromString && this.file && this.file.isOpen
+    }
     // ---------------------------
     /**
      * attach a file as input for the tokenizer
@@ -354,6 +359,7 @@ export class Lexer {
         this.file = new UTF8FileReader()
         this.file.open(filename, 8 * 1024)
 
+        this.startedFromString = false
         // read the first chunk
         this.readString = this.file.readChunk()
         // start with Token:BOF
@@ -471,7 +477,7 @@ export class Lexer {
     private consumeStringFromRead(endPos: number): string {
         const result = this.readString.slice(0, endPos)
         this.readString = this.readString.slice(endPos)
-        if (this.readString.length < 8 * 1024 && this.file && this.file.isOpen) {
+        if (this.moreToRead && this.readString.length < 8 * 1024 ) {
             this.readString += this.file.readChunk()
         }
         return result
@@ -483,8 +489,16 @@ export class Lexer {
      * @param what what to search
      */
     private findRead(what: string): number {
-        const foundPos = this.readString.indexOf(what)
-        if (foundPos < 0) return this.readString.length
+        let start=0
+        let foundPos=-1
+        while (foundPos<0) {
+            foundPos = this.readString.indexOf(what, start)
+            if (foundPos < 0) {
+                if (!this.moreToRead) throw Error(`can not find: ${what} starting at ${this.curReadLine}`)
+                start = this.readString.length
+                this.readString += this.file.readChunk()
+            }
+        }
         return foundPos
     }
 
@@ -500,7 +514,7 @@ export class Lexer {
         if (type == TokenCode.NEWLINE) {
             this.curReadLine++
             this.curReadCol = 0
-        } else if (type == TokenCode.COMMENT) {
+        } else if (type == TokenCode.COMMENT || type == TokenCode.LITERAL_STRING ) {
             const internalNewLinesCount = result.value.split(/\r\n|\r|\n/).length
             if (internalNewLinesCount) {
                 this.curReadLine += internalNewLinesCount - 1
@@ -520,6 +534,7 @@ export class Lexer {
     private untilNewLine(): number {
         let endPos = this.findRead("\n")
         if (this.readString.charAt(endPos - 1) == '\r') endPos--
+        if (endPos<0) endPos = this.findRead.length 
         return endPos
     }
 

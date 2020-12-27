@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -45,7 +45,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new")
+    this._call("new")
     
   }
   
@@ -68,7 +68,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_min_attached_balance")
+    return this._view("get_min_attached_balance")
     
   }
   
@@ -90,7 +90,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_number_of_staking_pools_created")
+    return this._view("get_number_of_staking_pools_created")
     
   }
   
@@ -122,7 +122,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("create_staking_pool",fnJSONParams)
+    this._call("create_staking_pool",fnJSONParams)
     
   }
   
@@ -146,7 +146,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("on_staking_pool_create",fnJSONParams)
+    this._call("on_staking_pool_create",fnJSONParams)
     
   }
   

@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -43,7 +43,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new")
+    this._call("new")
     
   }
   
@@ -65,7 +65,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("ping")
+    this._call("ping")
     
   }
   
@@ -88,7 +88,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("vote",fnJSONParams)
+    this._call("vote",fnJSONParams)
     
   }
   
@@ -110,7 +110,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_result")
+    return this._view("get_result")
     
   }
   
@@ -134,7 +134,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_total_voted_stake")
+    return this._view("get_total_voted_stake")
     
   }
   
@@ -158,7 +158,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_votes")
+    return this._view("get_votes")
     
   }
   

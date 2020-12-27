@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.throwControlled = exports.getMessages = exports.extra = exports.info = exports.msg = exports.warning = exports.error = exports.debugGroupEnd = exports.debugGroup = exports.debug = exports.setDebugLevel = exports.debugFrom = exports.debugLevel = exports.messages = exports.warningCount = exports.warningLevel = exports.errorCount = exports.verboseLevel = exports.storeMessages = void 0;
+exports.throwControlled = exports.getMessages = exports.extra = exports.info = exports.msg = exports.warning = exports.error = exports.debugGroupEnd = exports.debugGroup = exports.debug = exports.setDebugRange = exports.setDebugLevel = exports.debugTo = exports.debugFrom = exports.debugLevel = exports.messages = exports.warningCount = exports.warningLevel = exports.errorCount = exports.verboseLevel = exports.storeMessages = void 0;
 const color = require("./color.js");
 const ControlledError_js_1 = require("./ControlledError.js");
 exports.verboseLevel = 1;
@@ -10,11 +10,16 @@ exports.warningCount = 0;
 exports.messages = [];
 exports.debugLevel = 0;
 exports.debugFrom = 0;
-function setDebugLevel(level, fromLine) {
+exports.debugTo = 0;
+function setDebugLevel(level) {
     exports.debugLevel = level;
-    exports.debugFrom = fromLine || 0;
 }
 exports.setDebugLevel = setDebugLevel;
+function setDebugRange(fromLine, toLine) {
+    exports.debugFrom = fromLine;
+    exports.debugTo = toLine || 0;
+}
+exports.setDebugRange = setDebugRange;
 //     method debug
 // ---------------------------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -48,7 +48,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new",fnJSONParams)
+    this._call("new",fnJSONParams)
     
   }
   
@@ -70,7 +70,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("ping")
+    this._call("ping")
     
   }
   
@@ -95,7 +95,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("deposit")
+    this._call("deposit")
     
   }
   
@@ -120,7 +120,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("deposit_and_stake")
+    this._call("deposit_and_stake")
     
   }
   
@@ -143,7 +143,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("withdraw_all")
+    this._call("withdraw_all")
     
   }
   
@@ -166,7 +166,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("withdraw",fnJSONParams)
+    this._call("withdraw",fnJSONParams)
     
   }
   
@@ -188,7 +188,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("stake_all")
+    this._call("stake_all")
     
   }
   
@@ -211,7 +211,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("stake",fnJSONParams)
+    this._call("stake",fnJSONParams)
     
   }
   
@@ -234,7 +234,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("unstake_all")
+    this._call("unstake_all")
     
   }
   
@@ -258,7 +258,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("unstake",fnJSONParams)
+    this._call("unstake",fnJSONParams)
     
   }
   
@@ -283,7 +283,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_account_unstaked_balance",fnJSONParams)
+    return this._view("get_account_unstaked_balance",fnJSONParams)
     
   }
   
@@ -307,7 +307,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_account_staked_balance",fnJSONParams)
+    return this._view("get_account_staked_balance",fnJSONParams)
     
   }
   
@@ -329,7 +329,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_account_total_balance",fnJSONParams)
+    return this._view("get_account_total_balance",fnJSONParams)
     
   }
   
@@ -351,7 +351,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("is_account_unstaked_balance_available",fnJSONParams)
+    return this._view("is_account_unstaked_balance_available",fnJSONParams)
     
   }
   
@@ -373,7 +373,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_total_staked_balance")
+    return this._view("get_total_staked_balance")
     
   }
   
@@ -395,7 +395,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_owner_id")
+    return this._view("get_owner_id")
     
   }
   
@@ -417,7 +417,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_reward_fee_fraction")
+    return this._view("get_reward_fee_fraction")
     
   }
   
@@ -439,7 +439,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_staking_key")
+    return this._view("get_staking_key")
     
   }
   
@@ -461,7 +461,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("is_staking_paused")
+    return this._view("is_staking_paused")
     
   }
   
@@ -483,7 +483,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_account",fnJSONParams)
+    return this._view("get_account",fnJSONParams)
     
   }
   
@@ -505,7 +505,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_number_of_accounts")
+    return this._view("get_number_of_accounts")
     
   }
   
@@ -527,7 +527,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_accounts",fnJSONParams)
+    return this._view("get_accounts",fnJSONParams)
     
   }
   
@@ -551,7 +551,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("on_stake_action")
+    this._call("on_stake_action")
     
   }
   
@@ -577,7 +577,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("update_staking_key",fnJSONParams)
+    this._call("update_staking_key",fnJSONParams)
     
   }
   
@@ -600,7 +600,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("update_reward_fee_fraction",fnJSONParams)
+    this._call("update_reward_fee_fraction",fnJSONParams)
     
   }
   
@@ -623,7 +623,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("vote",fnJSONParams)
+    this._call("vote",fnJSONParams)
     
   }
   
@@ -646,7 +646,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("pause_staking")
+    this._call("pause_staking")
     
   }
   
@@ -669,7 +669,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("resume_staking")
+    this._call("resume_staking")
     
   }
   

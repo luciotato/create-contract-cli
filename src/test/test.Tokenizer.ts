@@ -19,7 +19,7 @@ function testThis(rustCode:string, expected:string[]) {
     expect("tokenizer", tokens).toBe(expected)
 }
 
-export function testTokenizer() {
+export function testTokenizer(): void {
     let rustCode = "\n\
     /// The amount of gas given to complete `vote` call.\n\
     const VOTE_GAS: u64 = 100_000_000_000_000;\n\

@@ -32,9 +32,13 @@ export let messages = []
 
 export let debugLevel = 0
 export let debugFrom = 0
-export function setDebugLevel(level:number, fromLine?:number): void {
+export let debugTo = 0
+export function setDebugLevel(level:number): void {
     debugLevel = level
-    debugFrom = fromLine || 0
+}
+export function setDebugRange(fromLine:number, toLine?:number): void {
+    debugFrom = fromLine 
+    debugTo = toLine || 0
 }
 
 //     method debug

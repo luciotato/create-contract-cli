@@ -67,21 +67,29 @@ export function testFor(rustFile: string, expectedFile:string, data: dataInfo) :
 
 export function testContractAPIProducer() : void{
     logger.setDebugLevel(0)
-    // logger.setDebugLevel(1,1)
+    //logger.setDebugRange(1490,1800)
 
-    testFor('./res/test/rust/NEARSwap/src/lib.rs', "./res/test/expected/swap-API.js",
-        { nickname: "swap", defaultContractName: "near-clp.betanet" }
+    testFor('./res/test/rust/div-pool/src/lib.rs', "./res/test/expected/div-pool-API.js",
+        { nickname: "div", defaultContractName: "diversifying.pools.guildnet" }
     )
 
+    logger.setDebugLevel(0)
+    //logger.setDebugRange(1450,1500)
+
+
+    //testFor('./res/test/rust/NEARSwap/src/lib.rs', "./res/test/expected/swap-API.js",
+    //    { nickname: "swap", defaultContractName: "near-clp.betanet" }
+    //)
+
     // logger.setDebugLevel(0)
-    // logger.setDebugLevel(1,500)
+    //logger.setDebugRange(1450,1500)
 
     testFor('./res/test/rust/staking-pool/src/lib.rs', "./res/test/expected/staking-pool-API.js",
         { nickname: "staky", defaultContractName: "tomstaker.stakehouse.betanet" }
     )
 
     // logger.setDebugLevel(0)
-    // logger.setDebugLevel(1,150)
+    //logger.setDebugRange(1450,1500)
 
     testFor('./res/test/rust/lockup/src/lib.rs', "./res/test/expected/lockup-API.js",
         { nickname: "lockup", defaultContractName: "testcontract.testnet" }

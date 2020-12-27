@@ -16,11 +16,11 @@
     class ContractAPI {
 
         // this.view helper function
-        view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _view(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.view(cliConfig.contractAccount, command, fnJSONParams, options)
         }
         // this.call helper function
-        call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
+        _call(command/*:string*/, fnJSONParams/*?:any*/) /*:string*/ {
             return nearCli.call(cliConfig.contractAccount, command, fnJSONParams, options)
         }
     
@@ -45,7 +45,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("new")
+    this._call("new")
     
   }
   
@@ -67,7 +67,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("add_request",fnJSONParams)
+    this._call("add_request",fnJSONParams)
     
   }
   
@@ -89,7 +89,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("add_request_and_confirm",fnJSONParams)
+    this._call("add_request_and_confirm",fnJSONParams)
     
   }
   
@@ -111,7 +111,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("delete_request",fnJSONParams)
+    this._call("delete_request",fnJSONParams)
     
   }
   
@@ -134,7 +134,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    this.call("confirm",fnJSONParams)
+    this._call("confirm",fnJSONParams)
     
   }
   
@@ -158,7 +158,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_request",fnJSONParams)
+    return this._view("get_request",fnJSONParams)
     
   }
   
@@ -179,7 +179,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_num_requests_pk",fnJSONParams)
+    return this._view("get_num_requests_pk",fnJSONParams)
     
   }
   
@@ -200,7 +200,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("list_request_ids")
+    return this._view("list_request_ids")
     
   }
   
@@ -221,7 +221,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_confirmations",fnJSONParams)
+    return this._view("get_confirmations",fnJSONParams)
     
   }
   
@@ -242,7 +242,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_num_confirmations")
+    return this._view("get_num_confirmations")
     
   }
   
@@ -263,7 +263,7 @@
     
     a.noMoreArgs() // no more positional args should remain
     
-    return this.view("get_request_nonce")
+    return this._view("get_request_nonce")
     
   }
   
