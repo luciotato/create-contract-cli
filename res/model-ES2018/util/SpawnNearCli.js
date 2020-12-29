@@ -58,6 +58,8 @@ function spawnNearCli(args /*:(string|any)[]*/, options /*:any*/) /*:string*/ {
         if (typeof args[i] !== "string") { // JSON
             args[i] = JSON.stringify(args[i])
             args[i] = args[i].replace(/"/g, '\\"') // add escape before each quote
+            args[i] = "\"" + args[i] + "\""
+            
         }
     }
 
